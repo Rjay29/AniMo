@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<!-- Admin Dashboard -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AniMo Admin | Dashboard</title>
+    <!-- Stylesheet Reference -->
+    <link rel="stylesheet" href="../shared/css/global.css" />
+    <!-- Stylesheet Reference -->
+    <link rel="stylesheet" href="../shared/css/components.css" />
+    <!-- Stylesheet Reference -->
+    <link rel="stylesheet" href="./admin.css" />
+    <!-- Page Script -->
+    <script src="../shared/js/api.js" defer></script>
+  </head>
+  <body class="site-shell">
+    <!-- Site Header -->
+    <header class="admin-header">
+      <a class="brand-logo" href="/">
+      <!-- Image Asset -->
+        <img class="brand-logo" src="/shared/assets/logo.png" alt="" /><span class="brand-wordmark">AniMo <small>Admin</small></span></a>
+      <div class="admin-header-actions">
+        <span id="adminIdentity"></span>
+        <a class="btn btn-secondary" href="/pages/home/home.html">View website</a>
+        <button id="adminLogout" class="btn btn-secondary" type="button">Log out</button>
+      </div>
+    </header>
+    <!-- Main Content -->
+    <main class="container admin-main">
+      <!-- Content Section -->
+      <section class="admin-intro">
+        <span class="eyebrow">Private administrator area</span>
+        <h1>Listings, orders, and assistant data</h1>
+        <p>Changes here are saved to AniMo's database and appear on the website.</p>
+      </section>
+      <div id="adminStatus" class="admin-status" role="status" aria-live="polite"></div>
+      <!-- Primary Navigation -->
+      <nav class="admin-tabs" aria-label="Admin sections">
+        <button type="button" class="admin-tab active" data-tab="listings">Listings</button>
+        <button type="button" class="admin-tab" data-tab="orders">Orders</button>
+        <button type="button" class="admin-tab" data-tab="assistantData">Assistant data</button>
+      </nav>
+      <!-- Listingssection -->
+      <section id="listingsSection" class="admin-section">
+        <div class="admin-columns">
+          <!-- Listingform Form -->
+          <form id="listingForm" class="card admin-panel">
+            <div class="admin-panel-title">
+              <div><span class="eyebrow">Catalog</span><h2 id="listingFormTitle">Add listing</h2></div>
+              <button id="cancelEdit" class="btn btn-secondary" type="button" hidden>Cancel edit</button>
+            </div>
+            <label class="manager-label" for="listingType">Listing type</label>
+            <select class="select" id="listingType">
+              <option value="products">Marketplace product</option>
+              <option value="farmers">Farmer or farmer group</option>
+              <option value="recipes">Recipe</option>
+              <option value="recipePackages">Meal kit</option>
+            </select>
+            <div id="listingFields" class="admin-form-fields"></div>
+            <label class="manager-label" for="listingPhoto">Photo (JPG, PNG, WebP; under 5 MB)</label>
+            <input id="listingPhoto" class="input" type="file" accept="image/jpeg,image/png,image/webp" />
+            <div class="admin-photo-preview">
+              <!-- Listing Photo Preview -->
+              <img id="photoPreview" alt="Listing photo preview" hidden />
+              <span id="photoPlaceholder">Select a photo for this listing.</span>
+            </div>
+            <button id="saveListing" class="btn btn-primary admin-submit" type="submit">Add listing</button>
+          </form>
+          <!-- Current Listings -->
+          <section class="card admin-panel" aria-labelledby="catalogTitle">
+            <div class="admin-panel-title">
+              <div><span class="eyebrow">Database records</span><h2 id="catalogTitle">Current listings</h2></div>
+              <button id="refreshCatalog" class="btn btn-secondary" type="button">Refresh</button>
+            </div>
+            <div id="listingGroups" class="listing-groups"></div>
+          </section>
+        </div>
+      </section>
+      <!-- Orderssection -->
+      <section id="ordersSection" class="admin-section" hidden>
+        <div class="card admin-panel">
+          <div class="admin-panel-title"><div><span class="eyebrow">Customer orders</span><h2>Manage order status</h2></div><button id="refreshOrders" class="btn btn-secondary" type="button">Refresh</button></div>
+          <div id="adminOrders" class="admin-orders"></div>
+        </div>
+      </section>
+      <!-- Assistantdatasection -->
+      <section id="assistantDataSection" class="admin-section" hidden>
+        <div class="admin-columns">
+          <!-- Assistantdataform Form -->
+          <form id="assistantDataForm" class="card admin-panel">
+            <div class="admin-panel-title">
+              <div><span class="eyebrow">Knowledge base</span><h2 id="assistantDataFormTitle">Add assistant data</h2></div>
+              <button id="cancelAssistantEdit" class="btn btn-secondary" type="button" hidden>Cancel edit</button>
+            </div>
+            <label class="manager-label" for="assistantCategory">Category</label>
+            <select id="assistantCategory" class="select" name="category" required>
+              <option value="Orders & checkout">Orders &amp; checkout</option>
+              <option value="Payments & vouchers">Payments &amp; vouchers</option>
+              <option value="Delivery & pickup">Delivery &amp; pickup</option>
+              <option value="Products & farmers">Products &amp; farmers</option>
+              <option value="Recipes & meal kits">Recipes &amp; meal kits</option>
+              <option value="Accounts & privacy">Accounts &amp; privacy</option>
+              <option value="Website help">Website help</option>
+              <option value="Other">Other</option>
+            </select>
+            <label class="manager-label" for="assistantTitle">Question or topic</label>
+            <input id="assistantTitle" class="input" name="title" maxlength="140" required placeholder="How do I place an order?" />
+            <label class="manager-label" for="assistantContent">Assistant answer</label>
+            <textarea id="assistantContent" class="textarea" name="content" maxlength="4000" rows="6" required></textarea>
+            <label class="admin-check"><input id="assistantEnabled" name="enabled" type="checkbox" checked /><span>Use this entry in assistant answers</span></label>
+            <button id="saveAssistantData" class="btn btn-primary admin-submit" type="submit">Save assistant data</button>
+          </form>
+          <!-- Assistant Data Entries -->
+          <section class="card admin-panel" aria-labelledby="assistantDataListTitle">
+            <div class="admin-panel-title">
+              <div><span class="eyebrow">Saved knowledge</span><h2 id="assistantDataListTitle">Assistant data entries</h2></div>
+              <button id="refreshAssistantData" class="btn btn-secondary" type="button">Refresh</button>
+            </div>
+            <div id="assistantDataList" class="assistant-data-list"></div>
+          </section>
+        </div>
+      </section>
+    </main>
+    <!-- Page Script -->
+    <script src="./admin.js"></script>
+  </body>
+</html>

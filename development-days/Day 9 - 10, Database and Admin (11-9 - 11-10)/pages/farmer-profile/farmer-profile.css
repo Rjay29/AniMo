@@ -1,0 +1,40 @@
+
+
+/* Layout Dimension */
+.profile-layout {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 24px;
+}
+
+/* Surface Styling */
+.profile-card,
+.profile-detail {
+  background: var(--white);
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(41,45,39,0.06);
+  box-shadow: var(--shadow);
+}
+
+/* Image Dimension */
+.farmer-profile-image { min-height: clamp(230px, 30vw, 340px); border-radius: 0; }
+
+/* Image Dimension */
+.profile-card .catalog-card-image { height: clamp(230px, 30vw, 340px); }
+
+/* Layout Dimension */
+.profile-detail { padding: 22px; }
+
+/* Layout Dimension */
+.profile-detail h1 { margin: 8px 0 10px; }
+
+/* Layout Dimension */
+.profile-meta { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+
+/* Layout Dimension */
+.badges { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0; }
+
+/* Layout Dimension */
+/* Responsive Breakpoint */
+@media (max-width: 900px) { .profile-layout { grid-template-columns: 1fr; } }

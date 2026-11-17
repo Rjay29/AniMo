@@ -1,0 +1,37 @@
+
+
+/* Layout Dimension */
+.recipe-detail-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  background: var(--white);
+  padding: 22px;
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+}
+
+/* Image Dimension */
+.recipe-detail-image { min-height: clamp(230px, 30vw, 340px); }
+
+/* Image Dimension */
+.recipe-detail-card .catalog-card-image { height: clamp(230px, 30vw, 340px); }
+
+/* Text Dimension */
+.recipe-detail-copy h2 { margin: 24px 0 8px; font-size: 1.3rem; }
+
+/* Layout Dimension */
+.recipe-detail-copy li { margin: 8px 0; }
+
+/* Layout Dimension */
+.recipe-facts { display: flex; gap: 8px; margin: 14px 0; }
+
+/* Layout Dimension */
+.recipe-order { margin: 24px 0 16px; padding: 18px; border-radius: 16px; background: #F1F4EC; }
+
+/* Layout Dimension */
+.recipe-back-link { margin-top: 6px; }
+
+/* Layout Dimension */
+/* Responsive Breakpoint */
+@media (max-width: 900px) { .recipe-detail-card { grid-template-columns: 1fr; } }

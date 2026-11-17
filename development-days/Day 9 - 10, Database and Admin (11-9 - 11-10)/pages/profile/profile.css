@@ -1,0 +1,88 @@
+
+
+/* Layout Dimension */
+.profile-page-layout { display: grid; grid-template-columns: minmax(240px, 0.7fr) minmax(0, 1.6fr); align-items: start; gap: 20px; }
+
+/* Layout Dimension */
+.profile-account-card,
+.profile-orders-card { min-width: 0; padding: clamp(18px, 3vw, 28px); }
+
+/* Layout Dimension */
+.profile-account-card h2,
+.profile-orders-card h2 { margin: 6px 0 18px; color: var(--dark-green); font-family: Georgia, "Times New Roman", serif; }
+
+/* Layout Dimension */
+.profile-account-card form { display: grid; gap: 14px; }
+
+/* Layout Dimension */
+.profile-account-card label { display: grid; gap: 6px; color: var(--dark-green); font-weight: 700; }
+
+/* Image Styling */
+.profile-picture-control { display: flex; align-items: center; gap: 16px; }
+
+/* Image Dimension */
+.profile-picture-control > img,
+.profile-picture-control > .profile-picture-placeholder { display: grid; width: 96px; height: 96px; flex: 0 0 auto; place-items: center; overflow: hidden; border: 2px solid rgba(38, 52, 45, 0.14); border-radius: 50%; background: var(--cream); color: var(--dark-green); text-align: center; }
+
+/* Image Styling */
+.profile-picture-control > img { object-fit: cover; }
+
+/* Image Styling */
+.profile-picture-control > .profile-picture-placeholder { padding: 8px; font-size: 0.8rem; font-weight: 700; }
+
+/* Image Dimension */
+.profile-picture-control > div { display: grid; gap: 8px; min-width: 0; }
+
+/* Image Dimension */
+.profile-picture-control .input { max-width: 100%; }
+
+/* Layout Dimension */
+.profile-status { min-height: 1.4em; margin: 0; color: var(--dark-green); }
+
+/* Surface Styling */
+.profile-status.error { color: #8a3026; }
+
+/* Layout Dimension */
+.profile-orders-heading { display: flex; justify-content: space-between; align-items: center; gap: 14px; }
+
+/* Layout Dimension */
+.order-tabs { display: flex; gap: 4px; overflow-x: auto; margin: 10px 0 16px; border-bottom: 1px solid rgba(38, 52, 45, 0.15); }
+
+/* Layout Dimension */
+.order-tab { flex: 0 0 auto; padding: 10px 12px; border: 0; border-bottom: 3px solid transparent; background: transparent; color: var(--dark-green); font-weight: 700; cursor: pointer; }
+
+/* Surface Styling */
+.order-tab.active { border-bottom-color: var(--clay); }
+
+/* Layout Dimension */
+.profile-order-list { display: grid; gap: 12px; }
+
+/* Layout Dimension */
+.profile-order { padding: 16px; border: 1px solid rgba(38, 52, 45, 0.12); border-radius: 12px; background: var(--white); }
+
+/* Layout Dimension */
+.profile-order-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+
+/* Layout Dimension */
+.profile-order-header h3 { margin: 0; color: var(--dark-green); overflow-wrap: anywhere; }
+
+/* Layout Dimension */
+.profile-order p { margin: 6px 0; color: var(--muted); }
+
+/* Text Dimension */
+.order-state { padding: 4px 9px; border-radius: 999px; background: rgba(191, 209, 138, 0.35); color: var(--dark-green); font-size: 0.8rem; font-weight: 700; white-space: nowrap; }
+
+/* Layout Dimension */
+.order-items { padding-left: 20px; }
+
+/* Layout Dimension */
+.order-empty { padding: 24px; color: var(--muted); text-align: center; }
+
+/* Layout Dimension */
+/* Responsive Breakpoint */
+@media (max-width: 900px) { .profile-page-layout { grid-template-columns: 1fr; } }
+
+/* Element Styling */
+/* Layout Dimension */
+/* Responsive Breakpoint */
+@media (max-width: 520px) { .profile-orders-heading { align-items: flex-start; flex-direction: column; } .profile-order-header { flex-direction: column; } }

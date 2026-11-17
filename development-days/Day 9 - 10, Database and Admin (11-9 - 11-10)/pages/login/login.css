@@ -1,0 +1,63 @@
+
+
+/* Layout Dimension */
+.auth-shell { display: flex; justify-content: center; }
+
+/* Layout Dimension */
+.auth-card { width: min(480px, 100%); padding: 30px; display: grid; gap: 16px; }
+
+/* Layout Dimension */
+.auth-card h1 { margin: 0; }
+
+/* Layout Dimension */
+.auth-card small { margin-top: -12px; color: var(--muted); }
+
+/* Layout Dimension */
+.auth-status { min-height: 1.4em; margin: 0; color: var(--dark-green); }
+
+/* Surface Styling */
+.auth-status.error { color: #8a3026; }
+
+/* Surface Styling */
+.auth-card a { color: var(--dark-green); font-weight: 700; text-decoration: underline; }
+
+/* Layout Dimension */
+.password-field { position: relative; display: block; margin-top: 6px; }
+
+/* Layout Dimension */
+.password-field .input { padding-right: 112px; }
+
+/* Text Dimension */
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  padding: 5px;
+  border: 0;
+  background: transparent;
+  color: var(--dark-green);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Interaction State */
+.password-toggle:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+
+/* Layout Dimension */
+.auth-card [hidden] { display: none; }
+
+/* Surface Styling */
+.admin-login {
+  --green: #405b91;
+  --dark-green: #263a67;
+  --clay: #7889bd;
+  background: linear-gradient(135deg, #18243b, #354a72);
+}
+
+/* Layout Dimension */
+.admin-login .auth-card { border-top: 5px solid #7889bd; }
+
+/* Surface Styling */
+.admin-login .eyebrow { color: #536a9e; }
