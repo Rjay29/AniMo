@@ -1,0 +1,22 @@
+
+
+/* Layout Dimension */
+.auth-shell { display: flex; justify-content: center; }
+
+/* Layout Dimension */
+.auth-card { width: min(500px, 100%); padding: 30px; display: grid; gap: 16px; }
+
+/* Layout Dimension */
+.auth-card h1 { margin: 0; }
+
+/* Layout Dimension */
+.auth-card small { margin-top: -12px; color: var(--muted); }
+
+/* Layout Dimension */
+.auth-status { min-height: 1.4em; margin: 0; color: var(--dark-green); }
+
+/* Surface Styling */
+.auth-status.error { color: #8a3026; }
+
+/* Surface Styling */
+.auth-card a { color: var(--dark-green); font-weight: 700; text-decoration: underline; }

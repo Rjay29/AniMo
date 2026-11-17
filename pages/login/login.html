@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<!-- Login Page -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login | AniMo</title>
+    <!-- Stylesheet Reference -->
+    <link rel="stylesheet" href="../../shared/css/global.css" />
+    <!-- Stylesheet Reference -->
+    <link rel="stylesheet" href="../../shared/css/components.css" />
+    <!-- Stylesheet Reference -->
+    <link rel="stylesheet" href="./login.css" />
+    <!-- Page Script -->
+    <script src="../../shared/js/api.js" defer></script>
+  </head>
+  <body class="site-shell">
+    <!-- Main Content -->
+    <main>
+      <!-- Content Section -->
+      <section class="section">
+        <div class="container auth-shell">
+          <!-- Login Form -->
+          <form class="auth-card card" id="loginForm">
+            <span class="eyebrow" id="loginEyebrow">Welcome to AniMo</span>
+            <h1 id="loginHeading">User Log In</h1>
+            <label>Username<input class="input" name="username" type="text" autocomplete="username" minlength="3" maxlength="32" required /></label>
+            <label>Password
+              <span class="password-field">
+                <input class="input" id="loginPassword" name="password" type="password" autocomplete="current-password" minlength="8" maxlength="256" required />
+                <button class="password-toggle" id="passwordToggle" type="button" aria-controls="loginPassword" aria-pressed="false">Show password</button>
+              </span>
+            </label>
+            <p class="auth-status" id="authStatus" role="status" aria-live="polite"></p>
+            <button class="btn btn-primary" type="submit">Log in</button>
+            <p id="registerLink">New to AniMo? <a href="../register/register.html">Create an account</a></p>
+            <p id="adminLoginLink" hidden><a href="/pages/login/login.html?next=%2Fadmin%2F">Admin Login</a></p>
+            <p id="userLoginLink" hidden><a href="/pages/login/login.html">User Log In</a></p>
+          </form>
+        </div>
+      </section>
+    </main>
+    <!-- Page Script -->
+    <script src="./login.js"></script>
+  </body>
+</html>

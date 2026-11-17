@@ -1,0 +1,168 @@
+
+
+/* Layout Dimension */
+.cart-layout { display: grid; grid-template-columns: 1.3fr 0.7fr; gap: 26px; align-items: start; }
+
+/* Layout Dimension */
+.cart-items, .cart-summary {
+  background: var(--white);
+  border: 1px solid rgba(41,45,39,0.06);
+  border-radius: 26px;
+  box-shadow: var(--shadow);
+  padding: 24px;
+}
+
+/* Layout Dimension */
+.cart-item {
+  display: grid;
+  grid-template-columns: 110px 1fr auto;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(41,45,39,0.08);
+}
+
+/* Layout Dimension */
+.cart-item:last-child { border-bottom: 0; }
+
+/* Layout Dimension */
+.cart-item-placeholder { min-height: 84px; }
+
+/* Layout Dimension */
+.cart-item h3 { margin: 0 0 4px; }
+
+/* Layout Dimension */
+.cart-item p { color: var(--muted); margin: 0 0 8px; }
+
+/* Layout Dimension */
+.cart-item-price { display: grid; justify-items: end; gap: 8px; }
+
+/* Layout Dimension */
+.qty-controls { display: inline-flex; align-items: center; gap: 10px; }
+
+/* Layout Dimension */
+.qty-controls button {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(56,102,65,0.12);
+  color: var(--dark-green);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+/* Image Dimension */
+.qty-controls button img { width: 14px; height: 14px; margin: auto; object-fit: contain; }
+
+/* Layout Dimension */
+.summary-row { display: flex; justify-content: space-between; gap: 12px; margin: 12px 0; }
+
+/* Text Dimension */
+.summary-total { padding-top: 12px; border-top: 1px solid rgba(41,45,39,0.12); font-size: 1.1rem; }
+
+/* Layout Dimension */
+.checkout-link { display: flex; width: 100%; margin-top: 16px; }
+
+/* Layout Dimension */
+.voucher-open-button {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin: 14px 0;
+  padding: 14px;
+  border: 1px dashed var(--green);
+  border-radius: 14px;
+  background: #F1F4EC;
+  color: var(--dark-green);
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Text Dimension */
+.voucher-warning { color: #7A4A00; font-size: 0.9rem; }
+
+/* Surface Styling */
+.discount-row { color: var(--dark-green); }
+
+/* Layout Dimension */
+.voucher-overlay {
+  position: fixed;
+  z-index: 120;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(20,30,22,0.58);
+}
+
+/* Layout Dimension */
+.voucher-overlay[hidden] { display: none; }
+
+/* Layout Dimension */
+.voucher-modal {
+  width: min(560px, 100%);
+  max-height: min(680px, 90vh);
+  overflow: auto;
+  padding: 22px;
+  border-radius: 22px;
+  background: var(--white);
+  box-shadow: var(--shadow);
+}
+
+/* Layout Dimension */
+.voucher-modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+
+/* Layout Dimension */
+.voucher-modal-header h2 { margin: 0; }
+
+/* Text Dimension */
+.voucher-modal-header button {
+  width: 38px; height: 38px; border: 0; border-radius: 50%;
+  background: #F1F4EC; color: var(--dark-green); font-size: 1.35rem; cursor: pointer;
+}
+
+/* Layout Dimension */
+.voucher-list { display: grid; gap: 12px; margin-bottom: 16px; }
+
+/* Layout Dimension */
+.voucher-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 14px;
+  border: 1px solid rgba(56,102,65,0.18);
+  border-left: 5px solid var(--green);
+  border-radius: 14px;
+}
+
+/* Layout Dimension */
+.voucher-option p { margin: 4px 0; color: var(--muted); }
+
+/* Text Dimension */
+.voucher-option span { color: var(--dark-green); font-size: 0.85rem; font-weight: 700; }
+
+/* Layout Dimension */
+.voucher-option .btn { flex: 0 0 auto; padding: 0.65rem 1rem; }
+
+/* Interaction State */
+.voucher-option .btn:disabled { background: #777C72; cursor: not-allowed; }
+
+/* Layout Dimension */
+/* Responsive Breakpoint */
+@media (max-width: 900px) { .cart-layout { grid-template-columns: 1fr; } }
+
+/* Responsive Breakpoint */
+@media (max-width: 560px) {
+
+  /* Layout Dimension */
+  .cart-item { grid-template-columns: 1fr; }
+
+  /* Element Styling */
+  .cart-item-price { justify-items: start; }
+
+  /* Layout Dimension */
+  .voucher-option { align-items: flex-start; flex-direction: column; }
+}
