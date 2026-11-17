@@ -1,2 +1,7 @@
-# AniMo
-A website that helps people buy local ingredients and lets farmers sell directly to them. You can see where fresh produce is available, how much it costs, and what you can cook with the ingredients you already have. Farmers can also sell their surplus harvest so it doesn’t go to waste.
+# Day 1 — HTML structure
+
+This is the simple HTML-only version of the main AniMo pages. It includes static example cards and working page links. Styles, scripts, icon/photo elements, login, and registration are not included in this first-day exercise.
+
+Open `pages/home/home.html` in a browser. Forms and search controls are examples only; there is no persistence or interaction yet.
+
+**Simulated debugging notes:** dynamic sections are hard-coded, forms do not submit, and the unstyled layout is difficult to scan on small screens. These are intentional Day 1 limitations.
