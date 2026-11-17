@@ -1,0 +1,7 @@
+
+
+/* Surface Styling */
+.package-card { background: var(--white); border-radius: 22px; overflow: hidden; box-shadow: var(--shadow); }
+
+/* Layout Dimension */
+.package-card .body { padding: 18px; }
