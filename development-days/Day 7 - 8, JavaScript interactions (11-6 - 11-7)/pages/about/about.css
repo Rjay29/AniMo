@@ -1,0 +1,17 @@
+
+
+/* Layout Dimension */
+.story-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+
+/* Layout Dimension */
+.story-card {
+  padding: 24px;
+}
+
+/* Layout Dimension */
+/* Responsive Breakpoint */
+@media (max-width: 900px) { .story-grid { grid-template-columns: 1fr; } }
