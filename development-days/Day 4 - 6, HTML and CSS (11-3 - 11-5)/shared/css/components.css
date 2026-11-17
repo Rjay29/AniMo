@@ -1,0 +1,259 @@
+
+
+/* Layout Dimension */
+.hero {
+  background: linear-gradient(135deg, #23452B, #386641);
+  color: var(--white);
+  padding: 88px 0 108px;
+}
+
+/* Layout Dimension */
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  align-items: center;
+  gap: 30px;
+}
+
+/* Text Dimension */
+.hero-copy h1 {
+  font-size: clamp(2.8rem, 5vw, 4.5rem);
+  line-height: 1.08;
+  margin: 18px 0 16px;
+}
+
+/* Text Dimension */
+.hero-copy p {
+  color: rgba(255,255,255,0.8);
+  font-size: 1.1rem;
+  margin: 0 0 28px;
+}
+
+/* Layout Dimension */
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* Layout Dimension */
+.hero-stat-grid {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-top: 30px;
+}
+
+/* Layout Dimension */
+.stat-box {
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.18);
+  min-width: 120px;
+}
+
+/* Text Dimension */
+.stat-box strong { display: block; font-size: 1.5rem; }
+
+/* Layout Dimension */
+.hero-panel {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 28px;
+  padding: 18px;
+  backdrop-filter: blur(12px);
+}
+
+/* Surface Styling */
+.mini-card {
+  background: var(--white);
+  border-radius: 24px;
+  overflow: hidden;
+  color: var(--dark);
+  box-shadow: var(--shadow);
+}
+
+/* Layout Dimension */
+.mini-card .content {
+  padding: 18px;
+}
+
+/* Image Dimension */
+.image-placeholder {
+  display: grid;
+  place-items: center;
+  min-height: 92px;
+  padding: 16px;
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 82% 18%, rgba(232, 170, 69, 0.3) 0 34px, transparent 35px),
+    repeating-linear-gradient(135deg, rgba(49, 90, 75, 0.06) 0 1px, transparent 1px 12px),
+    #e8e6d8;
+  color: var(--dark-green);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* Image Dimension */
+.catalog-card-image {
+  display: block;
+  width: 100%;
+  height: 122px;
+  object-fit: cover;
+  background: #e8e6d8;
+}
+
+/* Layout Dimension */
+.rating-stars { display: inline-flex; align-items: center; gap: 2px; vertical-align: middle; }
+
+/* Image Dimension */
+.rating-stars img { width: 14px; height: 14px; object-fit: contain; }
+
+/* Surface Styling */
+.rating-stars .rating-star-empty { opacity: 0.28; }
+
+/* Layout Dimension */
+.badge::before {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  margin-right: 5px;
+  background: url("/shared/assets/icons/check.png") center / contain no-repeat;
+  content: "";
+  vertical-align: -2px;
+}
+
+/* Layout Dimension */
+.icon-placeholder {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px 10px 10px 3px;
+  background: rgba(201, 109, 78, 0.12);
+  color: var(--dark-green);
+}
+
+/* Surface Styling */
+.product-card,
+.farmer-card,
+.recipe-card,
+.package-card,
+.post-card {
+  background: var(--card);
+  border: 1px solid rgba(38, 52, 45, 0.11);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Interaction State */
+.product-card:hover,
+.farmer-card:hover,
+.recipe-card:hover,
+.package-card:hover,
+.post-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 34px rgba(35, 53, 43, 0.14);
+}
+
+/* Layout Dimension */
+.product-card .body,
+.farmer-card .body,
+.recipe-card .body,
+.package-card .body,
+.post-card .body {
+  padding: 17px 18px 18px;
+}
+
+/* Text Dimension */
+.card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+/* Surface Styling */
+.card-meta strong { color: var(--dark-green); }
+
+/* Text Dimension */
+.product-card h3,
+.farmer-card h3,
+.recipe-card h3,
+.package-card h3,
+.post-card h3 {
+  margin: 0 0 12px;
+  font-size: 1.2rem;
+  color: var(--dark-green);
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* Layout Dimension */
+.product-card p,
+.farmer-card p,
+.recipe-card p,
+.package-card p,
+.post-card p {
+  margin: 0 0 16px;
+  color: var(--muted);
+}
+
+/* Layout Dimension */
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Text Dimension */
+.price {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--clay);
+}
+
+/* Layout Dimension */
+.filter-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Layout Dimension */
+.tag-list {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Layout Dimension */
+.tag {
+  padding: 6px 11px;
+  border-radius: 6px;
+  background: rgba(191, 209, 138, 0.3);
+  color: var(--dark-green);
+  font-weight: 700;
+  border: 1px solid rgba(49, 90, 75, 0.12);
+}
+
+/* Layout Dimension */
+.grid-3.tight { gap: 18px; }
+
+/* Responsive Breakpoint */
+@media (max-width: 900px) {
+
+  /* Layout Dimension */
+  .hero-grid { grid-template-columns: 1fr; }
+}

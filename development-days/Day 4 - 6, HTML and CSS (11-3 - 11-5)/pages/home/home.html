@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AniMo | Discover Local. Support Farmers.</title>
+    <!-- Stylesheet Reference -->
+    <link rel="stylesheet" href="../../shared/css/global.css" />
+    <!-- Stylesheet Reference -->
+    <link rel="stylesheet" href="../../shared/css/navbar.css" />
+    <!-- Stylesheet Reference -->
+    <link rel="stylesheet" href="../../shared/css/components.css" />
+    <!-- Stylesheet Reference -->
+    <link rel="stylesheet" href="../../shared/css/footer.css" />
+    <!-- Stylesheet Reference -->
+    <link rel="stylesheet" href="./home.css" />
+  </head>
+  <body class="site-shell">
+    <!-- Site Header -->
+    <header class="site-header">
+      <div class="container navbar">
+        <a href="../home/home.html" class="brand" aria-label="AniMo Home">AniMo</a>
+        <!-- Primary Navigation -->
+        <nav class="nav-links" aria-label="Main navigation"></nav>
+        <div class="nav-actions">
+          <a href="../cart/cart.html" class="icon-btn cart-pill" aria-label="Cart" title="Cart">
+            <span class="cart-count hidden">0</span>
+          </a>
+          <button class="btn btn-primary mobile-toggle" type="button" aria-label="Menu" title="Menu">Menu</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+      <!-- Hero Section -->
+      <section class="hero">
+        <div class="container hero-grid">
+          <div class="hero-copy">
+            <span class="eyebrow">A market with roots</span>
+            <h1>Good food, <span class="hero-highlight">grown closer.</span></h1>
+            <p>Meet the people behind your ingredients, shop what is in season, and bring a little more local to your table.</p>
+            <div class="hero-actions">
+              <a href="../marketplace/marketplace.html" class="btn btn-primary">Shop the market</a>
+              <a href="../recipe-discovery/recipe-discovery.html" class="btn btn-light">Find a recipe</a>
+            </div>
+            <div class="hero-stat-grid">
+              <div class="stat-box"><strong>450+</strong><span>Farm products</span></div>
+              <div class="stat-box"><strong>32</strong><span>Local farms</span></div>
+              <div class="stat-box"><strong>5</strong><span>Featured this week</span></div>
+            </div>
+          </div>
+          <div class="hero-panel">
+            <!-- Image Placeholder -->
+            <div class="weekly-note">
+              <span class="eyebrow">Field notes · No. 01</span>
+              <h2>Your neighborhood is full of good things.</h2>
+              <p>Fresh picks, thoughtful growers, and a new reason to cook with the season.</p>
+              <a href="#local-map" class="btn btn-secondary">Find local ingredients</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Bulletin Board -->
+      <section class="section bulletin-section" id="bulletin-board">
+        <div class="container">
+          <div class="section-heading">
+            <div><span class="eyebrow">AniMo Bulletin Board</span><h2>What’s fresh and cooking this week</h2></div>
+          </div>
+
+          <!-- Seasonal Picks -->
+          <section class="board-block" aria-labelledby="seasonal-title">
+            <div class="section-heading">
+              <div><h3 id="seasonal-title">Seasonal picks: Top 5 ingredients this week</h3><p>Five ingredients to discover from local growers.</p></div>
+              <a href="../marketplace/marketplace.html" class="btn btn-secondary">Shop all ingredients</a>
+            </div>
+            <!-- Product Card -->
+            <div class="grid grid-3" id="featured-products">
+            <!-- Product Card -->
+              <article class="product-card"><div class="body"><h3>Golden Okra</h3><p>Fresh harvest · ₱85 per bundle</p></div></article>
+            <!-- Product Card -->
+              <article class="product-card"><div class="body"><h3>Malunggay Leaves</h3><p>Local greens · ₱40 per bunch</p></div></article></div>
+          </section>
+
+          <!-- Recipe Highlights -->
+          <section class="board-block" aria-labelledby="top-recipes-title">
+            <div class="section-heading">
+              <div><h3 id="top-recipes-title">Top recipes of the week</h3><p>Ideas for making more of local ingredients.</p></div>
+              <a href="../recipe-discovery/recipe-discovery.html" class="btn btn-secondary">Discover recipes</a>
+            </div>
+            <!-- Recipe Card -->
+            <div class="grid grid-3" id="recipe-cards">
+            <!-- Recipe Card -->
+              <article class="recipe-card"><div class="body"><h3>Ginataang Labong</h3><p>A comforting bamboo shoot recipe.</p></div></article></div>
+          </section>
+
+          <!-- Featured Meal Kits -->
+          <section class="board-block" aria-labelledby="top-packages-title">
+            <div class="section-heading">
+              <div><h3 id="top-packages-title">Top food packages</h3><p>Everything you need for a simple local meal.</p></div>
+              <a href="../recipe-packages/recipe-packages.html" class="btn btn-secondary">Browse meal kits</a>
+            </div>
+            <!-- Package Card -->
+            <div class="grid grid-3" id="package-cards">
+            <!-- Package Card -->
+              <article class="package-card"><div class="body"><h3>Sinigang Starter Kit</h3><p>Local ingredients for a family meal.</p></div></article></div>
+          </section>
+        </div>
+      </section>
+
+      <!-- Farmer Preview -->
+      <section class="section">
+        <div class="container">
+          <div class="section-heading">
+            <div><span class="eyebrow">Meet the growers</span><h2>Farmers building better food systems</h2></div>
+            <a href="../farmers/farmers.html" class="btn btn-secondary">View farmers</a>
+          </div>
+          <!-- Farmer Card -->
+          <div class="grid grid-3" id="farmer-cards">
+          <!-- Farmer Card -->
+            <article class="farmer-card"><div class="body"><h3>Timpla Community Farm</h3><p>Quezon · Community growers</p></div></article></div>
+        </div>
+      </section>
+
+      <!-- Local Map -->
+      <section class="section local-map-section" id="local-map">
+        <div class="container">
+          <div class="section-heading">
+            <div><span class="eyebrow">Explore nearby</span><h2>Find ingredients around a place</h2></div>
+          </div>
+          <div class="map-controls card">
+            <label class="sr-only" for="mapSearch">Search for a town, city, or province</label>
+            <input id="mapSearch" class="input" type="search" list="mapLocations" placeholder="Search a town, city, or province..." />
+            <datalist id="mapLocations"></datalist>
+            <button id="mapSearchButton" class="btn btn-primary" type="button">Search location</button>
+            <button id="locateButton" class="btn btn-secondary" type="button">Pin my location</button>
+            <button id="addPinButton" class="btn btn-secondary" type="button" aria-pressed="false">Add a map pin</button>
+          </div>
+          <p id="mapStatus" class="map-status" aria-live="polite">Search a place, use your location, or choose “Add a map pin” and click on the map.</p>
+          <div class="map-layout">
+            <div class="map-surface" id="mapSurface" role="application" aria-label="Sample local ingredient map">
+              <!-- Icon Placeholder -->
+              <button class="map-pin map-pin-one" type="button" aria-label="Lucena, Quezon farm location">
+              <!-- Image Asset -->
+                <img src="/shared/assets/icons/map_pin.png" alt="" /></button>
+              <button class="map-pin map-pin-two" type="button" aria-label="Bacolod, Negros farm location">
+              <!-- Image Asset -->
+                <img src="/shared/assets/icons/map_pin.png" alt="" /></button>
+              <button class="map-pin map-pin-three" type="button" aria-label="Cagayan de Oro farm location">
+              <!-- Image Asset -->
+                <img src="/shared/assets/icons/map_pin.png" alt="" /></button>
+            </div>
+            <!-- Nearby Listings -->
+            <aside class="nearby-panel card">
+              <h3 id="nearbyTitle">Local ingredients</h3>
+              <p id="nearbyDescription">Pick a location to see sample ingredients from nearby producers.</p>
+              <div id="nearbyProducts" class="nearby-list"></div>
+            </aside>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Site Footer -->
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <div class="brand footer-brand-mark">AniMo</div>
+            <p>Discover local. Support farmers. Create more.</p>
+          </div>
+          <div class="footer-column"><h4>Explore</h4><a href="../marketplace/marketplace.html">Marketplace</a><a href="../recipe-discovery/recipe-discovery.html">Recipe Discovery</a><a href="#local-map">Local Map</a></div>
+          <div class="footer-column"><h4>Community</h4><a href="../farmers/farmers.html">Farmers</a><a href="#bulletin-board">AniMo Bulletin</a><a href="../about/about.html">About AniMo</a></div>
+          <div class="footer-column"><h4>Account</h4><a href="../checkout/checkout.html">Checkout</a></div>
+        </div>
+        <div class="footer-bottom"><span>© 2026 AniMo</span><span>Built for local ingredients and stronger food systems.</span></div>
+      </div>
+    </footer>
+
+    <!-- Shared Sample Data Interactions -->
+    
+    
+    
+    
+    
+  </body>
+</html>

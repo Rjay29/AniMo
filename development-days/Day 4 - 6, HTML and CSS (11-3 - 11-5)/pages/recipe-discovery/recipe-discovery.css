@@ -1,0 +1,82 @@
+
+
+/* Layout Dimension */
+.ingredient-search { position: relative; margin-top: 8px; max-width: 720px; }
+
+/* Layout Dimension */
+.ingredient-suggestions {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  display: grid;
+  padding: 6px;
+  border: 1px solid rgba(41,45,39,0.12);
+  border-radius: 14px;
+  background: var(--white);
+  box-shadow: var(--shadow);
+}
+
+/* Layout Dimension */
+.ingredient-suggestions[hidden] { display: none; }
+
+/* Layout Dimension */
+.ingredient-suggestions[hidden] { display: none; }
+
+/* Layout Dimension */
+.ingredient-suggestions button {
+  padding: 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--dark);
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Interaction State */
+.ingredient-suggestions button:hover { background: #F1F4EC; }
+
+/* Layout Dimension */
+.selected-heading, .recipe-results-heading { margin-top: 32px; }
+
+/* Layout Dimension */
+.selected-ingredients { min-height: 48px; }
+
+/* Layout Dimension */
+.selected-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 8px 7px 13px;
+  border-radius: 999px;
+  background: var(--green);
+  color: var(--white);
+  font-weight: 700;
+}
+
+/* Text Dimension */
+.selected-chip button {
+  width: 23px;
+  height: 23px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--white);
+  color: var(--dark-green);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* Surface Styling */
+.muted-note, .prototype-note { color: var(--muted); }
+
+/* Layout Dimension */
+.recipe-link { display: flex; margin-top: 15px; }
+
+/* Layout Dimension */
+.empty-recipes { margin-top: 20px; padding: 20px; border-radius: 18px; background: #F1F4EC; }
+
+/* Layout Dimension */
+.empty-recipes[hidden] { display: none; }

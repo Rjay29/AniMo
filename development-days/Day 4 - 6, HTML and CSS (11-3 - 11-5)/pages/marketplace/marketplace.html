@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Marketplace | AniMo</title>
+    <!-- Stylesheet Reference -->
+    <link rel="stylesheet" href="../../shared/css/global.css" />
+    <!-- Stylesheet Reference -->
+    <link rel="stylesheet" href="../../shared/css/navbar.css" />
+    <!-- Stylesheet Reference -->
+    <link rel="stylesheet" href="../../shared/css/components.css" />
+    <!-- Stylesheet Reference -->
+    <link rel="stylesheet" href="../../shared/css/footer.css" />
+    <!-- Stylesheet Reference -->
+    <link rel="stylesheet" href="./marketplace.css" />
+  </head>
+  <body class="site-shell">
+    <!-- Site Header -->
+    <header class="site-header">
+      <div class="container navbar">
+        <a href="../home/home.html" class="brand">AniMo</a>
+        <!-- Primary Navigation -->
+        <nav class="nav-links">
+          <a href="../home/home.html">Home</a>
+          <a href="../marketplace/marketplace.html" class="active">Marketplace</a>
+          <a href="../farmers/farmers.html">Farmers</a>
+          
+          <a href="../recipe-discovery/recipe-discovery.html">Recipes</a>
+          <a href="../home/home.html#local-map">Local Map</a>
+          
+        </nav>
+        <div class="nav-actions">
+          
+          <a href="../cart/cart.html" class="icon-btn cart-pill">Cart<span class="cart-count hidden">0</span></a>
+          <button class="btn btn-primary mobile-toggle" type="button">Menu</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+      <!-- Marketplace Title And Context -->
+      <section class="page-hero">
+        <div class="container page-hero-inner">
+          <div>
+            <span class="eyebrow">Marketplace</span>
+            <h1>Fresh ingredients, direct from growers.</h1>
+            <p>Search seasonal picks and discover what your community is growing this week.</p>
+          </div>
+          <div class="page-crumbs">Home / Marketplace</div>
+        </div>
+      </section>
+
+      <!-- Product Search Filters Location -->
+      <section class="section">
+        <div class="container">
+          <div class="filter-panel card">
+            <div class="filter-row">
+              <input type="search" id="searchInput" class="input" placeholder="Search fruits, vegetables, pantry goods..." />
+              <select id="categorySelect" class="select">
+                <option value="all">All categories</option>
+              </select>
+              <select id="sortSelect" class="select">
+                <option value="featured">Featured</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+                <option value="rating">Top Rated</option>
+              </select>
+            </div>
+          </div>
+          <!-- Product Image -->
+          <div class="grid grid-4 marketplace-grid" id="productGrid">
+          <!-- Product Card -->
+            <article class="product-card"><div class="body"><h3>Golden Okra</h3><p>₱85 per bundle · Lucena</p><a href="../product-details/product-details.html?id=okra">View details</a></div></article>
+          <!-- Product Card -->
+            <article class="product-card"><div class="body"><h3>Native Rice</h3><p>₱120 per kilo · Quezon</p><a href="../product-details/product-details.html?id=native-rice">View details</a></div></article></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Site Footer -->
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <div class="brand" style="color: #fff; margin-bottom: 14px;">AniMo</div>
+            <p>Discover local. Support farmers. Create more.</p>
+          </div>
+          <div class="footer-column"><h4>Explore</h4><a href="../marketplace/marketplace.html">Marketplace</a><a href="../recipe-discovery/recipe-discovery.html">Recipe Discovery</a><a href="../home/home.html#local-map">Local Map</a></div>
+          <div class="footer-column"><h4>Community</h4><a href="../farmers/farmers.html">Farmers</a><a href="../home/home.html#bulletin-board">AniMo Bulletin</a><a href="../about/about.html">About AniMo</a></div>
+          <div class="footer-column"><h4>Account</h4><a href="../checkout/checkout.html">Checkout</a></div>
+        </div>
+        <div class="footer-bottom"><span>© 2026 AniMo</span><span>Built for local ingredients and stronger food systems.</span></div>
+      </div>
+    </footer>
+
+    
+    
+    
+    
+    
+  </body>
+</html>

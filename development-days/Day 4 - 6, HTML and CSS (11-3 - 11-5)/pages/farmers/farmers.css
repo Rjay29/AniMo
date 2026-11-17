@@ -1,0 +1,10 @@
+
+
+/* Image Dimension */
+.farmer-card .image-placeholder { min-height: 100px; }
+
+/* Surface Styling */
+.farmer-card .body > p strong { color: var(--dark-green); }
+
+/* Layout Dimension */
+.farmer-card .card-footer { align-items: flex-start; }

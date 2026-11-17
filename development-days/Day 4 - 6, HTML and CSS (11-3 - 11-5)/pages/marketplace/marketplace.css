@@ -1,0 +1,121 @@
+
+
+/* Layout Dimension */
+.filter-panel {
+  padding: 18px;
+}
+
+/* Layout Dimension */
+.filter-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr;
+  gap: 14px;
+}
+
+/* Layout Dimension */
+.availability-list { display: flex; flex-wrap: wrap; gap: 7px; margin: 12px 0; }
+
+/* Layout Dimension */
+.marketplace-grid {
+  margin-top: 24px;
+  grid-auto-rows: 1fr;
+  align-items: stretch;
+}
+
+/* Layout Dimension */
+.marketplace-product-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Image Dimension */
+.marketplace-product-card > .image-placeholder {
+  min-height: 122px;
+  height: 122px;
+  flex: 0 0 122px;
+}
+
+/* Layout Dimension */
+.marketplace-product-card > .body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+/* Layout Dimension */
+.marketplace-product-card .card-meta {
+  min-height: 1.3em;
+}
+
+/* Layout Dimension */
+.marketplace-product-card .card-meta > span {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* Layout Dimension */
+.marketplace-product-card h3 {
+  display: -webkit-box;
+  min-height: 2.4em;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* Layout Dimension */
+.marketplace-product-card .body > p {
+  display: -webkit-box;
+  min-height: 3em;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* Layout Dimension */
+.marketplace-product-card .availability-list {
+  min-height: 62px;
+  align-content: flex-start;
+}
+
+/* Layout Dimension */
+.marketplace-card-bottom {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+/* Layout Dimension */
+.marketplace-price {
+  grid-column: 1 / -1;
+  min-height: 1.5em;
+  display: flex;
+  align-items: center;
+}
+
+/* Text Dimension */
+.marketplace-product-card .marketplace-card-bottom .btn {
+  width: 100%;
+  height: 44px;
+  min-height: 44px;
+  padding: 0.5rem 0.25rem;
+  font-size: 0.9rem;
+  line-height: 1.2;
+  margin: 0;
+}
+
+/* Layout Dimension */
+.no-products { grid-column: 1 / -1; padding: 32px; text-align: center; }
+
+/* Responsive Breakpoint */
+@media (max-width: 700px) {
+
+  /* Layout Dimension */
+  .filter-row {
+    grid-template-columns: 1fr;
+  }
+}
