@@ -276,7 +276,7 @@ git commit -m "Stop tracking local databases"
         <img src="https://github.com/LazyAustin525.png" width="100px;" alt=""/>
       </a>
       <br />
-      <sub><b>LazyAustin525 (add full name)</b></sub>
+      <sub><b>Apolinar, Jev Austin A.</b></sub>
       <br />
       <sub><b>Your Role Here</b></sub>
       <br />
@@ -289,7 +289,7 @@ git commit -m "Stop tracking local databases"
         <img src="https://github.com/Nicojin.png" width="100px;" alt=""/>
       </a>
       <br />
-      <sub><b>Nicojin (add full name)</b></sub>
+      <sub><b>Fernandez, John Rommel P.</b></sub>
       <br />
       <sub><b>Your Role Here</b></sub>
       <br />
