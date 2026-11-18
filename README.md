@@ -108,37 +108,6 @@ Set both environment variables and restart. The admin account is created on star
 
 ---
 
-## 🔀 Flowchart (Sign-in and Access)
-
-```mermaid
-flowchart TD
-    A([Open AniMo]) --> B[Sign-in page]
-    B --> C{Account type?}
-    C -->|Customer| D[Register or sign in]
-    C -->|Administrator| E[Admin sign-in]
-    D --> F{Valid credentials?}
-    E --> F
-    F -->|No| B
-    F -->|Yes| G[Server creates session cookie<br/>HttpOnly, SameSite=Lax]
-    G --> H{Role}
-    H -->|Customer| I[Site pages:<br/>marketplace, profile, orders]
-    H -->|Administrator| J[/admin/ dashboard]
-```
-
----
-
-## 🧩 Architecture Diagram
-
-```mermaid
-flowchart LR
-    B["🌐 Browser"] -->|HTTP :8000| S["⚙️ Node.js server<br/>server.js"]
-    AD["🛠️ Admin dashboard<br/>/admin/"] --> S
-    S --> U[("users.sqlite<br/>accounts · sessions · orders")]
-    S --> L[("listings.sqlite<br/>products · farmers · recipes · meal kits")]
-    S --> A[("ai.sqlite<br/>assistant knowledge")]
-    S --> F["🖼️ shared/assets/<br/>listing + profile images"]
-```
-
 ### 📁 Project Structure
 
 ```text
