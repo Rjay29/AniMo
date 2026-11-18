@@ -270,16 +270,33 @@ git commit -m "Stop tracking local databases"
       <a href="https://github.com/Rjay29">
         <img src="https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white" />
       </a>
-      <br />
-      <a href="https://www.instagram.com/rj_iov/">
-        <img src="https://img.shields.io/badge/Instagram-E4405F?style=flat&logo=instagram&logoColor=white" />
+    </td>
+    <td align="center">
+      <a href="https://github.com/LazyAustin525">
+        <img src="https://github.com/LazyAustin525.png" width="100px;" alt=""/>
       </a>
       <br />
-      <a href="https://discordapp.com/users/551348088963465236">
-        <img src="https://img.shields.io/badge/Discord-5865F2?style=flat&logo=discord&logoColor=white" />
+      <sub><b>LazyAustin525 (add full name)</b></sub>
+      <br />
+      <sub><b>Your Role Here</b></sub>
+      <br />
+      <a href="https://github.com/LazyAustin525">
+        <img src="https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white" />
       </a>
     </td>
-    <!-- Copy the <td> block above for each teammate and swap in their GitHub username, name, role, and links. -->
+    <td align="center">
+      <a href="https://github.com/Nicojin">
+        <img src="https://github.com/Nicojin.png" width="100px;" alt=""/>
+      </a>
+      <br />
+      <sub><b>Nicojin (add full name)</b></sub>
+      <br />
+      <sub><b>Your Role Here</b></sub>
+      <br />
+      <a href="https://github.com/Nicojin">
+        <img src="https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white" />
+      </a>
+    </td>
   </tr>
 </table>
 
