@@ -1,19 +1,62 @@
-# AniMo local full-stack setup
+<div align="center">
 
-AniMo now runs through a small Node.js server. It serves the website, requires an account before opening site pages, and stores listings, user profiles, sessions, and orders in SQLite databases.
+![AniMo Logo](shared/assets/animo-logo.png)
 
-The Home page's farm-product and local-farm totals reflect the product and farmer listings returned by the catalog API.
+> A full-stack local marketplace for browsing farm products and farmers, discovering recipes and meal kits, placing demo orders, and managing everything from a private admin dashboard.
 
-## Requirements
+![HTML5](https://img.shields.io/badge/Frontend-HTML5-E34F26?logo=html5&logoColor=white)
+![CSS3](https://img.shields.io/badge/Frontend-CSS3-1572B6?logo=css3&logoColor=white)
+![JavaScript](https://img.shields.io/badge/Frontend-JavaScript-F7DF1E?logo=javascript&logoColor=111827)
+![Node.js](https://img.shields.io/badge/Backend-Node.js%2022.13%2B-339933?logo=nodedotjs&logoColor=white)
+![SQLite](https://img.shields.io/badge/Database-SQLite-003B57?logo=sqlite&logoColor=white)
+![Dependencies](https://img.shields.io/badge/npm%20packages-0-brightgreen)
+![License](https://img.shields.io/badge/License-Educational-lightgrey)
 
-- Node.js 22.13 or newer with the built-in `node:sqlite` module.
-- A modern browser.
+</div>
 
-No npm packages are required.
+---
 
-## Start AniMo on Windows
+## ✨ Features
 
-Open PowerShell in this project folder. Before the first start, set a private administrator username and password. Use a password with at least 12 characters:
+### 🔐 Accounts and Sessions
+- Create a customer account, sign in, and sign out.
+- Every site page requires an account; AniMo always starts at the **sign-in page**.
+- Passwords are hashed with **scrypt** and sessions use secure cookies.
+
+### 🛒 Marketplace
+- Browse **products, farmers, recipes, and meal kits**.
+- Home page totals for farm products and local farms come from the **catalog API**.
+- Demo checkout saves orders to the database (**no real payments**).
+
+### 👤 Profiles
+- Edit your profile name.
+- Upload or remove a profile picture.
+
+### 🛠️ Admin Dashboard
+- Add, edit, and remove products, farmers, recipes, and meal kits.
+- Upload listing photos.
+- Update customer **order statuses**.
+- Manage the help assistant's knowledge entries.
+
+### 🤖 Help Assistant
+- Answers questions using built-in help plus **enabled admin-managed entries**, matched by topic.
+- Fully local: **no external AI service is configured or called**.
+
+---
+
+## 🚀 Getting Started
+
+### Requirements
+- **Node.js 22.13+** (needs the built-in `node:sqlite` module)
+- A modern browser (Chrome, Edge, Firefox, Safari)
+- ✅ No npm packages. Nothing to `npm install`.
+
+### Run the app
+
+**1.** Open a terminal in the project folder and set a private admin username and a password of **12+ characters**.
+
+<details open>
+<summary><b>🪟 Windows (PowerShell)</b></summary>
 
 ```powershell
 $env:ANIMO_ADMIN_USERNAME = "your-admin-name"
@@ -21,35 +64,227 @@ $env:ANIMO_ADMIN_PASSWORD = "use-a-long-private-password"
 node server.js
 ```
 
-Open `http://127.0.0.1:8000` (or `http://127.0.0.1:8000/pages/login/login.html`). AniMo always starts at the sign-in page. Create a customer account, or use **Administrator? Sign in to the admin dashboard** with the configured administrator credentials. Opening `http://127.0.0.1:8000/admin/` while signed out also sends you to the sign-in page and returns administrators to the dashboard. Do not open `index.html` directly as a `file://` URL; login, logout, profiles, and database APIs require the Node.js server.
+</details>
 
-If you already initialized the database without administrator settings, set both environment variables and restart the server; it creates the administrator account on startup. If that username was previously registered as a customer, choose a different administrator username.
+<details>
+<summary><b>🍎 macOS / 🐧 Linux</b></summary>
 
-To stop the server, press **Ctrl+C** in its PowerShell window.
+```bash
+export ANIMO_ADMIN_USERNAME="your-admin-name"
+export ANIMO_ADMIN_PASSWORD="use-a-long-private-password"
+node server.js
+```
 
-## What is stored
+</details>
 
-The server creates three separate files in `data\`:
+**2.** Open **http://127.0.0.1:8000** (or `/pages/login/login.html`).
 
-- `users.sqlite` — usernames, scrypt password hashes, browser sessions, profile names and picture paths, and orders.
-- `listings.sqlite` — marketplace products, farmers, recipes, meal kits, and image paths. Built-in demo records are loaded the first time this database is created.
-- `ai.sqlite` — assistant knowledge entries managed in the administrator dashboard. The assistant uses matching enabled entries and built-in help; no external AI service is configured or called.
+**3.** Create a customer account, or click **"Administrator? Sign in to the admin dashboard"** and use your admin credentials.
 
-Back up the `data\` folder while the server is stopped. Keep it private; it contains personal order information. The files are ignored by Git.
+**4.** Stop the server with **Ctrl+C**.
 
-## Add or edit a listing
+> **Tip:** Never open `index.html` directly as a `file://` URL. Login, logout, profiles, and the database APIs all need the Node.js server running.
 
-Sign in as the configured administrator and open **`/admin/`**. The private page supports adding, editing, and removing products, farmers, recipes, and meal kits; photo uploads; changing customer order statuses; and adding, editing, enabling, or removing assistant knowledge entries. Listing photos are stored in their category folders under `shared\assets\` and their paths are saved in `listings.sqlite`. Users can upload or remove a profile picture from their profile page; those images are stored in `shared\assets\profiles\` and their paths in `users.sqlite`. Enabled assistant entries are matched to questions by topic.
+<details>
+<summary><b>🔁 Already initialized the database without admin settings?</b></summary>
 
-## Authentication and deployment notes
+Set both environment variables and restart. The admin account is created on startup. If that username was previously registered as a customer, pick a different admin username.
 
-- Passwords are **hashed**, not encrypted reversibly. AniMo uses Node's scrypt password key-derivation function with a separate random salt per user.
-- Sessions use random, `HttpOnly`, `SameSite=Lax` cookies; stored session tokens are hashed.
-- The included server binds only to `127.0.0.1` and is intended for local development/demo use.
-- Do not expose this development server directly to the internet. A public deployment needs HTTPS, secure server hosting, backups, monitoring, production-grade rate limiting, and a reviewed operational security setup.
-- Checkout records demo orders but does not process payments.
-- `ai.sqlite` is storage only; there is no AI API configured or called.
+</details>
 
-## Seven-day learning snapshots
+---
 
-The `development-days\` folder contains seven copies showing the project progression from HTML-only through the current connected local app. Login, registration, and the Admin dashboard first appear together on Day 4. Day 7 matches the current website. Each snapshot has a `README.md` with its launch instructions and intentionally unfinished areas; the Day 5 copy also has a short `FINALIZATION.md`. These are educational versions, not production deployments. Each Node-backed copy creates its own databases on first run.
+## 📸 Screenshots
+
+<!-- Replace these with your real screenshots. -->
+
+| Home | Marketplace |
+|------|-------------|
+| ![Home Page](docs/screenshots/home.png) | ![Marketplace](docs/screenshots/marketplace.png) |
+
+| Profile | Admin Dashboard |
+|---------|-----------------|
+| ![Profile](docs/screenshots/profile.png) | ![Admin Dashboard](docs/screenshots/admin.png) |
+
+---
+
+## 🔀 Flowchart (Sign-in and Access)
+
+```mermaid
+flowchart TD
+    A([Open AniMo]) --> B[Sign-in page]
+    B --> C{Account type?}
+    C -->|Customer| D[Register or sign in]
+    C -->|Administrator| E[Admin sign-in]
+    D --> F{Valid credentials?}
+    E --> F
+    F -->|No| B
+    F -->|Yes| G[Server creates session cookie<br/>HttpOnly, SameSite=Lax]
+    G --> H{Role}
+    H -->|Customer| I[Site pages:<br/>marketplace, profile, orders]
+    H -->|Administrator| J[/admin/ dashboard]
+```
+
+---
+
+## 🧩 Architecture Diagram
+
+```mermaid
+flowchart LR
+    B["🌐 Browser"] -->|HTTP :8000| S["⚙️ Node.js server<br/>server.js"]
+    AD["🛠️ Admin dashboard<br/>/admin/"] --> S
+    S --> U[("users.sqlite<br/>accounts · sessions · orders")]
+    S --> L[("listings.sqlite<br/>products · farmers · recipes · meal kits")]
+    S --> A[("ai.sqlite<br/>assistant knowledge")]
+    S --> F["🖼️ shared/assets/<br/>listing + profile images"]
+```
+
+### 📁 Project Structure
+
+```text
+AniMo/
+├── server.js               # Node.js server (site, APIs, auth)
+├── admin/                  # Private administrator dashboard
+│   ├── index.html
+│   ├── admin.css
+│   └── admin.js
+├── pages/                  # Site pages (e.g. pages/login/login.html)
+├── shared/assets/          # Listing photos (by category) and profiles/
+├── data/                   # SQLite databases (created on first run)
+└── development-days/       # Seven learning snapshots (Day 1 → Day 7)
+```
+
+---
+
+## 💾 Data Storage
+
+The server creates three separate databases in `data/`:
+
+| File | Contents |
+|------|----------|
+| `users.sqlite` | Usernames, scrypt password hashes, sessions, profile names and picture paths, orders |
+| `listings.sqlite` | Products, farmers, recipes, meal kits, image paths (demo records load on first creation) |
+| `ai.sqlite` | Assistant knowledge entries (storage only) |
+
+- SQLite may also create `*.sqlite-shm` and `*.sqlite-wal` files while running. This is normal.
+- **Back up** by stopping the server, then copying the whole `data/` folder.
+- ⚠️ `data/` contains personal order information. **Keep it private and out of Git.**
+
+---
+
+## 🛠️ Admin Dashboard
+
+Sign in with the configured admin account and open **`/admin/`**.
+
+| Tool | What you can do |
+|------|-----------------|
+| 📦 Listings | Add, edit, and remove products, farmers, recipes, and meal kits |
+| 📷 Photos | Upload listing photos (saved under `shared/assets/` by category) |
+| 🧾 Orders | Change customer order statuses |
+| 🤖 Assistant | Add, edit, enable, or remove knowledge entries |
+
+Customer profile pictures are managed by users on their own profile page and saved in `shared/assets/profiles/`.
+
+---
+
+## 🏗️ Tech Stack
+
+- **Backend:** Node.js (built-in HTTP server, `node:sqlite`)
+- **Frontend:** HTML, CSS, Vanilla JavaScript
+- **Data Storage:** SQLite (`users.sqlite`, `listings.sqlite`, `ai.sqlite`)
+- **Auth:** scrypt password hashing, hashed session tokens in `HttpOnly` cookies
+
+---
+
+## 🔐 Security Notes
+
+- Passwords are **hashed**, not reversibly encrypted, with a random salt per user.
+- The server binds only to `127.0.0.1` and is meant for **local development and demos**.
+- 🚫 **Do not expose this server to the internet.** A public deployment needs HTTPS, secure hosting, backups, monitoring, production-grade rate limiting, and a reviewed security setup.
+- Checkout records demo orders and **does not process payments**.
+
+---
+
+## 📚 Seven-Day Learning Snapshots
+
+The `development-days/` folder shows the project growing from HTML-only to the current connected local app.
+
+```mermaid
+flowchart LR
+    D1["Day 1<br/>HTML only"] --> D2["Day 2"] --> D3["Day 3"] --> D4["Day 4<br/>Login, registration<br/>+ Admin appear"] --> D5["Day 5<br/>+ FINALIZATION.md"] --> D6["Day 6"] --> D7["Day 7<br/>Matches current site"]
+```
+
+- Each snapshot has its own `README.md` with launch steps and intentionally unfinished areas.
+- Each Node-backed copy creates **its own databases** on first run.
+- These are educational versions, **not production deployments**.
+
+---
+
+## 🧯 Troubleshooting
+
+| Problem | Fix |
+|---------|-----|
+| `Cannot find module 'node:sqlite'` | Upgrade to Node.js 22.13 or newer |
+| Login or profile pages don't work | Use `http://127.0.0.1:8000`, not a `file://` path |
+| Can't sign in as admin | Set both env variables in the same terminal before `node server.js`; password must be 12+ characters |
+| Admin username rejected | It may already be a customer account; choose another |
+| Port 8000 in use | Stop the other process, then restart |
+
+---
+
+## 🙌 Git Hygiene
+
+Keep local databases out of the repo by adding this to `.gitignore`:
+
+```gitignore
+data/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+```
+
+If they are already tracked, untrack them while keeping your local copies:
+
+```bash
+git rm -r --cached data/
+git commit -m "Stop tracking local databases"
+```
+
+> Files pushed earlier remain in Git history even after deletion.
+
+---
+
+## 👥 Team
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/Rjay29">
+        <img src="https://github.com/Rjay29.png" width="100px;" alt=""/>
+      </a>
+      <br />
+      <sub><b>Arazula, Rjay D.</b></sub>
+      <br />
+      <sub><b>Your Role Here</b></sub>
+      <br />
+      <a href="https://github.com/Rjay29">
+        <img src="https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white" />
+      </a>
+      <br />
+      <a href="https://www.instagram.com/rj_iov/">
+        <img src="https://img.shields.io/badge/Instagram-E4405F?style=flat&logo=instagram&logoColor=white" />
+      </a>
+      <br />
+      <a href="https://discordapp.com/users/551348088963465236">
+        <img src="https://img.shields.io/badge/Discord-5865F2?style=flat&logo=discord&logoColor=white" />
+      </a>
+    </td>
+    <!-- Copy the <td> block above for each teammate and swap in their GitHub username, name, role, and links. -->
+  </tr>
+</table>
+
+---
+
+## 📝 Notes
+
+> AniMo is a learning project built to demonstrate a connected full-stack web app (authentication, databases, and an admin dashboard) without external dependencies.
