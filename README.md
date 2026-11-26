@@ -1,6 +1,7 @@
 <div align="center">
 
-![AniMo Logo](shared/assets/animo-logo.png)
+![AniMo Logo](<img width="776" height="776" alt="916010826_1182230194232371_6320971466993799556_n" src="https://github.com/user-attachments/assets/76acc401-5937-4ee7-90e7-8059ca349cd9" />
+)
 
 > A full-stack local marketplace for browsing farm products and farmers, discovering recipes and meal kits, placing demo orders, and managing everything from a private admin dashboard.
 
