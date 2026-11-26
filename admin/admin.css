@@ -217,3 +217,24 @@
   /* Element Styling */
   .assistant-data-heading { flex-direction: column; }
 }
+/* Verification Queue */
+.farmer-application-row { display: flex; justify-content: space-between; gap: 20px; padding: 18px 0; border-top: 1px solid rgba(49,90,75,.18); }
+.farmer-application-row h3 { margin: 0 0 8px; }
+.application-documents { display: flex; flex-wrap: wrap; gap: 10px; }
+.application-documents a { font-weight: 700; text-decoration: underline; }
+.farmer-review-state { display: inline-flex; padding: 3px 8px; border-radius: 999px; background: #fff0d6; color: #704700; font-size: .75rem; font-weight: 750; }
+.farmer-review-state.approved { background: #e2f1e4; color: #215531; }
+
+/* Verification Queue Small Screens */
+@media (max-width: 680px) {
+  .farmer-application-row { flex-direction: column; }
+}
+
+/* Dark mode overrides */
+:root[data-theme="dark"] .admin-status.error { color: #ff8a80; }
+:root[data-theme="dark"] .admin-photo-preview,
+:root[data-theme="dark"] .listing-image-empty { background: rgba(255,255,255,0.04); border-color: var(--border-strong); color: var(--muted); }
+:root[data-theme="dark"] .farmer-review-state { background: rgba(240,195,106,0.16); color: #f0c36a; }
+:root[data-theme="dark"] .admin-form,
+:root[data-theme="dark"] .admin-panel { background: var(--card); border-color: var(--border); }
+:root[data-theme="dark"] .admin-list-row { border-top-color: var(--border); }

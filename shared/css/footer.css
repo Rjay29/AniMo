@@ -1,62 +1,61 @@
+/* Site footer */
 
-
-/* Layout Dimension */
 .site-footer {
-  background: var(--dark-green);
-  color: rgba(255,255,255,0.8);
-  padding: 52px 0 26px;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(191, 209, 138, 0.12), transparent 24rem),
+    linear-gradient(180deg, #1b4338 0%, #183c32 100%);
+  color: rgba(255, 253, 247, 0.82);
+  padding: 40px 0 22px;
+  margin-top: auto;
 }
 
-/* Layout Dimension */
 .footer-grid {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr 1fr;
-  gap: 26px;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr;
+  gap: 24px;
 }
 
-/* Surface Styling */
-.footer-brand p,
-.footer-column p,
-.footer-column a {
-  color: #D1D8CE;
+.footer-brand .brand { color: #fffdf7; }
+.footer-brand p {
+  margin: 14px 0 0;
+  color: rgba(241, 244, 236, 0.78);
+  max-width: 28ch;
 }
 
-/* Layout Dimension */
 .footer-column h4 {
-  margin: 0 0 18px;
-  color: var(--white);
+  margin: 0 0 16px;
+  color: #fffdf7;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
-/* Layout Dimension */
 .footer-column a {
   display: block;
   margin-bottom: 10px;
+  color: rgba(241, 244, 236, 0.78);
+  transition: color 0.2s ease, transform 0.2s ease;
 }
+.footer-column a:hover { color: #e8aa45; transform: translateX(2px); }
 
-/* Text Dimension */
 .footer-bottom {
-  margin-top: 26px;
-  padding-top: 18px;
-  border-top: 1px solid rgba(255,255,255,0.12);
-  font-size: 0.9rem;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 0.85rem;
   display: flex;
   justify-content: space-between;
-  gap: 16px;
+  gap: 14px;
+  color: rgba(241, 244, 236, 0.7);
 }
 
-/* Responsive Breakpoint */
 @media (max-width: 900px) {
-
-  /* Layout Dimension */
   .footer-grid { grid-template-columns: 1fr 1fr; }
 }
 
-/* Responsive Breakpoint */
 @media (max-width: 640px) {
-
-  /* Layout Dimension */
-  .footer-grid { grid-template-columns: 1fr; }
-
-  /* Layout Dimension */
-  .footer-bottom { display: block; }
+  .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+  .footer-bottom { flex-direction: column; }
 }

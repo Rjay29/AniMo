@@ -6,13 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AniMo Admin | Dashboard</title>
     <!-- Stylesheet Reference -->
-    <link rel="stylesheet" href="../shared/css/global.css" />
+    <link rel="stylesheet" href="/shared/css/global.css" />
     <!-- Stylesheet Reference -->
-    <link rel="stylesheet" href="../shared/css/components.css" />
+    <link rel="stylesheet" href="/shared/css/components.css" />
     <!-- Stylesheet Reference -->
-    <link rel="stylesheet" href="./admin.css" />
+    <link rel="stylesheet" href="/admin/admin.css" />
     <!-- Page Script -->
-    <script src="../shared/js/api.js" defer></script>
+    <script src="/shared/js/theme-init.js"></script>
+    <script src="/shared/js/api.js" defer></script>
   </head>
   <body class="site-shell">
     <!-- Site Header -->
@@ -21,6 +22,7 @@
       <!-- Image Asset -->
         <img class="brand-logo" src="/shared/assets/logo.png" alt="" /><span class="brand-wordmark">AniMo <small>Admin</small></span></a>
       <div class="admin-header-actions">
+        <button class="page-theme-toggle" type="button" data-theme-toggle aria-label="Switch to dark mode"></button>
         <span id="adminIdentity"></span>
         <a class="btn btn-secondary" href="/pages/home/home.html">View website</a>
         <button id="adminLogout" class="btn btn-secondary" type="button">Log out</button>
@@ -38,6 +40,7 @@
       <!-- Primary Navigation -->
       <nav class="admin-tabs" aria-label="Admin sections">
         <button type="button" class="admin-tab active" data-tab="listings">Listings</button>
+        <button type="button" class="admin-tab" data-tab="farmerApplications">Farmer applications</button>
         <button type="button" class="admin-tab" data-tab="orders">Orders</button>
         <button type="button" class="admin-tab" data-tab="assistantData">Assistant data</button>
       </nav>
@@ -75,6 +78,13 @@
             </div>
             <div id="listingGroups" class="listing-groups"></div>
           </section>
+        </div>
+      </section>
+      <!-- Pending Farmer Applications -->
+      <section id="farmerApplicationsSection" class="admin-section" hidden>
+        <div class="card admin-panel">
+          <div class="admin-panel-title"><div><span class="eyebrow">Seller verification</span><h2>Farmer applications</h2></div><button id="refreshFarmerApplications" class="btn btn-secondary" type="button">Refresh</button></div>
+          <div id="farmerApplications" class="listing-groups"></div>
         </div>
       </section>
       <!-- Orderssection -->
@@ -123,6 +133,7 @@
       </section>
     </main>
     <!-- Page Script -->
-    <script src="./admin.js"></script>
+    <script src="/shared/js/utilities.js"></script>
+    <script src="/admin/admin.js"></script>
   </body>
 </html>

@@ -1,40 +1,33 @@
-
-
-/* Layout Dimension */
-.profile-layout {
-  display: grid;
-  grid-template-columns: 0.9fr 1.1fr;
-  gap: 24px;
+﻿/* Farmer profile */
+.profile-layout { display: grid; grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr); gap: clamp(20px, 3vw, 32px); align-items: start; }
+.profile-card .farmer-profile-image,
+.profile-card .catalog-card-image.farmer-profile-image {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  height: auto;
+  max-height: 460px;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  display: block;
 }
-
-/* Surface Styling */
-.profile-card,
-.profile-detail {
-  background: var(--white);
-  border-radius: 18px;
-  overflow: hidden;
-  border: 1px solid rgba(41,45,39,0.06);
-  box-shadow: var(--shadow);
+.profile-detail h1 { margin: 8px 0 12px; font-family: Georgia, "Times New Roman", serif; font-size: clamp(2rem, 4vw, 2.8rem); line-height: 1.15; color: var(--dark-green); }
+.profile-detail p, .profile-detail li { color: var(--muted); line-height: 1.7; }
+.profile-meta { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.profile-detail .badges { display: flex; gap: 10px; flex-wrap: wrap; margin: 14px 0 4px; }
+.profile-detail h3 { margin: 24px 0 12px; color: var(--dark-green); }
+.profile-detail ul { padding-left: 20px; margin: 0 0 20px; }
+.profile-detail li { margin: 8px 0; }
+.profile-detail .btn { margin-right: 10px; margin-top: 8px; }
+.farmer-listings-section { margin-top: 32px; }
+.farmer-listings-section h2 { margin-bottom: 18px; color: var(--dark-green); }
+@media (max-width: 860px) {
+  .profile-layout { grid-template-columns: 1fr; gap: 18px; }
+  .profile-card .farmer-profile-image,
+  .profile-card .catalog-card-image.farmer-profile-image { max-height: 340px; }
 }
-
-/* Image Dimension */
-.farmer-profile-image { min-height: clamp(230px, 30vw, 340px); border-radius: 0; }
-
-/* Image Dimension */
-.profile-card .catalog-card-image { height: clamp(230px, 30vw, 340px); }
-
-/* Layout Dimension */
-.profile-detail { padding: 22px; }
-
-/* Layout Dimension */
-.profile-detail h1 { margin: 8px 0 10px; }
-
-/* Layout Dimension */
-.profile-meta { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
-
-/* Layout Dimension */
-.badges { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0; }
-
-/* Layout Dimension */
-/* Responsive Breakpoint */
-@media (max-width: 900px) { .profile-layout { grid-template-columns: 1fr; } }
+@media (max-width: 640px) {
+  .profile-detail h1 { font-size: clamp(1.65rem, 6vw, 2.2rem); }
+  .profile-card .farmer-profile-image,
+  .profile-card .catalog-card-image.farmer-profile-image { max-height: 260px; }
+  .profile-detail .btn { width: 100%; margin-right: 0; }
+}

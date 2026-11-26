@@ -1,22 +1,31 @@
-
-
-/* Layout Dimension */
-.auth-shell { display: flex; justify-content: center; }
-
-/* Layout Dimension */
-.auth-card { width: min(500px, 100%); padding: 30px; display: grid; gap: 16px; }
-
-/* Layout Dimension */
-.auth-card h1 { margin: 0; }
-
-/* Layout Dimension */
-.auth-card small { margin-top: -12px; color: var(--muted); }
-
-/* Layout Dimension */
-.auth-status { min-height: 1.4em; margin: 0; color: var(--dark-green); }
-
-/* Surface Styling */
-.auth-status.error { color: #8a3026; }
-
-/* Surface Styling */
-.auth-card a { color: var(--dark-green); font-weight: 700; text-decoration: underline; }
+/* Register */
+.auth-shell { display: flex; justify-content: center; align-items: flex-start; min-height: calc(100vh - 80px); }
+.auth-card {
+  width: min(620px, 100%); padding: clamp(26px, 4vw, 36px); display: grid; gap: 16px;
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+  background: var(--card); backdrop-filter: blur(8px);
+}
+.auth-brand { display: inline-flex; align-items: center; gap: 12px; font-size: 1.5rem; font-weight: 800; color: var(--dark-green); }
+.auth-brand img { width: 44px; height: 44px; object-fit: contain; }
+.auth-card h1 { margin: 4px 0 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp(1.8rem, 4vw, 2.3rem); line-height: 1.1; }
+.auth-card small { margin-top: -8px; color: var(--muted); }
+.auth-card label { display: grid; gap: 6px; font-weight: 600; color: var(--dark-green); }
+.auth-status { min-height: 1.4em; margin: 0; color: var(--dark-green); font-weight: 500; }
+.auth-status.error { color: #b4544a; }
+:root[data-theme="dark"] .auth-status.error { color: #ff8a80; }
+:root[data-theme="dark"] .farmer-fields { background: linear-gradient(180deg, rgba(191, 209, 138, .1), rgba(191, 209, 138, .04)); border-color: var(--border); }
+.auth-card a { color: var(--dark-green); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+.otp-actions { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; }
+.otp-actions label { flex: 1 1 190px; }
+.farmer-fields { display: grid; gap: 14px; padding: 18px; border: 1px solid rgba(49, 90, 75, .18); border-radius: 16px; background: linear-gradient(180deg, rgba(191, 209, 138, .16), rgba(191, 209, 138, .08)); }
+.farmer-fields h2, .farmer-fields p { margin: 0; }
+.farmer-fields h2 { font-size: 1.2rem; color: var(--dark-green); font-family: Georgia, "Times New Roman", serif; }
+.farmer-fields p, .auth-disclaimer { color: var(--muted); font-size: .9rem; }
+.terms-check { display: flex !important; align-items: start; gap: 10px; font-weight: 500 !important; }
+.terms-check input { width: 18px; height: 18px; margin-top: 3px; flex: 0 0 auto; accent-color: var(--green); }
+.auth-card [hidden] { display: none; }
+@media (max-width: 520px) {
+  .auth-card { padding: 22px; }
+  .otp-actions { align-items: stretch; }
+  .otp-actions > button { flex: 1 1 100%; }
+}

@@ -13,6 +13,8 @@
     <!-- Stylesheet Reference -->
     <link rel="stylesheet" href="../../shared/css/footer.css" />
     <!-- Stylesheet Reference -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <!-- Stylesheet Reference -->
     <link rel="stylesheet" href="./home.css" />
   </head>
   <body class="site-shell">
@@ -47,7 +49,7 @@
             <div class="hero-stat-grid">
               <div class="stat-box"><strong id="product-listing-count" aria-live="polite">—</strong><span>Farm products</span></div>
               <div class="stat-box"><strong id="farmer-listing-count" aria-live="polite">—</strong><span>Local farms</span></div>
-              <div class="stat-box"><strong>5</strong><span>Featured this week</span></div>
+              <div class="stat-box"><strong id="featured-listing-count" aria-live="polite">—</strong><span>Featured this week</span></div>
             </div>
           </div>
           <div class="hero-panel">
@@ -72,10 +74,10 @@
           <!-- Seasonal Picks -->
           <section class="board-block" aria-labelledby="seasonal-title">
             <div class="section-heading">
-              <div><h3 id="seasonal-title">Seasonal picks: Top 5 ingredients this week</h3><p>Five ingredients to discover from local growers.</p></div>
+              <div><h3 id="seasonal-title">Top ingredients this week</h3><p id="featured-description">Ranking is based on verified AniMo order counts; products need at least 10 orders.</p></div>
               <a href="../marketplace/marketplace.html" class="btn btn-secondary">Shop all ingredients</a>
             </div>
-            <div class="grid grid-3" id="featured-products"></div>
+            <div class="grid grid-3" id="featured-products"><article class="skeleton-card" aria-hidden="true"><div class="skeleton-img" style="height:140px"></div><div class="skeleton-body"><div class="skeleton-line w40"></div><div class="skeleton-line h16 w80"></div><div class="skeleton-line"></div><div class="skeleton-line w60"></div><div class="skeleton-row"><div class="skeleton-pill"></div><div class="skeleton-pill"></div></div><div class="skeleton-row" style="justify-content:space-between;margin-top:4px"><div class="skeleton-line w40 h16"></div><div class="skeleton-btn"></div></div></div></article><article class="skeleton-card" aria-hidden="true"><div class="skeleton-img" style="height:140px"></div><div class="skeleton-body"><div class="skeleton-line w40"></div><div class="skeleton-line h16 w80"></div><div class="skeleton-line"></div><div class="skeleton-line w60"></div><div class="skeleton-row"><div class="skeleton-pill"></div><div class="skeleton-pill"></div></div><div class="skeleton-row" style="justify-content:space-between;margin-top:4px"><div class="skeleton-line w40 h16"></div><div class="skeleton-btn"></div></div></div></article><article class="skeleton-card" aria-hidden="true"><div class="skeleton-img" style="height:140px"></div><div class="skeleton-body"><div class="skeleton-line w40"></div><div class="skeleton-line h16 w80"></div><div class="skeleton-line"></div><div class="skeleton-line w60"></div><div class="skeleton-row"><div class="skeleton-pill"></div><div class="skeleton-pill"></div></div><div class="skeleton-row" style="justify-content:space-between;margin-top:4px"><div class="skeleton-line w40 h16"></div><div class="skeleton-btn"></div></div></div></article></div>
           </section>
 
           <!-- Recipe Highlights -->
@@ -84,7 +86,7 @@
               <div><h3 id="top-recipes-title">Top recipes of the week</h3><p>Ideas for making more of local ingredients.</p></div>
               <a href="../recipe-discovery/recipe-discovery.html" class="btn btn-secondary">Discover recipes</a>
             </div>
-            <div class="grid grid-3" id="recipe-cards"></div>
+            <div class="grid grid-3" id="recipe-cards"><article class="skeleton-card" aria-hidden="true"><div class="skeleton-img" style="height:140px"></div><div class="skeleton-body"><div class="skeleton-line w40"></div><div class="skeleton-line h16 w80"></div><div class="skeleton-line"></div><div class="skeleton-line w60"></div><div class="skeleton-row"><div class="skeleton-pill"></div><div class="skeleton-pill"></div></div><div class="skeleton-row" style="justify-content:space-between;margin-top:4px"><div class="skeleton-line w40 h16"></div><div class="skeleton-btn"></div></div></div></article><article class="skeleton-card" aria-hidden="true"><div class="skeleton-img" style="height:140px"></div><div class="skeleton-body"><div class="skeleton-line w40"></div><div class="skeleton-line h16 w80"></div><div class="skeleton-line"></div><div class="skeleton-line w60"></div><div class="skeleton-row"><div class="skeleton-pill"></div><div class="skeleton-pill"></div></div><div class="skeleton-row" style="justify-content:space-between;margin-top:4px"><div class="skeleton-line w40 h16"></div><div class="skeleton-btn"></div></div></div></article><article class="skeleton-card" aria-hidden="true"><div class="skeleton-img" style="height:140px"></div><div class="skeleton-body"><div class="skeleton-line w40"></div><div class="skeleton-line h16 w80"></div><div class="skeleton-line"></div><div class="skeleton-line w60"></div><div class="skeleton-row"><div class="skeleton-pill"></div><div class="skeleton-pill"></div></div><div class="skeleton-row" style="justify-content:space-between;margin-top:4px"><div class="skeleton-line w40 h16"></div><div class="skeleton-btn"></div></div></div></article></div>
           </section>
 
           <!-- Featured Meal Kits -->
@@ -93,7 +95,7 @@
               <div><h3 id="top-packages-title">Top food packages</h3><p>Everything you need for a simple local meal.</p></div>
               <a href="../recipe-packages/recipe-packages.html" class="btn btn-secondary">Browse meal kits</a>
             </div>
-            <div class="grid grid-3" id="package-cards"></div>
+            <div class="grid grid-3" id="package-cards"><article class="skeleton-card" aria-hidden="true"><div class="skeleton-img" style="height:140px"></div><div class="skeleton-body"><div class="skeleton-line w40"></div><div class="skeleton-line h16 w80"></div><div class="skeleton-line"></div><div class="skeleton-line w60"></div><div class="skeleton-row"><div class="skeleton-pill"></div><div class="skeleton-pill"></div></div><div class="skeleton-row" style="justify-content:space-between;margin-top:4px"><div class="skeleton-line w40 h16"></div><div class="skeleton-btn"></div></div></div></article><article class="skeleton-card" aria-hidden="true"><div class="skeleton-img" style="height:140px"></div><div class="skeleton-body"><div class="skeleton-line w40"></div><div class="skeleton-line h16 w80"></div><div class="skeleton-line"></div><div class="skeleton-line w60"></div><div class="skeleton-row"><div class="skeleton-pill"></div><div class="skeleton-pill"></div></div><div class="skeleton-row" style="justify-content:space-between;margin-top:4px"><div class="skeleton-line w40 h16"></div><div class="skeleton-btn"></div></div></div></article><article class="skeleton-card" aria-hidden="true"><div class="skeleton-img" style="height:140px"></div><div class="skeleton-body"><div class="skeleton-line w40"></div><div class="skeleton-line h16 w80"></div><div class="skeleton-line"></div><div class="skeleton-line w60"></div><div class="skeleton-row"><div class="skeleton-pill"></div><div class="skeleton-pill"></div></div><div class="skeleton-row" style="justify-content:space-between;margin-top:4px"><div class="skeleton-line w40 h16"></div><div class="skeleton-btn"></div></div></div></article></div>
           </section>
         </div>
       </section>
@@ -105,7 +107,7 @@
             <div><span class="eyebrow">Meet the growers</span><h2>Farmers building better food systems</h2></div>
             <a href="../farmers/farmers.html" class="btn btn-secondary">View farmers</a>
           </div>
-          <div class="grid grid-3" id="farmer-cards"></div>
+          <div class="grid grid-3" id="farmer-cards"><article class="skeleton-card" aria-hidden="true"><div class="skeleton-img" style="height:140px"></div><div class="skeleton-body"><div class="skeleton-line w40"></div><div class="skeleton-line h16 w80"></div><div class="skeleton-line"></div><div class="skeleton-line w60"></div><div class="skeleton-row"><div class="skeleton-pill"></div><div class="skeleton-pill"></div></div><div class="skeleton-row" style="justify-content:space-between;margin-top:4px"><div class="skeleton-line w40 h16"></div><div class="skeleton-btn"></div></div></div></article><article class="skeleton-card" aria-hidden="true"><div class="skeleton-img" style="height:140px"></div><div class="skeleton-body"><div class="skeleton-line w40"></div><div class="skeleton-line h16 w80"></div><div class="skeleton-line"></div><div class="skeleton-line w60"></div><div class="skeleton-row"><div class="skeleton-pill"></div><div class="skeleton-pill"></div></div><div class="skeleton-row" style="justify-content:space-between;margin-top:4px"><div class="skeleton-line w40 h16"></div><div class="skeleton-btn"></div></div></div></article><article class="skeleton-card" aria-hidden="true"><div class="skeleton-img" style="height:140px"></div><div class="skeleton-body"><div class="skeleton-line w40"></div><div class="skeleton-line h16 w80"></div><div class="skeleton-line"></div><div class="skeleton-line w60"></div><div class="skeleton-row"><div class="skeleton-pill"></div><div class="skeleton-pill"></div></div><div class="skeleton-row" style="justify-content:space-between;margin-top:4px"><div class="skeleton-line w40 h16"></div><div class="skeleton-btn"></div></div></div></article></div>
         </div>
       </section>
 
@@ -113,39 +115,27 @@
       <section class="section local-map-section" id="local-map">
         <div class="container">
           <div class="section-heading">
-            <div><span class="eyebrow">Explore nearby</span><h2>Find ingredients around a place</h2></div>
+            <div><span class="eyebrow">Explore nearby</span><h2>Find Philippine sellers and ingredients</h2></div>
           </div>
           <div class="map-controls card">
-            <label class="sr-only" for="mapSearch">Search for a town, city, or province</label>
-            <input id="mapSearch" class="input" type="search" list="mapLocations" placeholder="Search a town, city, or province..." />
-            <datalist id="mapLocations"></datalist>
+            <label class="sr-only" for="mapSearch">Search for a place in the Philippines</label>
+            <input id="mapSearch" class="input" type="search" placeholder="Search a city, town, or province in the Philippines..." autocomplete="off" />
             <button id="mapSearchButton" class="btn btn-primary" type="button">Search location</button>
-            <button id="locateButton" class="btn btn-secondary" type="button">Pin my location</button>
-            <button id="addPinButton" class="btn btn-secondary" type="button" aria-pressed="false">Add a map pin</button>
+            <button id="locateButton" class="btn btn-secondary" type="button">Use my location</button>
+            <button id="clearRouteButton" class="btn btn-secondary" type="button">Clear route</button>
           </div>
-          <p id="mapStatus" class="map-status" aria-live="polite">Search a place, use your location, or choose “Add a map pin” and click on the map.</p>
+          <p id="mapStatus" class="map-status" aria-live="polite">Search a Philippine location, use your location, or select a seller pin to view details.</p>
           <div class="map-layout">
-            <div class="map-surface" id="mapSurface" role="application" aria-label="Sample local ingredient map">
-              <!-- Icon Placeholder -->
-              <button class="map-pin map-pin-one" type="button" aria-label="Lucena, Quezon farm location">
-              <!-- Image Asset -->
-                <img src="/shared/assets/icons/map_pin.png" alt="" /></button>
-              <button class="map-pin map-pin-two" type="button" aria-label="Bacolod, Negros farm location">
-              <!-- Image Asset -->
-                <img src="/shared/assets/icons/map_pin.png" alt="" /></button>
-              <button class="map-pin map-pin-three" type="button" aria-label="Cagayan de Oro farm location">
-              <!-- Image Asset -->
-                <img src="/shared/assets/icons/map_pin.png" alt="" /></button>
-            </div>
-            <!-- Nearby Listings -->
+            <div class="map-surface card" id="mapSurface" aria-label="Philippines local seller map"></div>
             <aside class="nearby-panel card">
-              <h3 id="nearbyTitle">Local ingredients</h3>
-              <p id="nearbyDescription">Pick a location to see sample ingredients from nearby producers.</p>
-              <div id="nearbyProducts" class="nearby-list"></div>
+              <h3 id="nearbyTitle">Local sellers</h3>
+              <p id="nearbyDescription">Seller pins are loaded from AniMo records and limited to locations within the Philippines.</p>
+              <div id="nearbyProducts" class="nearby-list" role="list" aria-label="Local sellers. Use arrow keys or Page Up and Page Down to scroll." tabindex="0"><div class="skeleton-card" aria-hidden="true" style="padding:14px;display:grid;gap:10px"><div class="skeleton-line" style="width:70%;height:14px"></div><div class="skeleton-line" style="width:100%;height:12px"></div><div class="skeleton-line" style="width:55%;height:12px"></div></div></div>
             </aside>
           </div>
         </div>
       </section>
+
     </main>
 
     <!-- Site Footer -->
@@ -153,14 +143,14 @@
       <div class="container">
         <div class="footer-grid">
           <div class="footer-brand">
-            <div class="brand footer-brand-mark">AniMo</div>
-            <p>Discover local. Support farmers. Create more.</p>
+            <a href="../home/home.html" class="brand" aria-label="AniMo Home">AniMo</a>
+            <p>Discover local produce, meet Filipino growers, and bring fresher ingredients to every meal.</p>
           </div>
-          <div class="footer-column"><h4>Explore</h4><a href="../marketplace/marketplace.html">Marketplace</a><a href="../recipe-discovery/recipe-discovery.html">Recipe Discovery</a><a href="#local-map">Local Map</a></div>
-          <div class="footer-column"><h4>Community</h4><a href="../farmers/farmers.html">Farmers</a><a href="#bulletin-board">AniMo Bulletin</a><a href="../about/about.html">About AniMo</a></div>
-          <div class="footer-column"><h4>Account</h4><a href="../login/login.html">Login</a><a href="../register/register.html">Register</a><a href="../checkout/checkout.html">Checkout</a></div>
+          <div class="footer-column"><h4>Explore</h4><a href="../marketplace/marketplace.html">Marketplace</a><a href="../recipe-discovery/recipe-discovery.html">Recipes</a><a href="../recipe-packages/recipe-packages.html">Meal Kits</a><a href="../home/home.html#local-map">Local Map</a></div>
+          <div class="footer-column"><h4>Community</h4><a href="../farmers/farmers.html">Farmers</a><a href="../home/home.html#bulletin-board">Bulletin Board</a><a href="../about/about.html">About AniMo</a></div>
+          <div class="footer-column"><h4>Account</h4><a href="../login/login.html">Login</a><a href="../register/register.html">Register</a><a href="../cart/cart.html">Cart</a><a href="../checkout/checkout.html">Checkout</a></div>
         </div>
-        <div class="footer-bottom"><span>© 2026 AniMo</span><span>Built for local ingredients and stronger food systems.</span></div>
+        <div class="footer-bottom"><span>&copy; 2026 AniMo</span><span>Built for local ingredients and stronger food systems.</span></div>
       </div>
     </footer>
 
@@ -172,6 +162,8 @@
     <script src="../../shared/js/cart.js"></script>
     <!-- Page Script -->
     <script src="../../shared/js/navigation.js"></script>
+    <!-- Page Script -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <!-- Page Script -->
     <script src="./home.js"></script>
   </body>

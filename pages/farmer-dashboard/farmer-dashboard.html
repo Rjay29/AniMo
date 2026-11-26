@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<!-- Verified Farmer Workspace -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Farmer Dashboard | AniMo</title>
+    <link rel="stylesheet" href="../../shared/css/global.css" />
+    <link rel="stylesheet" href="../../shared/css/navbar.css" />
+    <link rel="stylesheet" href="../../shared/css/components.css" />
+    <link rel="stylesheet" href="./farmer-dashboard.css" />
+  </head>
+  <body class="site-shell">
+    <!-- Site Header -->
+    <header class="site-header"><div class="container navbar"><a href="../home/home.html" class="brand">AniMo</a><nav class="nav-links" aria-label="Main navigation"></nav><div class="nav-actions"><a href="../cart/cart.html" class="icon-btn cart-pill"><span class="cart-count hidden">0</span></a><button class="btn btn-primary mobile-toggle" type="button">☰</button></div></div></header>
+    <!-- Farmer Workspace -->
+    <main class="container farmer-dashboard">
+      <header class="farmer-dashboard-heading"><span class="eyebrow">Verified seller workspace</span><h1>Manage your harvest</h1><p>Submit listings for administrator review, adjust stock, and coordinate order delivery.</p><a class="btn btn-secondary" href="../chat/chat.html">Open buyer chats</a></header>
+      <p id="farmerStatus" class="farmer-status" role="status" aria-live="polite"></p>
+      <div class="farmer-dashboard-grid">
+        <form id="farmerListingForm" class="card farmer-panel">
+          <h2 id="farmerFormHeading">Submit a listing</h2>
+          <label>Listing type<select class="select" name="type"><option value="products">Product</option><option value="recipes">Recipe</option><option value="recipePackages">Meal kit</option></select></label>
+          <label>Name<input class="input" name="name" required maxlength="140" /></label>
+          <label id="categoryField">Category<input class="input" name="category" /></label>
+          <div class="farmer-product-fields">
+            <label>Price (PHP)<input class="input" name="price" type="number" min=".01" step=".01" /></label>
+            <label>Stock<input class="input" name="stock" type="number" min="0" step="1" /></label>
+            <label>Unit<input class="input" name="unit" placeholder="bundle, jar, pack…" /></label>
+            <label>Farmer / farm name<input class="input" name="farm" required /></label>
+            <label>Location<input class="input" name="location" required /></label>
+          </div>
+          <label>Description<textarea class="textarea" name="description" rows="3" required></textarea></label>
+          <div class="farmer-recipe-fields" hidden>
+            <label>Preparation time<input class="input" name="time" placeholder="30 min" /></label>
+            <label>Difficulty<select class="select" name="difficulty"><option>Easy</option><option>Medium</option><option>Hard</option></select></label>
+            <label>Ingredients (one per line)<textarea class="textarea" name="ingredients" rows="3"></textarea></label>
+            <label>Steps (one per line)<textarea class="textarea" name="steps" rows="3"></textarea></label>
+          </div>
+          <fieldset class="farmer-products"><legend>Linked products / ingredients</legend><div id="farmerProductChoices"></div></fieldset>
+          <label>Photo (optional, JPG/PNG/WebP under 5 MB)<input class="input" name="image" type="file" accept="image/jpeg,image/png,image/webp" /></label>
+          <button class="btn btn-primary" type="submit">Submit for administrator review</button>
+          <button class="btn btn-secondary" type="button" id="cancelListingEdit" hidden>Cancel edit</button>
+        </form>
+        <section class="card farmer-panel">
+          <div class="farmer-panel-heading"><h2>Your listings</h2><button class="btn btn-secondary" id="refreshFarmerListings" type="button">Refresh</button></div>
+          <div id="farmerListings" class="farmer-list">
+          <article class="skeleton-card" aria-hidden="true"><div class="skeleton-line skeleton-line-lg"></div><div class="skeleton-line"></div><div class="skeleton-line skeleton-line-sm"></div></article>
+          <article class="skeleton-card" aria-hidden="true"><div class="skeleton-line skeleton-line-lg"></div><div class="skeleton-line"></div><div class="skeleton-line skeleton-line-sm"></div></article>
+        </div>
+        </section>
+      </div>
+      <section class="card farmer-panel farmer-orders-panel"><div class="farmer-panel-heading"><h2>Orders and delivery</h2><button class="btn btn-secondary" id="refreshFarmerOrders" type="button">Refresh</button></div><div id="farmerOrders" class="farmer-list">
+        <article class="skeleton-card" aria-hidden="true"><div class="skeleton-line skeleton-line-lg"></div><div class="skeleton-line"></div><div class="skeleton-line skeleton-line-sm"></div></article>
+        <article class="skeleton-card" aria-hidden="true"><div class="skeleton-line skeleton-line-lg"></div><div class="skeleton-line"></div><div class="skeleton-line skeleton-line-sm"></div></article>
+      </div></section>
+    </main>
+    <script src="../../shared/js/api.js"></script>
+    <script src="../../shared/js/sample-data.js"></script>
+    <script src="../../shared/js/utilities.js"></script>
+    <script src="../../shared/js/cart.js"></script>
+    <script src="../../shared/js/navigation.js"></script>
+    <script src="./farmer-dashboard.js"></script>
+  </body>
+</html>

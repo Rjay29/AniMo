@@ -12,19 +12,56 @@
     <!-- Stylesheet Reference -->
     <link rel="stylesheet" href="./login.css" />
     <!-- Page Script -->
+    <script src="../../shared/js/theme-init.js"></script>
     <script src="../../shared/js/api.js" defer></script>
   </head>
-  <body class="site-shell">
-    <!-- Main Content -->
-    <main>
-      <!-- Content Section -->
-      <section class="section">
-        <div class="container auth-shell">
-          <!-- Login Form -->
+  <body class="site-shell auth-body">
+    <button class="page-theme-toggle page-theme-toggle-fixed" type="button" data-theme-toggle aria-label="Switch to dark mode"></button>
+    <main class="auth-main">
+      <section class="auth-experience" aria-label="AniMo sign in">
+        <div class="auth-ambient" aria-hidden="true">
+          <span class="auth-orb auth-orb-a"></span>
+          <span class="auth-orb auth-orb-b"></span>
+          <span class="auth-orb auth-orb-c"></span>
+          <span class="auth-grid"></span>
+        </div>
+
+        <aside class="auth-story card">
+          <a class="brand auth-brand" href="../home/home.html" aria-label="AniMo Home">
+            <img src="/shared/assets/logo.png" alt="" />
+            <span>AniMo</span>
+          </a>
+          <p class="eyebrow">Fresh. Local. Trusted.</p>
+          <h2 class="auth-story-title">Your farm-to-table marketplace, <span>beautifully simple.</span></h2>
+          <p class="auth-story-copy">Sign in to discover local harvests, connect with farmers, plan recipes, and manage your orders in one warm, trusted place.</p>
+          <div class="auth-feature-list" aria-label="AniMo highlights">
+            <div class="auth-feature">
+              <span class="auth-feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2 4 5v6c0 5.25 3.4 9.74 8 11 4.6-1.26 8-5.75 8-11V5l-8-3Zm-1 14.59-3.3-3.3 1.42-1.41L11 12.76l4.88-4.89 1.42 1.42L11 16.59Z"/></svg></span>
+              <div><strong>Trusted local sellers</strong><span>Verified farmers and transparent product details.</span></div>
+            </div>
+            <div class="auth-feature">
+              <span class="auth-feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2Zm10 0c-1.1 0-1.99.9-1.99 2S15.9 22 17 22s2-.9 2-2-.9-2-2-2ZM7.17 14.75l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1 1 0 0 0 20 4H5.21l-.94-2H1v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96A2 2 0 0 0 7 17h12v-2H7.42a.25.25 0 0 1-.25-.25Z"/></svg></span>
+              <div><strong>Seamless shopping</strong><span>Marketplace, recipes, and meal kits in one flow.</span></div>
+            </div>
+            <div class="auth-feature">
+              <span class="auth-feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5A5.5 5.5 0 0 1 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3A5.5 5.5 0 0 1 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35Z"/></svg></span>
+              <div><strong>Community-first</strong><span>Support Filipino growers and eat with purpose.</span></div>
+            </div>
+          </div>
+        </aside>
+
+        <div class="auth-form-wrap">
           <form class="auth-card card" id="loginForm">
+            <a class="brand auth-brand auth-form-brand" href="../home/home.html" aria-label="AniMo Home"><img src="/shared/assets/logo.png" alt="" /><span>AniMo</span></a>
             <span class="eyebrow" id="loginEyebrow">Welcome to AniMo</span>
-            <h1 id="loginHeading">User Log In</h1>
-            <label>Username<input class="input" name="username" type="text" autocomplete="username" minlength="3" maxlength="32" required /></label>
+            <h1 id="loginHeading">Welcome back</h1>
+            <p class="auth-lead">Sign in to continue your AniMo experience.</p>
+            <fieldset class="account-choice" id="accountChoice"><legend>Continue as</legend>
+              <button type="button" class="account-choice-option active" data-account-type="customer" aria-pressed="true">Buyer</button>
+              <button type="button" class="account-choice-option" data-account-type="farmer" aria-pressed="false">Farmer</button>
+            </fieldset>
+            <input id="accountType" type="hidden" name="accountType" value="customer" />
+            <label>Username, email, or Philippine mobile number<input class="input" name="username" type="text" autocomplete="username" maxlength="254" required /></label>
             <label>Password
               <span class="password-field">
                 <input class="input" id="loginPassword" name="password" type="password" autocomplete="current-password" minlength="8" maxlength="256" required />
@@ -32,15 +69,14 @@
               </span>
             </label>
             <p class="auth-status" id="authStatus" role="status" aria-live="polite"></p>
-            <button class="btn btn-primary" type="submit">Log in</button>
-            <p id="registerLink">New to AniMo? <a href="../register/register.html">Create an account</a></p>
-            <p id="adminLoginLink" hidden><a href="/pages/login/login.html?next=%2Fadmin%2F">Admin Login</a></p>
-            <p id="userLoginLink" hidden><a href="/pages/login/login.html">User Log In</a></p>
+            <button class="btn btn-primary auth-submit" type="submit">Log in</button>
+            <p id="registerLink" class="auth-alt-link">New to AniMo? <a href="../register/register.html">Create an account</a></p>
+            <p id="userLoginLink" class="auth-alt-link" hidden><a href="/pages/login/login.html">User Log In</a></p>
           </form>
         </div>
       </section>
     </main>
-    <!-- Page Script -->
     <script src="./login.js"></script>
+    <script src="../../shared/js/ui-enhancements.js"></script>
   </body>
 </html>

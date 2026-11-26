@@ -36,6 +36,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         <li>Transparent pricing and direct farmer support</li>
       </ul>
       <a href="../farmers/farmers.html" class="btn btn-secondary">Back to farmers</a>
+      ${farmer.ownerId ? `<a href="../chat/chat.html?userId=${encodeURIComponent(farmer.ownerId)}" class="btn btn-primary">Message this farmer</a>` : ''}
     </div>
   `;
+  const products = window.aniMoData.products.filter((product) => (
+    product.farm === farmer.name || (farmer.ownerId && product.ownerId === farmer.ownerId)
+  ));
+  const productGrid = document.getElementById('farmerProductGrid');
+  productGrid.innerHTML = products.length ? products.map((product) => `
+    <article class="product-card">
+      ${ui.renderCatalogImage(product.image, product.name, product.category)}
+      <div class="body"><h3>${ui.escapeHTML(product.name)}</h3><p>${ui.escapeHTML(product.description)}</p>
+        <p class="stock-status ${Number(product.stock) < 1 ? 'sold-out' : ''}">${Number(product.stock) < 1 ? 'Sold out' : `${ui.escapeHTML(product.stock)} ${ui.escapeHTML(product.unit)} in stock`}</p>
+        <div class="card-footer"><span class="price">${formatCurrency(product.price)}</span>
+          <button class="btn btn-primary" type="button" data-add-cart="${ui.escapeHTML(product.id)}" ${Number(product.stock) < 1 ? 'disabled' : ''}>Add to cart</button>
+        </div><a class="btn btn-secondary" href="../product-details/product-details.html?id=${encodeURIComponent(product.id)}">View product</a>
+      </div>
+    </article>`).join('') : '<p class="card">This farmer has no approved product listings yet.</p>';
 });

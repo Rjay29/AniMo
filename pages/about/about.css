@@ -1,15 +1,11 @@
-/* Layout Dimension */
-.story-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 24px;
-}
-
-/* Layout Dimension */
-.story-card {
-  padding: 24px;
-}
-
-/* Layout Dimension */
-/* Responsive Breakpoint */
-@media (max-width: 900px) { .story-grid { grid-template-columns: 1fr; } }
+/* About */
+.about-story { padding: clamp(18px, 3vw, 28px); border-radius: var(--radius); }
+.about-story-grid { display: grid; grid-template-columns: minmax(200px, .95fr) minmax(0, 1.25fr); gap: 22px; align-items: center; }
+.about-story .image-placeholder { min-height: 240px; border-radius: var(--radius); }
+.about-story h2, .about-team h2 { margin: 8px 0 10px; color: var(--dark-green); font-family: Georgia, "Times New Roman", serif; font-size: clamp(1.55rem, 2.5vw, 2rem); }
+.about-story p { color: var(--muted); font-size: 0.95rem; }
+.about-team { margin-top: 22px; }
+.about-team .card { text-align: center; padding: 18px; }
+.about-team .image-placeholder { min-height: 100px; margin-bottom: 12px; }
+@media (max-width: 800px) { .about-story-grid { grid-template-columns: 1fr; } .about-story .image-placeholder { min-height: 200px; } }
+@media (max-width: 480px) { .about-story { padding: 16px; } .about-team .card { padding: 14px; } }

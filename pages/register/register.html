@@ -1,27 +1,70 @@
 <!DOCTYPE html>
+<!-- Buyer And Farmer Registration -->
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Register | AniMo</title>
-    <!-- Stylesheet Reference -->
     <link rel="stylesheet" href="../../shared/css/global.css" />
-    <!-- Stylesheet Reference -->
     <link rel="stylesheet" href="../../shared/css/components.css" />
-    <!-- Stylesheet Reference -->
+    <link rel="stylesheet" href="../login/login.css" />
     <link rel="stylesheet" href="./register.css" />
-    <!-- Page Script -->
+    <script src="../../shared/js/theme-init.js"></script>
     <script src="../../shared/js/api.js" defer></script>
   </head>
   <body class="site-shell">
-    <!-- Main Content -->
+    <button class="page-theme-toggle page-theme-toggle-fixed" type="button" data-theme-toggle aria-label="Switch to dark mode"></button>
+    <!-- Registration Form -->
     <main>
-      <!-- Account Registration -->
-      <section class="section"><div class="container auth-shell">
-      <!-- Registration Form -->
-        <form class="auth-card card" id="registerForm"><span class="eyebrow">Join the local market</span><h1>Create your account</h1><label>Username<input class="input" name="username" type="text" autocomplete="username" minlength="3" maxlength="32" pattern="[A-Za-z0-9._\-]{3,32}" required /></label><small>Use 3–32 letters, numbers, dots, dashes, or underscores.</small><label>Password<input class="input" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="256" required /></label><small>Use at least 8 characters. Passwords are securely hashed on the server.</small><p class="auth-status" id="authStatus" role="status" aria-live="polite"></p><button class="btn btn-primary" type="submit">Create account</button><p>Already have an account? <a href="../login/login.html">Log in</a></p></form></div></section>
+      <section class="section">
+        <div class="container auth-shell">
+          <form class="auth-card card" id="registerForm">
+            <a class="brand auth-brand" href="../home/home.html" aria-label="AniMo Home"><img src="/shared/assets/logo.png" alt="" /><span>AniMo</span></a>
+            <span class="eyebrow">Join the local market</span>
+            <h1 id="registerHeading">Create a buyer account</h1>
+            <fieldset class="account-choice"><legend>Choose account type</legend>
+              <button type="button" class="account-choice-option active" data-account-type="customer" aria-pressed="true">Buyer</button>
+              <button type="button" class="account-choice-option" data-account-type="farmer" aria-pressed="false">Farmer</button>
+            </fieldset>
+            <input id="accountType" name="accountType" type="hidden" value="customer" />
+            <label>Full name<input class="input" name="displayName" type="text" maxlength="80" autocomplete="name" required /></label>
+            <label>Username<input class="input" name="username" type="text" autocomplete="username" minlength="3" maxlength="32" pattern="[A-Za-z0-9._\-]{3,32}" required /></label>
+            <label>Profile picture<input class="input" name="profilePicture" type="file" accept="image/jpeg,image/png,image/webp" required /></label>
+            <label>Email or Philippine mobile number<input class="input" id="contact" name="contact" type="text" autocomplete="email tel" placeholder="name@example.com or 09XXXXXXXXX" maxlength="254" required /></label>
+            <div class="otp-actions">
+              <button class="btn btn-secondary" id="sendOtpButton" type="button">Send demo OTP</button>
+              <label id="otpCode" hidden>Verification code<input class="input" id="otpValue" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" /></label>
+              <button class="btn btn-secondary" id="verifyOtpButton" type="button" hidden>Verify code</button>
+            </div>
+            <p class="auth-status" id="otpStatus" role="status" aria-live="polite"></p>
+            <label>Password<input class="input" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="256" required /></label>
+            <small>Use at least 8 characters. Passwords are securely hashed on the server.</small>
+
+            <!-- Farmer Verification Documents -->
+            <section id="farmerFields" class="farmer-fields" hidden>
+              <h2>Farmer verification</h2>
+              <p>Applications remain pending until an administrator reviews required documents. This local demo stores files privately in the project data folder.</p>
+              <label>Farm / seller name<input class="input" name="farmerName" maxlength="140" /></label>
+              <label>Farm location<input class="input" name="farmerLocation" maxlength="140" /></label>
+              <label>Specialty<input class="input" name="farmerSpecialty" maxlength="240" /></label>
+              <label>About the farm<textarea class="textarea" name="farmerStory" maxlength="1200" rows="3"></textarea></label>
+              <label>Applicant type<select class="select" id="applicantType" name="applicantType"><option value="individual">Individual</option><option value="group">Group</option></select></label>
+              <label>Government-issued ID (National ID / eGov)<input class="input" name="governmentId" type="file" accept="application/pdf,image/jpeg,image/png" /></label>
+              <label>Proof of address<input class="input" name="proofOfAddress" type="file" accept="application/pdf,image/jpeg,image/png" /></label>
+              <label>Bank account proof<input class="input" name="bankProof" type="file" accept="application/pdf,image/jpeg,image/png" /></label>
+              <label id="groupDocument" hidden>Department of Agriculture certificate of accreditation<input class="input" name="daAccreditation" type="file" accept="application/pdf,image/jpeg,image/png" /></label>
+            </section>
+
+            <label class="terms-check"><input name="termsAccepted" type="checkbox" required /> <span>I accept AniMo's demo Terms and Conditions and privacy notice.</span></label>
+            <p class="auth-status" id="authStatus" role="status" aria-live="polite"></p>
+            <button class="btn btn-primary" type="submit">Create account</button>
+            <p>Already have an account? <a href="../login/login.html">Log in</a></p>
+            <p class="auth-disclaimer">Demo OTP codes are displayed on this page. No email or SMS provider is connected.</p>
+          </form>
+        </div>
+      </section>
     </main>
-    <!-- Page Script -->
     <script src="./register.js"></script>
+      <script src="../../shared/js/ui-enhancements.js"></script>
   </body>
 </html>

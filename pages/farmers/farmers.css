@@ -1,10 +1,7 @@
-
-
-/* Image Dimension */
-.farmer-card .image-placeholder { min-height: 100px; }
-
-/* Surface Styling */
+/* Farmers directory */
+.farmer-card .image-placeholder,
+.farmer-card .catalog-card-image { aspect-ratio: 1 / 1 !important; height: auto !important; min-height: 0 !important; }
 .farmer-card .body > p strong { color: var(--dark-green); }
-
-/* Layout Dimension */
-.farmer-card .card-footer { align-items: flex-start; }
+.farmer-card .card-footer { align-items: flex-start; gap: 8px; }
+.farmer-card .btn { white-space: nowrap; min-height: 40px; font-size: 0.88rem; }
+@media (max-width: 640px) { .farmer-card .card-footer { flex-direction: column; align-items: stretch; } .farmer-card .btn { width: 100%; } }

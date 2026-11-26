@@ -1,22 +1,42 @@
-
-
-/* Layout Dimension */
+/* Package details */
 .package-detail {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 22px;
-  background: var(--white);
-  border-radius: 18px;
-  padding: 22px;
-  box-shadow: var(--shadow);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(20px, 3vw, 32px);
+  align-items: start;
 }
-
-/* Image Dimension */
-.package-detail-image { min-height: clamp(230px, 30vw, 340px); }
-
-/* Image Dimension */
-.package-detail .catalog-card-image { height: clamp(230px, 30vw, 340px); }
-
-/* Layout Dimension */
-/* Responsive Breakpoint */
-@media (max-width: 900px) { .package-detail { grid-template-columns: 1fr; } }
+.package-detail .package-detail-image,
+.package-detail .catalog-card-image.package-detail-image {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  height: auto;
+  max-height: 460px;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  display: block;
+}
+.package-detail h1 {
+  margin: 8px 0 12px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  line-height: 1.15;
+  color: var(--dark-green);
+}
+.package-detail h2 { margin: 24px 0 12px; color: var(--dark-green); font-size: 1.2rem; }
+.package-detail p, .package-detail li { color: var(--muted); line-height: 1.7; }
+.package-detail ul { padding-left: 20px; margin: 0; }
+.package-detail li { margin: 8px 0; }
+.package-detail .price { color: var(--dark-green); font-weight: 800; }
+.package-detail .tag-list { margin: 12px 0 4px; }
+.package-detail .btn { margin-top: 16px; margin-right: 10px; }
+@media (max-width: 860px) {
+  .package-detail { grid-template-columns: 1fr; gap: 18px; }
+  .package-detail .package-detail-image,
+  .package-detail .catalog-card-image.package-detail-image { max-height: 340px; }
+}
+@media (max-width: 640px) {
+  .package-detail h1 { font-size: clamp(1.65rem, 6vw, 2.2rem); }
+  .package-detail .package-detail-image,
+  .package-detail .catalog-card-image.package-detail-image { max-height: 260px; }
+  .package-detail .btn { width: 100%; margin-right: 0; }
+}
