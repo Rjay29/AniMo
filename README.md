@@ -106,6 +106,7 @@ Set both environment variables and restart. The admin account is created on star
 |---------|-----------------|
 | ![Profile](docs/screenshots/profile.png) | ![Admin Dashboard](docs/screenshots/admin.png) |
 
+> not final yet
 ---
 
 ### 📁 Project Structure
