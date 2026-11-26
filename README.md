@@ -1,7 +1,6 @@
 <div align="center">
 
-![AniMo Logo](<img width="776" height="776" alt="916010826_1182230194232371_6320971466993799556_n" src="https://github.com/user-attachments/assets/76acc401-5937-4ee7-90e7-8059ca349cd9" />
-)
+![AniMo Logo](<img width="776" height="776" alt="image" src="https://github.com/user-attachments/assets/91be49c5-d5a6-4cce-a30b-5f3e5dfd840c" />)
 
 > A full-stack local marketplace for browsing farm products and farmers, discovering recipes and meal kits, placing demo orders, and managing everything from a private admin dashboard.
 
@@ -11,7 +10,6 @@
 ![Node.js](https://img.shields.io/badge/Backend-Node.js%2022.13%2B-339933?logo=nodedotjs&logoColor=white)
 ![SQLite](https://img.shields.io/badge/Database-SQLite-003B57?logo=sqlite&logoColor=white)
 ![Dependencies](https://img.shields.io/badge/npm%20packages-0-brightgreen)
-![License](https://img.shields.io/badge/License-Educational-lightgrey)
 
 </div>
 
