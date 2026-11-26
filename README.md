@@ -234,7 +234,6 @@ git commit -m "Stop tracking local databases"
       <br />
       <sub><b>Arazula, Rjay D.</b></sub>
       <br />
-      <sub><b>Your Role Here</b></sub>
       <br />
       <a href="https://github.com/Rjay29">
         <img src="https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white" />
@@ -247,7 +246,6 @@ git commit -m "Stop tracking local databases"
       <br />
       <sub><b>Apolinar, Jev Austin A.</b></sub>
       <br />
-      <sub><b>Your Role Here</b></sub>
       <br />
       <a href="https://github.com/LazyAustin525">
         <img src="https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white" />
@@ -260,7 +258,6 @@ git commit -m "Stop tracking local databases"
       <br />
       <sub><b>Fernandez, John Rommel P.</b></sub>
       <br />
-      <sub><b>Your Role Here</b></sub>
       <br />
       <a href="https://github.com/Nicojin">
         <img src="https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white" />
