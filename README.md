@@ -15,7 +15,7 @@
 
 ---
 
-## ✨ Features
+## Features
 
 ### 🔐 Accounts and Sessions
 - Create a customer account, sign in, and sign out.
@@ -43,7 +43,7 @@
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Requirements
 - **Node.js 22.13+** (needs the built-in `node:sqlite` module)
@@ -164,7 +164,7 @@ Customer profile pictures are managed by users on their own profile page and sav
 
 ---
 
-## 🔐 Security Notes
+## Security Notes
 
 - Passwords are **hashed**, not reversibly encrypted, with a random salt per user.
 - The server binds only to `127.0.0.1` and is meant for **local development and demos**.
@@ -188,7 +188,7 @@ flowchart LR
 
 ---
 
-## 🧯 Troubleshooting
+## Troubleshooting
 
 | Problem | Fix |
 |---------|-----|
@@ -200,7 +200,7 @@ flowchart LR
 
 ---
 
-## 🙌 Git Hygiene
+## Git Hygiene
 
 Keep local databases out of the repo by adding this to `.gitignore`:
 
@@ -222,7 +222,7 @@ git commit -m "Stop tracking local databases"
 
 ---
 
-## 👥 Team
+## Team
 
 <table>
   <tr>
