@@ -1,8 +1,9 @@
 <div align="center">
 
 ![AniMo Logo](<img width="776" height="776" alt="image" src="https://github.com/user-attachments/assets/91be49c5-d5a6-4cce-a30b-5f3e5dfd840c" />)
+> note on the logo it is not finished yet
 
-> A full-stack local marketplace for browsing farm products and farmers, discovering recipes and meal kits, placing demo orders, and managing everything from a private admin dashboard.
+> A full-stack local marketplace for browsing farm products and farmers, discovering recipes and meal kits, placing demo orders, and managing everything from a private admin dashboard. 
 
 ![HTML5](https://img.shields.io/badge/Frontend-HTML5-E34F26?logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/Frontend-CSS3-1572B6?logo=css3&logoColor=white)
