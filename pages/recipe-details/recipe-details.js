@@ -13,6 +13,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const products = (recipe.productIds || [])
     .map((productId) => window.aniMoUtils.getProductById(productId))
     .filter(Boolean);
+  const unavailable = products.filter((product) => Number(product.stock) < 1);
+  const available = products.filter((product) => Number(product.stock) > 0);
 
   // Recipe Instructions
   container.innerHTML = `
@@ -27,7 +29,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         <p>${ui.escapeHTML(recipe.description)}</p>
         <div class="recipe-facts"><span class="badge">${ui.escapeHTML(recipe.time)}</span><span class="badge">${ui.escapeHTML(recipe.difficulty)}</span></div>
         <h2>Ingredients</h2>
-        <ul>${recipe.ingredients.map((ingredient) => `<li>${ui.escapeHTML(ingredient)}</li>`).join('')}</ul>
+        <ul>${recipe.ingredients.map((ingredient) => {
+          const linked = products.find((product) => product.name.toLowerCase().includes(ingredient.toLowerCase())
+            || ingredient.toLowerCase().includes(product.name.toLowerCase()));
+          return `<li${linked && Number(linked.stock) < 1 ? ' class="sold-out"' : ''}>${ui.escapeHTML(ingredient)}${linked && Number(linked.stock) < 1 ? ' — SOLD OUT' : ''}</li>`;
+        }).join('')}</ul>
+        ${unavailable.length ? `<p class="sold-out" role="status">Currently unavailable: ${unavailable.map((product) => ui.escapeHTML(product.name)).join(', ')}.</p>` : ''}
         <h2>Step-by-step recipe</h2>
         <ol>${recipe.steps.map((step) => `<li>${ui.escapeHTML(step)}</li>`).join('')}</ol>
         <div class="recipe-order">
@@ -35,7 +42,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           <p>${products.length
             ? `Add ${products.map((product) => ui.escapeHTML(product.name)).join(', ')} from local sellers to your cart.`
             : 'No matching sample products are available to order for this recipe.'}</p>
-          <button class="btn btn-primary" type="button" id="orderRecipeButton" ${products.length ? '' : 'disabled'}>Order this recipe</button>
+          <button class="btn btn-primary" type="button" id="orderRecipeButton" ${available.length ? '' : 'disabled'}>Add available ingredients to cart</button>
         </div>
         <a href="../recipe-discovery/recipe-discovery.html" class="btn btn-secondary recipe-back-link">Back to recipes</a>
       </div>
@@ -44,8 +51,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const orderButton = document.getElementById('orderRecipeButton');
   // Click Interaction
-  orderButton.addEventListener('click', () => {
-    products.forEach((product) => window.aniMoCart.addToCart(product.id, 1));
+  orderButton.addEventListener('click', async () => {
+    if (unavailable.length && !window.confirm(`Unavailable ingredients: ${unavailable.map((product) => product.name).join(', ')}. Continue with the available ingredients only?`)) return;
+    const pendingItems = available.map((product) => ({ id: product.id, qty: 1 }));
+    if (!await window.aniMoRequireLogin({ pendingCart: { items: pendingItems } })) return;
+    pendingItems.forEach((item) => window.aniMoCart.addToCart(item.id, item.qty));
     orderButton.textContent = 'Ingredients added to cart';
     orderButton.disabled = true;
   });

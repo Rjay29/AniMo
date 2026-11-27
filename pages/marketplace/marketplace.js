@@ -39,7 +39,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div class="body">
           <div class="card-meta"><span>${ui.escapeHTML(product.location)}</span><strong>${renderStars(product.rating)}</strong></div>
           <h3>${ui.escapeHTML(product.name)}</h3>
-          <p>Sold by ${ui.escapeHTML(product.farm)}</p>
+          <p>Sold by ${(() => {
+            const farmer = window.aniMoData.farmers.find((entry) => entry.name === product.farm);
+            return farmer ? `<a href="../farmer-profile/farmer-profile.html?id=${encodeURIComponent(farmer.id)}">${ui.escapeHTML(product.farm)}</a>` : ui.escapeHTML(product.farm);
+          })()}</p>
+          <p class="stock-status ${Number(product.stock) < 1 ? 'sold-out' : ''}">${Number(product.stock) < 1 ? `Sold out · Estimated restock ${new Date(Date.now() + 7 * 86400000).toLocaleDateString()}` : `${ui.escapeHTML(product.stock)} ${ui.escapeHTML(product.unit)} in stock`}</p>
+          <small class="freshness-note">Updated ${ui.escapeHTML(product.updatedAt ? new Date(product.updatedAt).toLocaleDateString() : 'recently')} · ${Number(product.orderCount) || 0} orders</small>
           <div class="availability-list">
             ${product.deliveryAvailable ? '<span class="badge">Delivery available</span>' : ''}
             ${product.pickupAvailable ? '<span class="badge">Pickup available</span>' : ''}
@@ -48,7 +53,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div class="marketplace-price">
               <span class="price">${formatCurrency(product.price)} / ${ui.escapeHTML(product.unit)}</span>
             </div>
-            <button class="btn btn-primary" type="button" data-add-cart="${ui.escapeHTML(product.id)}">Add to cart</button>
+            <button class="btn btn-primary" type="button" data-add-cart="${ui.escapeHTML(product.id)}" ${Number(product.stock) < 1 ? 'disabled' : ''}>Add to cart</button>
             <a href="../product-details/product-details.html?id=${encodeURIComponent(product.id)}" class="btn btn-secondary product-details-link">View details</a>
           </div>
         </div>

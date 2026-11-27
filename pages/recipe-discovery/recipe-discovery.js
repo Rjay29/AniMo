@@ -80,6 +80,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           <h3>${ui.escapeHTML(recipe.name)}</h3>
           <p>${ui.escapeHTML(recipe.description)}</p>
           <div class="tag-list">${recipe.ingredients.map((ingredient) => `<span class="tag">${ui.escapeHTML(ingredient)}</span>`).join('')}</div>
+          <div class="availability-list">${(recipe.productIds || []).map((id) => window.aniMoUtils.getProductById(id)).filter(Boolean).map((product) => `<span class="badge${Number(product.stock) < 1 ? ' sold-out' : ''}">${ui.escapeHTML(product.name)} · ${Number(product.stock) < 1 ? 'Sold out' : `${ui.escapeHTML(product.stock)} in stock`}</span>`).join('')}</div>
           <a href="../recipe-details/recipe-details.html?id=${encodeURIComponent(recipe.id)}" class="btn btn-secondary recipe-link">View recipe and steps</a>
         </div>
       </article>
@@ -98,12 +99,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       time: '25 min',
       difficulty: 'Easy',
       ingredients,
-      productIds: window.aniMoData.products
-        .filter((product) => ingredients.some((ingredient) => (
-          ingredient.includes(product.name.toLowerCase().split(' ')[0])
-          || product.name.toLowerCase().includes(ingredient)
-        )))
-        .map((product) => product.id),
+      productIds: ingredients.map((ingredient) => {
+        const normalizedIngredient = ingredient.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+        return window.aniMoData.products.find((product) => (
+          product.name.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().includes(normalizedIngredient)
+          && Number(product.stock) > 0
+        ))?.id;
+      }).filter(Boolean),
       description: `A sample recipe idea using ${ingredients.join(', ')}.`,
       steps: [
         `Wash and prepare the selected ingredients: ${ingredients.join(', ')}.`,

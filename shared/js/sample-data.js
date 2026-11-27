@@ -262,20 +262,122 @@ window.aniMoData = {
   ]
 };
 
-// Catalog Loading
-window.aniMoDataReady = fetch('/api/catalog', { cache: 'no-store' }).then(async (response) => {
-  if (!response.ok) throw new Error(`Catalog request failed (${response.status}).`);
-  const catalog = await response.json();
-  ['products', 'farmers', 'recipes', 'recipePackages'].forEach((collection) => {
-    if (!Array.isArray(catalog[collection])) throw new Error(`Catalog collection "${collection}" is invalid.`);
-    window.aniMoData[collection] = catalog[collection];
-  });
-  window.aniMoData.ingredients = Array.isArray(catalog.ingredients) ? catalog.ingredients : [];
-}).catch((error) => {
-  window.aniMoCatalogLoadError = error;
-  console.error('Could not load the AniMo database catalog:', error);
-  return null;
+// Catalog Loading Skeletons
+document.querySelectorAll('#featured-products, #recipe-cards, #package-cards, #farmer-cards, #productGrid, #recipeGrid, #packageGrid, #farmersGrid').forEach((container) => {
+  container.setAttribute('aria-busy', 'true');
+  if (!container.querySelector('.skeleton, .skeleton-card')) {
+    container.innerHTML = '<div class="skeleton" aria-hidden="true"></div><div class="skeleton" aria-hidden="true"></div><div class="skeleton" aria-hidden="true"></div>';
+  }
 });
+
+// Catalog Loading
+(function initCatalog() {
+  let settled = false;
+  const fallbackData = {
+    products: window.aniMoData.products.slice(),
+    farmers: window.aniMoData.farmers.slice(),
+    recipes: window.aniMoData.recipes.slice(),
+    recipePackages: window.aniMoData.recipePackages.slice(),
+    ingredients: window.aniMoData.ingredients.slice()
+  };
+
+  function useFallback(reason) {
+    if (settled) return false;
+    settled = true;
+    window.aniMoCatalogFallback = true;
+    if (reason) console.warn('Using embedded AniMo catalog fallback:', reason);
+    ['products', 'farmers', 'recipes', 'recipePackages', 'ingredients'].forEach((key) => {
+      if (!Array.isArray(window.aniMoData[key]) || !window.aniMoData[key].length) {
+        window.aniMoData[key] = fallbackData[key].slice();
+      }
+    });
+    return true;
+  }
+
+  const fetchCatalog = fetch('/api/catalog', { cache: 'no-store' }).then(async (response) => {
+    if (!response.ok) throw new Error(`Catalog request failed (${response.status}).`);
+    const catalog = await response.json();
+    ['products', 'farmers', 'recipes', 'recipePackages'].forEach((collection) => {
+      if (!Array.isArray(catalog[collection])) throw new Error(`Catalog collection "${collection}" is invalid.`);
+    });
+    if (settled) return;
+    settled = true;
+    ['products', 'farmers', 'recipes', 'recipePackages'].forEach((collection) => {
+      window.aniMoData[collection] = catalog[collection];
+    });
+    window.aniMoData.ingredients = Array.isArray(catalog.ingredients) ? catalog.ingredients : fallbackData.ingredients.slice();
+  }).catch((error) => {
+    if (useFallback(error)) return;
+  });
+
+  const timeoutFallback = new Promise((resolve) => {
+    window.setTimeout(() => { useFallback('timeout'); resolve();     }, 2000);
+  });
+  const minSkeletonDelay = new Promise((resolve) => window.setTimeout(resolve, 2000));
+
+  window.aniMoDataReady = Promise.all([
+    Promise.race([fetchCatalog.then(() => undefined), timeoutFallback]).catch(() => { useFallback('error'); }),
+    minSkeletonDelay
+  ]).then(() => undefined);
+
+  window.aniMoDataReady.finally(() => {
+    document.querySelectorAll('[aria-busy="true"]').forEach((container) => container.removeAttribute('aria-busy'));
+    const esc = (v) => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const fmt = (n) => '₱' + Number(n || 0).toLocaleString('en-PH');
+    const img = (src, name, category, className = '') => {
+      const renderer = window.aniMoUtilities && window.aniMoUtilities.renderCatalogImage;
+      if (typeof renderer === 'function') return renderer(src, name, category, className);
+      const validSource = typeof src === 'string'
+        && (/^data:image\/(?:webp|png|jpeg);base64,[A-Za-z0-9+/]+=*$/.test(src)
+          || /^\/shared\/assets\/(?:marketplace|farmers|recipes|meal_kits)\/[A-Za-z0-9._-]+\.(?:webp|png|jpe?g)$/.test(src));
+      const safeSource = validSource ? src : '/shared/assets/marketplace/stock-market-vegetables.jpg';
+      return `<img class="catalog-card-image ${esc(className)}" src="${esc(safeSource)}" alt="${esc(name)}" loading="lazy" decoding="async" />`;
+    };
+    const fallbackHtml = (id) => {
+      const d = window.aniMoData || {};
+      if (id === 'featured-products' || id === 'productGrid') {
+        const items = (d.products || []).slice(0, id === 'featured-products' ? 3 : 12);
+        return items.length ? items.map((p) => `<article class="product-card">${img(p.image, p.name, p.category)}<div class="body"><div class="card-meta"><span>${esc(p.location)}</span><strong>★ ${esc(p.rating)}</strong></div><h4>${esc(p.name)}</h4><p>${esc(p.farm)}</p><div class="card-footer"><span class="price">${fmt(p.price)}</span><a href="../product-details/product-details.html?id=${encodeURIComponent(p.id)}" class="btn btn-secondary">View</a></div></div></article>`).join('') : '';
+      }
+      if (id === 'recipe-cards' || id === 'recipeGrid') {
+        const items = (d.recipes || []).slice(0, id === 'recipe-cards' ? 3 : 12);
+        return items.length ? items.map((r) => `<article class="recipe-card">${img(r.image, r.name, r.category)}<div class="body"><div class="card-meta"><span>${esc(r.category)}</span><strong>${esc(r.time)}</strong></div><h4>${esc(r.name)}</h4><p>${esc(r.description)}</p><a href="../recipe-details/recipe-details.html?id=${encodeURIComponent(r.id)}" class="btn btn-secondary">View recipe</a></div></article>`).join('') : '';
+      }
+      if (id === 'package-cards' || id === 'packageGrid') {
+        const items = (d.recipePackages || []).slice(0, id === 'package-cards' ? 3 : 12);
+        return items.length ? items.map((p) => `<article class="package-card">${img(p.image, p.name, 'Local meal package')}<div class="body"><h4>${esc(p.name)}</h4><p>${esc(p.description)}</p><div class="card-footer"><span class="price">${fmt(p.price)}</span><a href="../package-details/package-details.html?id=${encodeURIComponent(p.id)}" class="btn btn-secondary">View package</a></div></div></article>`).join('') : '';
+      }
+      if (id === 'farmer-cards' || id === 'farmersGrid') {
+        const items = (d.farmers || []).slice(0, id === 'farmer-cards' ? 3 : 12);
+        return items.length ? items.map((f) => `<article class="farmer-card">${img(f.image, f.name, 'Local grower')}<div class="body"><div class="card-meta"><span>${esc(f.location)}</span><strong>★ ${esc(f.rating)}</strong></div><h4>${esc(f.name)}</h4><p>${esc(f.specialty || '')}</p><div class="card-footer"><span class="badge">${esc(f.type || 'Farmer')}</span><a href="../farmer-profile/farmer-profile.html?id=${encodeURIComponent(f.id)}" class="btn btn-secondary">Profile</a></div></div></article>`).join('') : '';
+      }
+      if (id === 'nearbyProducts') {
+        const items = (d.farmers || []).slice(0, 12);
+        return items.length ? items.map((f) => `<article class="nearby-item" role="listitem">${img(f.image, f.name, 'Local grower', 'nearby-seller-avatar')}<div class="nearby-item-copy"><strong>${esc(f.name)}</strong><span>${esc(f.location || 'Philippines')} · ${esc(f.specialty || 'Local seller')}</span><a href="../farmer-profile/farmer-profile.html?id=${encodeURIComponent(f.id)}">View seller</a></div></article>`).join('') : '';
+      }
+      return '';
+    };
+    const catalogFallbackIds = new Set(['featured-products', 'productGrid', 'recipe-cards', 'recipeGrid', 'package-cards', 'packageGrid', 'farmer-cards', 'farmersGrid', 'farmerGrid', 'nearbyProducts']);
+    const clearStuckSkeletons = () => {
+      document.querySelectorAll('.skeleton-card, .skeleton[aria-hidden="true"]').forEach((el) => {
+        const container = el.parentElement;
+        if (!container) return;
+        const hasRealContent = Array.from(container.children).some((child) =>
+          !child.classList.contains('skeleton-card') && !child.classList.contains('skeleton') && child.nodeType === 1
+        );
+        if (hasRealContent) return;
+        const html = !window.aniMoCatalogLoadError ? fallbackHtml(container.id) : '';
+        if (html) { container.innerHTML = html; return; }
+        if (!catalogFallbackIds.has(container.id)) return;
+        container.innerHTML = window.aniMoCatalogLoadError
+          ? '<p class="card" role="status">AniMo listings could not load. Check the local server and refresh.</p>'
+          : '<p class="card" role="status">Content is taking longer than expected. Please refresh.</p>';
+      });
+    };
+    window.setTimeout(clearStuckSkeletons, 0);
+    window.setTimeout(clearStuckSkeletons, 1500);
+  });
+})();
 
 // Catalog Lookup
 window.aniMoUtils = {

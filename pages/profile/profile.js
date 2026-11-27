@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       <article class="profile-order">
         <div class="profile-order-header"><h3>Order ${escapeHtml(order.id)}</h3><span class="order-state">${escapeHtml(labels[order.status] || order.status)}</span></div>
         <p>${escapeHtml(order.created_at)} · ${escapeHtml(order.fulfillment === 'pickup' ? 'Pickup' : 'Delivery')} · ₱${Number(order.total).toFixed(2)}</p>
-        <ul class="order-items">${order.items.map((item) => `<li>${escapeHtml(item.name)} × ${escapeHtml(item.quantity)}</li>`).join('')}</ul>
+        <ul class="order-items">${order.items.map((item) => `<li>${escapeHtml(item.name)} × ${escapeHtml(item.quantity)}${order.status === 'completed' && !item.id.startsWith('package:') ? ` · <a href="../product-details/product-details.html?id=${encodeURIComponent(item.id)}#productReviews">Rate this product</a>` : ''}</li>`).join('')}</ul>
         ${order.address ? `<p>Delivery address: ${escapeHtml(order.address)}</p>` : ''}
       </article>`).join('') : `<p class="order-empty">${filter === 'all' ? 'No orders yet. Browse the market to place your first order.' : `No orders in “${escapeHtml(labels[filter])}” yet.`}</p>`;
   }
