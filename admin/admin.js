@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       return await window.aniMoApi(url, options);
     } catch (error) {
       if (error.status === 401 || error.status === 403) {
-        window.location.href = '/pages/login/login.html?next=%2Fadmin%2F';
+        window.location.href = `/pages/login/login.html?next=${encodeURIComponent(window.location.pathname)}`;
       }
       throw error;
     }
@@ -180,9 +180,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       <section class="listing-group"><h3>${typeNames[type]} <span class="muted">(${entries.length})</span></h3>
         ${entries.length ? entries.map((entry) => `
           <article class="listing-row">
-            ${entry.image ? `<img src="${entry.image}" alt="" />` : '<span class="listing-image-empty" aria-hidden="true">No photo</span>'}
+            ${window.aniMoUtilities.renderCatalogImage(
+              entry.image,
+              entry.name,
+              type === 'farmers' ? 'Local grower' : type === 'recipePackages' ? 'Local meal package' : entry.category || 'Vegetables'
+            )}
             <span class="listing-name">${escapeHtml(typeof entry.name === 'string' && entry.name.trim() && entry.name.trim().toLowerCase() !== 'undefined' ? entry.name : `Unnamed listing (${entry.id})`)}</span>
+            ${entry.status === 'pending' ? '<span class="farmer-review-state">Pending review</span>' : ''}
             <span class="listing-actions">
+              ${entry.status === 'pending' ? `<button class="btn btn-primary" type="button" data-approve-listing="${escapeHtml(entry.id)}">Approve</button><button class="btn btn-secondary" type="button" data-reject-listing="${escapeHtml(entry.id)}">Reject</button>` : ''}
               <button class="btn btn-secondary" type="button" data-edit-type="${type}" data-edit-id="${escapeHtml(entry.id)}">Edit</button>
               <button class="btn btn-secondary" type="button" data-delete-type="${type}" data-delete-id="${escapeHtml(entry.id)}">Remove</button>
             </span>
@@ -336,6 +342,25 @@ document.addEventListener('DOMContentLoaded', async () => {
       </article>`).join('') : '<p class="muted">There are no customer orders yet.</p>';
   }
 
+  // Farmer Application Review
+  async function loadFarmerApplications() {
+    const { applications } = await api('/api/admin/farmer-applications');
+    const container = document.getElementById('farmerApplications');
+    container.innerHTML = applications.length ? applications.map((application) => {
+      const profile = application.documents.profile || {};
+      const documentLinks = Object.entries(application.documents)
+        .filter(([key]) => key !== 'profile')
+        .map(([key, document]) => `<a target="_blank" rel="noopener" href="/api/admin/farmer-documents/${application.userId}/${encodeURIComponent(key)}">${escapeHtml(key)} · ${escapeHtml(document.name)}</a>`).join('');
+      return `<article class="farmer-application-row">
+        <div><h3>${escapeHtml(profile.name || application.displayName)} <span class="farmer-review-state">${escapeHtml(application.status)}</span></h3>
+          <p>${escapeHtml(application.applicantType)} · ${escapeHtml(profile.location || '')} · ${escapeHtml(application.contact)}</p>
+          <p>${escapeHtml(profile.specialty || '')} — ${escapeHtml(profile.story || '')}</p>
+          <div class="application-documents">${documentLinks || '<span>No documents attached.</span>'}</div></div>
+        ${application.status === 'pending' ? `<div class="listing-actions"><button class="btn btn-primary" data-approve-application="${application.userId}" type="button">Approve</button><button class="btn btn-secondary" data-reject-application="${application.userId}" type="button">Reject</button></div>` : ''}
+      </article>`;
+    }).join('') : '<p class="muted">No farmer applications yet.</p>';
+  }
+
   try {
     const { user } = await api('/api/auth/me');
     if (user.role !== 'admin') {
@@ -343,7 +368,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
     document.getElementById('adminIdentity').textContent = `Signed in as ${user.username}`;
-    await Promise.all([loadCatalog(), loadAssistantData()]);
+    await Promise.all([loadCatalog(), loadAssistantData(), loadFarmerApplications()]);
   } catch (error) {
     showStatus(error.message, true);
     return;
@@ -416,6 +441,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   list.addEventListener('click', async (event) => {
     const edit = event.target.closest('[data-edit-id]');
     const remove = event.target.closest('[data-delete-id]');
+    const approve = event.target.closest('[data-approve-listing]');
+    const reject = event.target.closest('[data-reject-listing]');
+    const review = approve || reject;
+    if (review) {
+      const reviewStatus = approve ? 'approved' : 'rejected';
+      try {
+        await api(`/api/admin/listings/${encodeURIComponent(review.dataset.approveListing || review.dataset.rejectListing)}/status`, {
+          method: 'PATCH', body: JSON.stringify({ status: reviewStatus })
+        });
+        showStatus(`Listing ${reviewStatus}.`);
+        await loadCatalog();
+      } catch (error) { showStatus(error.message, true); }
+      return;
+    }
     if (edit) {
       const type = edit.dataset.editType;
       const entry = catalog[type].find((item) => item.id === edit.dataset.editId);
@@ -452,6 +491,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   cancelEditButton.addEventListener('click', resetForm);
   document.getElementById('refreshCatalog').addEventListener('click', () => loadCatalog().catch((error) => showStatus(error.message, true)));
   document.getElementById('refreshOrders').addEventListener('click', () => loadOrders().catch((error) => showStatus(error.message, true)));
+  document.getElementById('refreshFarmerApplications').addEventListener('click', () => loadFarmerApplications().catch((error) => showStatus(error.message, true)));
+  document.getElementById('farmerApplications').addEventListener('click', async (event) => {
+    const approve = event.target.closest('[data-approve-application]');
+    const reject = event.target.closest('[data-reject-application]');
+    const button = approve || reject;
+    if (!button) return;
+    const userId = button.dataset.approveApplication || button.dataset.rejectApplication;
+    const reviewStatus = approve ? 'approved' : 'rejected';
+    try {
+      await api(`/api/admin/farmer-applications/${userId}`, {
+        method: 'PATCH', body: JSON.stringify({ status: reviewStatus })
+      });
+      showStatus(`Farmer application ${reviewStatus}.`);
+      await Promise.all([loadFarmerApplications(), loadCatalog()]);
+    } catch (error) { showStatus(error.message, true); }
+  });
   document.getElementById('refreshAssistantData').addEventListener('click', () => loadAssistantData().catch((error) => showStatus(error.message, true)));
   // Form Submission
   assistantDataForm.addEventListener('submit', async (event) => {
@@ -547,11 +602,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Click Interaction
     button.addEventListener('click', async () => {
       document.querySelectorAll('.admin-tab').forEach((tab) => tab.classList.toggle('active', tab === button));
-      for (const section of ['listings', 'orders', 'assistantData']) {
+      for (const section of ['listings', 'farmerApplications', 'orders', 'assistantData']) {
         document.getElementById(`${section}Section`).hidden = button.dataset.tab !== section;
       }
       try {
         if (button.dataset.tab === 'orders') await loadOrders();
+        if (button.dataset.tab === 'farmerApplications') await loadFarmerApplications();
         if (button.dataset.tab === 'assistantData') await loadAssistantData();
       } catch (error) {
         showStatus(error.message, true);
