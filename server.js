@@ -10,6 +10,7 @@ const { readFileSync, writeFileSync, unlinkSync, mkdirSync, existsSync } = requi
 const { extname, resolve, sep } = require('node:path');
 // Script Runtime
 const vm = require('node:vm');
+const { createExpandedDemoData } = require('./data/expanded-demo-data');
 
 // Project Paths
 const root = __dirname;
@@ -20,11 +21,12 @@ const port = Number(process.env.PORT || 8000);
 // Session Timing
 const sessionLifetime = 7 * 24 * 60 * 60 * 1000;
 // Request Limits
-const maxRequestBytes = 10 * 1024 * 1024;
+const maxRequestBytes = 20 * 1024 * 1024;
 // Image Limits
 const maxImageBytes = 1024 * 1024;
 // Session Cookie
 const sessionCookie = 'animo_session';
+const privateAdminPath = `/control/${randomBytes(24).toString('hex')}`;
 mkdirSync(dataDirectory, { recursive: true });
 
 // User Database
@@ -44,7 +46,25 @@ usersDb.exec(`
     user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     display_name TEXT NOT NULL,
     profile_picture TEXT,
+    contact TEXT,
+    account_type TEXT NOT NULL DEFAULT 'customer' CHECK (account_type IN ('customer', 'farmer')),
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS farmer_applications (
+    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    applicant_type TEXT NOT NULL CHECK (applicant_type IN ('individual', 'group')),
+    documents_json TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+    submitted_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    reviewed_at TEXT
+  );
+  CREATE TABLE IF NOT EXISTS otp_challenges (
+    id TEXT PRIMARY KEY,
+    contact TEXT NOT NULL,
+    code_hash TEXT NOT NULL,
+    expires_at INTEGER NOT NULL,
+    verified INTEGER NOT NULL DEFAULT 0,
+    attempts INTEGER NOT NULL DEFAULT 0
   );
   CREATE TABLE IF NOT EXISTS sessions (
     token_hash TEXT PRIMARY KEY,
@@ -65,6 +85,29 @@ usersDb.exec(`
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
   CREATE INDEX IF NOT EXISTS orders_user_idx ON orders(user_id, created_at DESC);
+  CREATE TABLE IF NOT EXISTS conversations (
+    id INTEGER PRIMARY KEY,
+    customer_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    farmer_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(customer_id, farmer_id)
+  );
+  CREATE TABLE IF NOT EXISTS messages (
+    id INTEGER PRIMARY KEY,
+    conversation_id INTEGER NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+    sender_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    body TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS reviews (
+    id INTEGER PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    listing_id TEXT NOT NULL,
+    rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    comment TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, listing_id)
+  );
 `);
 
 // Listing Database
@@ -78,6 +121,8 @@ listingsDb.exec(`
     data_json TEXT NOT NULL,
     image_data TEXT,
     image_path TEXT,
+    owner_id INTEGER,
+    review_status TEXT NOT NULL DEFAULT 'approved',
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
@@ -97,7 +142,22 @@ function ensureColumn(database, table, column, definition) {
 }
 
 ensureColumn(usersDb, 'profiles', 'profile_picture', 'TEXT');
+ensureColumn(usersDb, 'profiles', 'contact', 'TEXT');
+ensureColumn(usersDb, 'profiles', 'account_type', "TEXT NOT NULL DEFAULT 'customer'");
+usersDb.exec("CREATE UNIQUE INDEX IF NOT EXISTS profiles_contact_unique_idx ON profiles(contact) WHERE contact IS NOT NULL AND contact <> ''");
 ensureColumn(listingsDb, 'listings', 'image_path', 'TEXT');
+ensureColumn(listingsDb, 'listings', 'owner_id', 'INTEGER');
+ensureColumn(listingsDb, 'listings', 'review_status', "TEXT NOT NULL DEFAULT 'approved'");
+ensureColumn(usersDb, 'orders', 'payment_method', "TEXT NOT NULL DEFAULT 'cod'");
+ensureColumn(usersDb, 'orders', 'latitude', 'REAL');
+ensureColumn(usersDb, 'orders', 'longitude', 'REAL');
+usersDb.exec(`
+  CREATE TABLE IF NOT EXISTS conversation_orders (
+    conversation_id INTEGER NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+    order_id TEXT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+    PRIMARY KEY (conversation_id, order_id)
+  );
+`);
 
 // Assistant Database
 const aiDb = new DatabaseSync(resolve(dataDirectory, 'ai.sqlite'));
@@ -114,8 +174,10 @@ aiDb.exec(`
 `);
 
 // Catalog Image Data
+const uniqueCatalogImages = JSON.parse(readFileSync(resolve(root, 'data', 'catalog-image-map.json'), 'utf8'));
 const builtInImages = {
   products: {
+    ...uniqueCatalogImages.products,
     okra: 'marketplace/golden_okra.jpg',
     coconut: 'marketplace/coconut_sugar.jpg',
     cassava: 'marketplace/cassava_chips.jpg',
@@ -124,6 +186,7 @@ const builtInImages = {
     'siling-labuyo': 'marketplace/siling_labuyo.jpg'
   },
   farmers: {
+    ...uniqueCatalogImages.farmers,
     timpla: 'farmers/timpla_community_farm.png',
     arawan: 'farmers/arawan_organic_valley.png',
     kusina: 'farmers/kusina_ng_bukid.jpg'
@@ -227,6 +290,7 @@ for (const [type, records] of Object.entries(builtInImages)) {
     updateImage.run(`/shared/assets/${asset}`, type, id);
   }
 }
+seedFarmerCoordinates();
 
 // Feature Logic Response
 function jsonResponse(response, status, data, headers = {}) {
@@ -279,10 +343,15 @@ function currentUser(request) {
   usersDb.prepare('DELETE FROM sessions WHERE expires_at <= ?').run(now);
   const tokenHash = createHash('sha256').update(token).digest('hex');
   return usersDb.prepare(`
-    SELECT users.id, users.username, users.role, profiles.display_name, profiles.profile_picture
+    SELECT users.id, users.username,
+      CASE WHEN users.role = 'admin' THEN 'admin'
+        WHEN profiles.account_type = 'farmer' AND farmer_applications.status = 'approved' THEN 'farmer'
+        ELSE 'customer' END AS role,
+      profiles.account_type, profiles.contact, profiles.display_name, profiles.profile_picture
     FROM sessions
     JOIN users ON users.id = sessions.user_id
     JOIN profiles ON profiles.user_id = users.id
+    LEFT JOIN farmer_applications ON farmer_applications.user_id = users.id
     WHERE sessions.token_hash = ? AND sessions.expires_at > ?
   `).get(tokenHash, now) || null;
 }
@@ -345,7 +414,9 @@ function publicUser(user) {
     username: user.username,
     displayName: user.display_name,
     profilePicture: user.profile_picture || null,
-    role: user.role
+    role: user.role,
+    contact: user.contact || null,
+    accountType: user.account_type || (user.role === 'farmer' ? 'farmer' : 'customer')
   };
 }
 
@@ -354,8 +425,13 @@ function readListing(row) {
   return {
     ...JSON.parse(row.data_json),
     id: row.id,
+    name: row.name,
     image: row.image_path || row.image_data || undefined,
-    listingType: row.type
+    listingType: row.type,
+    status: row.review_status,
+    ownerId: row.owner_id || null,
+    listedAt: row.created_at,
+    updatedAt: row.updated_at
   };
 }
 
@@ -486,13 +562,277 @@ function validateListing(type, entry) {
 }
 
 // Feature Logic Catalog
-function listCatalog() {
+function listCatalog(includePending = false) {
   const catalog = { products: [], farmers: [], recipes: [], recipePackages: [] };
-  const rows = listingsDb.prepare('SELECT * FROM listings ORDER BY created_at DESC, rowid DESC').all();
+  const rows = listingsDb.prepare(
+    `SELECT * FROM listings ${includePending ? '' : 'WHERE review_status = ?'} ORDER BY created_at DESC, rowid DESC`
+  ).all(...(includePending ? [] : ['approved']));
   for (const row of rows) catalog[row.type].push(readListing(row));
   catalog.ingredients = [...new Set(catalog.recipes.flatMap((recipe) => recipe.ingredients || []))];
+  const savedReviews = usersDb.prepare('SELECT listing_id, rating FROM reviews').all();
+  for (const collection of [catalog.products, catalog.farmers, catalog.recipes, catalog.recipePackages]) {
+    for (const listing of collection) {
+      const ratings = [
+        ...demoReviews.filter((review) => review.listingId === listing.id).map((review) => review.rating),
+        ...savedReviews.filter((review) => review.listing_id === listing.id).map((review) => review.rating)
+      ];
+      if (ratings.length) {
+        listing.rating = Math.round(ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length * 10) / 10;
+        listing.reviewCount = ratings.length;
+      }
+    }
+  }
   return catalog;
 }
+
+// Delivered Order Review Eligibility
+function orderContainsReviewTarget(orderItems, listingId) {
+  const target = listingsDb.prepare('SELECT type, data_json FROM listings WHERE id = ?').get(listingId);
+  const orderedProducts = new Set();
+  for (const item of orderItems) {
+    if (item.id === listingId) return true;
+    if (item.id.startsWith('package:')) {
+      const packageId = item.id.slice('package:'.length);
+      if (packageId === listingId) return true;
+      const packageRow = listingsDb.prepare('SELECT data_json FROM listings WHERE id = ? AND type = ?')
+        .get(packageId, 'recipePackages');
+      if (packageRow) (JSON.parse(packageRow.data_json).productIds || []).forEach((id) => orderedProducts.add(id));
+    } else orderedProducts.add(item.id);
+  }
+  if (target?.type === 'recipes') {
+    return (JSON.parse(target.data_json).productIds || []).some((id) => orderedProducts.has(id));
+  }
+  if (target?.type === 'farmers') {
+    return orderItems.some((item) => {
+      const row = listingsDb.prepare('SELECT owner_id, data_json FROM listings WHERE id = ?').get(item.id.replace(/^package:/, ''));
+      return row && (row.owner_id === Number(listingId.replace(/^farmer-user-/, ''))
+        || JSON.parse(row.data_json).farm === listingsDb.prepare('SELECT name FROM listings WHERE id = ?').get(listingId)?.name);
+    });
+  }
+  return false;
+}
+
+// Contact Validation
+function normalizeContact(value) {
+  if (typeof value !== 'string') return null;
+  const contact = value.trim();
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(contact) && contact.length <= 254) {
+    return contact.toLowerCase();
+  }
+  const compact = contact.replace(/[\s()-]/g, '');
+  if (/^09\d{9}$/.test(compact)) return `+63${compact.slice(1)}`;
+  if (/^\+639\d{9}$/.test(compact)) return compact;
+  if (/^639\d{9}$/.test(compact)) return `+${compact}`;
+  return null;
+}
+
+// Private Farmer Document Storage
+function validateFarmerDocument(key, document) {
+  if (!document || typeof document.data !== 'string' || typeof document.name !== 'string' || document.name.length > 180) {
+    throw Object.assign(new Error(`Attach a valid ${key} document.`), { status: 400 });
+  }
+  const match = /^data:(application\/pdf|image\/(?:jpeg|png));base64,([A-Za-z0-9+/]+=*)$/.exec(document.data);
+  if (!match) throw Object.assign(new Error('Documents must be PDF, JPG, or PNG files.'), { status: 400 });
+  const bytes = Buffer.from(match[2], 'base64');
+  if (!bytes.length || bytes.length > 3 * 1024 * 1024) {
+    throw Object.assign(new Error('Each verification document must be smaller than 3 MB.'), { status: 413 });
+  }
+  const validSignature = match[1] === 'application/pdf'
+    ? bytes.subarray(0, 5).toString('ascii') === '%PDF-'
+    : match[1] === 'image/png'
+      ? bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
+      : bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255;
+  if (!validSignature) throw Object.assign(new Error('The selected file does not match its PDF/JPG/PNG type.'), { status: 400 });
+  return {
+    name: document.name,
+    bytes,
+    contentType: match[1],
+    extension: match[1] === 'application/pdf' ? '.pdf' : match[1] === 'image/png' ? '.png' : '.jpg'
+  };
+}
+
+function storeFarmerDocument(userId, key, validated) {
+  const directory = resolve(dataDirectory, 'farmer-documents');
+  mkdirSync(directory, { recursive: true });
+  const filename = `${userId}-${key}-${randomBytes(12).toString('hex')}${validated.extension}`;
+  writeFileSync(resolve(directory, filename), validated.bytes, { flag: 'wx' });
+  return { name: validated.name, filename, contentType: validated.contentType };
+}
+
+// Order Count Aggregation
+function listingOrderCounts() {
+  const counts = new Map();
+  const rows = usersDb.prepare('SELECT items_json FROM orders').all();
+  for (const row of rows) {
+    const usedInOrder = new Set();
+    for (const item of JSON.parse(row.items_json)) {
+      if (item.id.startsWith('package:')) {
+        const packageRow = listingsDb.prepare('SELECT data_json FROM listings WHERE id = ? AND type = ?')
+          .get(item.id.slice('package:'.length), 'recipePackages');
+        const ids = packageRow ? JSON.parse(packageRow.data_json).productIds || [] : [];
+        ids.forEach((productId) => usedInOrder.add(productId));
+      } else {
+        usedInOrder.add(item.id);
+      }
+    }
+    usedInOrder.forEach((productId) => counts.set(productId, (counts.get(productId) || 0) + 1));
+  }
+  return counts;
+}
+
+// Demo Review Fixtures
+const demoReviews = [
+  ['okra', 'Mila Santos', 5, 'Picked fresh and tender; perfect for pinakbet.'],
+  ['okra', 'Ramon Dela Cruz', 4, 'Good quality and carefully packed.'],
+  ['coconut', 'Liza Mercado', 5, 'Lovely caramel flavor in coffee and champorado.'],
+  ['coconut', 'Paolo Reyes', 5, 'A little goes a long way.'],
+  ['cassava', 'Nina Flores', 5, 'Crisp snack with a clean, homemade taste.'],
+  ['cassava', 'Arman Cruz', 4, 'Arrived intact and not too salty.'],
+  ['native-rice', 'Jessa Lim', 5, 'Fragrant rice with a satisfying texture.'],
+  ['malunggay', 'Cora Bautista', 4, 'Fresh leaves; I added them to soup.'],
+  ['siling-labuyo', 'Ben Garcia', 5, 'Very spicy, just as expected.'],
+  ['ginataang-labong', 'Ella Navarro', 5, 'Comforting recipe with clear instructions.'],
+  ['vegetable-adobo', 'Tomas Aquino', 4, 'Easy weeknight bowl.'],
+  ['banana-coco-smoothie', 'Bea Ramos', 5, 'Quick and refreshing.'],
+  ['spicy-cassava-bites', 'Noel Santiago', 5, 'Great merienda idea.'],
+  ['sinigang-kit', 'Kaye Villanueva', 4, 'Useful kit for a simple sour soup.'],
+  ['adobo-kit', 'Migs Flores', 5, 'Convenient local ingredients.'],
+  ['malunggay-rice-soup', 'Ari Mendoza', 5, 'A soothing recipe for a rainy afternoon.'],
+  ['vegetable-bowl-kit', 'Tina Dizon', 4, 'Good portions for a quick lunch.'],
+  ['merienda-kit', 'Jun Pangan', 5, 'A fun snack to prepare with the family.'],
+  ['coconut-breakfast-kit', 'Maya Cortez', 4, 'Nice local pantry combination.'],
+  ['timpla', 'Gina Reyes', 5, 'Friendly grower with a thoughtful selection.'],
+  ['arawan', 'Leo Santos', 5, 'Great story and carefully grown ingredients.'],
+  ['kusina', 'Mara Lopez', 4, 'A welcoming local producer.']
+].map(([listingId, displayName, rating, comment], index) => ({
+  id: `demo-${index + 1}`,
+  listingId,
+  displayName,
+  rating,
+  comment,
+  created_at: '2026-11-20',
+  demo: true
+}));
+
+function seedExpandedDemoCatalog() {
+  const data = createExpandedDemoData();
+  const marker = listingsDb.prepare('SELECT value FROM app_settings WHERE key = ?').get('expanded_demo_catalog_seeded');
+  if (!marker) {
+    const insert = listingsDb.prepare(`
+      INSERT OR IGNORE INTO listings (id, type, name, data_json, owner_id, review_status)
+      VALUES (?, ?, ?, ?, ?, 'approved')
+    `);
+    listingsDb.exec('BEGIN');
+    try {
+      for (const farmer of data.farmers) {
+        const { id, name, ...payload } = farmer;
+        insert.run(id, 'farmers', name, JSON.stringify(payload), null);
+      }
+      for (let index = 0; index < data.products.length; index += 1) {
+        const product = data.products[index];
+        const { id, name, ...payload } = product;
+        insert.run(id, 'products', name, JSON.stringify(payload), null);
+      }
+      for (const recipe of data.recipes) {
+        const { id, name, ...payload } = recipe;
+        insert.run(id, 'recipes', name, JSON.stringify(payload), null);
+      }
+      for (const kit of data.recipePackages) {
+        const { id, name, ...payload } = kit;
+        insert.run(id, 'recipePackages', name, JSON.stringify(payload), null);
+      }
+      listingsDb.prepare('INSERT INTO app_settings (key, value) VALUES (?, ?)').run('expanded_demo_catalog_seeded', 'true');
+      listingsDb.exec('COMMIT');
+    } catch (error) {
+      listingsDb.exec('ROLLBACK');
+      throw error;
+    }
+
+    const count = data.products.length + data.farmers.length + data.recipes.length + data.recipePackages.length;
+  }
+
+  const knowledgeInsert = aiDb.prepare(`
+    INSERT INTO knowledge_records (category, title, content, enabled)
+    SELECT ?, ?, ?, 1
+    WHERE NOT EXISTS (SELECT 1 FROM knowledge_records WHERE lower(title) = lower(?))
+  `);
+  for (const [category, title, content] of data.assistantFaq) {
+    knowledgeInsert.run(category, title, content, title);
+  }
+
+  const count = data.products.length + data.farmers.length + data.recipes.length + data.recipePackages.length;
+  for (let index = 0; index < count; index += 1) {
+    const listingId = index < 25
+      ? data.farmers[index].id
+      : index < 180
+        ? data.products[index - 25].id
+        : index < 200
+          ? data.recipes[index - 180].id
+          : data.recipePackages[index - 200].id;
+    const kind = index < 25 ? 'farmer' : index < 180 ? 'product' : index < 200 ? 'recipe' : 'meal kit';
+    const authorNames = ['Lina M.', 'Rogelio D.', 'Carmen P.', 'Noel A.', 'Mila S.'];
+    const comments = [
+      `The ${kind} was carefully prepared and the listing details were helpful.`,
+      `A lovely local ${kind}; the quality and description matched what I expected.`
+    ];
+    comments.forEach((comment, noteIndex) => {
+      if (demoReviews.some((review) => review.id === `demo-expanded-${index}-${noteIndex}`)) return;
+      demoReviews.push({
+        id: `demo-expanded-${index}-${noteIndex}`,
+        listingId,
+        displayName: authorNames[(index + noteIndex) % authorNames.length],
+        rating: 4 + ((index + noteIndex) % 2),
+        comment: comment.replaceAll(kind, kind === 'product' ? 'produce' : kind),
+        created_at: '2026-11-25',
+        demo: true
+      });
+    });
+  }
+
+  seedJevAustinDemoChat();
+}
+
+function seedJevAustinDemoChat() {
+  const buyer = usersDb.prepare(`
+    SELECT users.id FROM users JOIN profiles ON profiles.user_id = users.id
+    WHERE lower(users.username) = ?
+  `).get('jev');
+  const farmer = usersDb.prepare(`
+    SELECT users.id FROM users
+    JOIN profiles ON profiles.user_id = users.id
+    LEFT JOIN farmer_applications ON farmer_applications.user_id = users.id
+    WHERE lower(users.username) = ? AND profiles.account_type = 'farmer' AND farmer_applications.status = 'approved'
+  `).get('austin');
+  if (!buyer || !farmer) return;
+
+  const deliveredOrders = usersDb.prepare(`
+    SELECT orders.id, orders.items_json FROM orders
+    WHERE orders.user_id = ? AND orders.status = 'completed'
+    ORDER BY orders.created_at DESC
+  `).all(buyer.id).filter((order) => JSON.parse(order.items_json).some((item) => item.id === 'cassava')).slice(0, 5);
+  if (!deliveredOrders.length) return;
+
+  usersDb.prepare('INSERT OR IGNORE INTO conversations (customer_id, farmer_id) VALUES (?, ?)').run(buyer.id, farmer.id);
+  const conversation = usersDb.prepare('SELECT id FROM conversations WHERE customer_id = ? AND farmer_id = ?').get(buyer.id, farmer.id);
+  if (!conversation) return;
+
+  const addOrder = usersDb.prepare('INSERT OR IGNORE INTO conversation_orders (conversation_id, order_id) VALUES (?, ?)');
+  deliveredOrders.forEach((order) => addOrder.run(conversation.id, order.id));
+
+  const existing = usersDb.prepare('SELECT COUNT(*) AS count FROM messages WHERE conversation_id = ?').get(conversation.id);
+  if (existing.count) return;
+  const messageRows = [
+    [buyer.id, `Hi Austin, my delivered order ${deliveredOrders[0].id} arrived. The cassava chips were packed well.`],
+    [farmer.id, 'Thanks for letting me know, Jev! I’m glad the cassava chips arrived safely.'],
+    [buyer.id, `I also received order ${deliveredOrders[1]?.id || deliveredOrders[0].id}. The quality was great.`],
+    [farmer.id, 'Thank you for supporting our local harvest. Please message me if you have any questions about storage or serving.'],
+    [buyer.id, `I have ${deliveredOrders.length} delivered cassava order${deliveredOrders.length === 1 ? '' : 's'} linked here. Thanks again!`]
+  ];
+  const addMessage = usersDb.prepare('INSERT INTO messages (conversation_id, sender_id, body) VALUES (?, ?, ?)');
+  for (const [senderId, body] of messageRows) addMessage.run(conversation.id, senderId, body);
+}
+
+seedExpandedDemoCatalog();
 
 // Feature Logic Assistant Knowledge
 function listAssistantKnowledge(includeDisabled = false) {
@@ -502,6 +842,367 @@ function listAssistantKnowledge(includeDisabled = false) {
     FROM knowledge_records ${where}
     ORDER BY category COLLATE NOCASE, title COLLATE NOCASE, id
   `).all();
+}
+
+// Ollama Assistant Configuration
+const ollamaUrl = (process.env.OLLAMA_URL || 'http://127.0.0.1:11434').replace(/\/+$/, '');
+const ollamaModel = process.env.OLLAMA_MODEL || 'llama3.1';
+const assistantSessionTtlMs = 30 * 60 * 1000;
+const assistantSessions = new Map();
+const PH_BOUNDS = { minLat: 4.5, maxLat: 21.5, minLng: 116, maxLng: 127 };
+
+function isWithinPhilippines(lat, lng) {
+  return Number.isFinite(lat) && Number.isFinite(lng)
+    && lat >= PH_BOUNDS.minLat && lat <= PH_BOUNDS.maxLat
+    && lng >= PH_BOUNDS.minLng && lng <= PH_BOUNDS.maxLng;
+}
+
+function cleanText(value, max = 500) {
+  return typeof value === 'string' ? value.replace(/\s+/g, ' ').trim().slice(0, max) : '';
+}
+
+function tokenizeSearch(text) {
+  return [...new Set(cleanText(text, 400).toLowerCase().split(/[^a-z0-9]+/).filter((term) => term.length > 2))].slice(0, 12);
+}
+
+async function fetchJsonWithTimeout(url, options = {}, timeoutMs = 12000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    const contentType = response.headers.get('content-type') || '';
+    const body = contentType.includes('application/json') ? await response.json() : await response.text();
+    return { ok: response.ok, status: response.status, body };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+aiDb.exec(`
+  CREATE TABLE IF NOT EXISTS map_location_cache (
+    query TEXT PRIMARY KEY,
+    latitude REAL NOT NULL,
+    longitude REAL NOT NULL,
+    label TEXT NOT NULL,
+    source TEXT NOT NULL DEFAULT 'cache',
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+`);
+
+const knownPhLocations = {
+  'lucena, quezon': { lat: 13.9414, lng: 121.6234, label: 'Lucena, Quezon, Philippines' },
+  'bacolod, negros occidental': { lat: 10.6765, lng: 122.9509, label: 'Bacolod, Negros Occidental, Philippines' },
+  'cagayan de oro, misamis oriental': { lat: 8.4542, lng: 124.6319, label: 'Cagayan de Oro, Misamis Oriental, Philippines' },
+  'davao city, davao del sur': { lat: 7.1907, lng: 125.4553, label: 'Davao City, Davao del Sur, Philippines' },
+  'iloilo city, iloilo': { lat: 10.7202, lng: 122.5621, label: 'Iloilo City, Iloilo, Philippines' },
+  'tagaytay, cavite': { lat: 14.1153, lng: 120.9621, label: 'Tagaytay, Cavite, Philippines' },
+  'la trinidad, benguet': { lat: 16.455, lng: 120.5875, label: 'La Trinidad, Benguet, Philippines' },
+  'naga, camarines sur': { lat: 13.6218, lng: 123.1948, label: 'Naga, Camarines Sur, Philippines' }
+};
+
+function getCachedPhLocation(query) {
+  const key = cleanText(query, 120).toLowerCase();
+  if (!key) return null;
+  const known = knownPhLocations[key];
+  if (known && isWithinPhilippines(known.lat, known.lng)) return { ...known, query: key, source: 'known' };
+  const row = aiDb.prepare('SELECT query, latitude, longitude, label, source FROM map_location_cache WHERE query = ?').get(key);
+  if (row && isWithinPhilippines(row.latitude, row.longitude)) {
+    return { query: row.query, lat: row.latitude, lng: row.longitude, label: row.label, source: row.source };
+  }
+  return null;
+}
+
+function cachePhLocation(query, lat, lng, label, source = 'nominatim') {
+  const key = cleanText(query, 120).toLowerCase();
+  if (!key || !isWithinPhilippines(lat, lng)) return null;
+  aiDb.prepare(`
+    INSERT INTO map_location_cache (query, latitude, longitude, label, source, updated_at)
+    VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+    ON CONFLICT(query) DO UPDATE SET latitude = excluded.latitude, longitude = excluded.longitude, label = excluded.label, source = excluded.source, updated_at = CURRENT_TIMESTAMP
+  `).run(key, lat, lng, cleanText(label, 180) || key, cleanText(source, 40) || 'nominatim');
+  return getCachedPhLocation(key);
+}
+
+async function geocodePhilippines(query) {
+  const key = cleanText(query, 120);
+  if (!key) return null;
+  const cached = getCachedPhLocation(key);
+  if (cached) return cached;
+  const url = new URL('https://nominatim.openstreetmap.org/search');
+  url.searchParams.set('format', 'jsonv2');
+  url.searchParams.set('limit', '1');
+  url.searchParams.set('countrycodes', 'ph');
+  url.searchParams.set('q', key);
+  const result = await fetchJsonWithTimeout(url, {
+    headers: { 'Accept-Language': 'en', 'User-Agent': 'AniMo-Local-Dev/1.0 (local project map search)' }
+  }, 10000);
+  if (!result.ok || !Array.isArray(result.body) || !result.body[0]) return null;
+  const hit = result.body[0];
+  const lat = Number(hit.lat);
+  const lng = Number(hit.lon);
+  if (!isWithinPhilippines(lat, lng)) return null;
+  return cachePhLocation(key, lat, lng, hit.display_name || key, 'nominatim');
+}
+
+function resolveSellerCoordinates(record) {
+  const lat = Number(record?.latitude ?? record?.lat);
+  const lng = Number(record?.longitude ?? record?.lng);
+  if (isWithinPhilippines(lat, lng)) return { lat, lng, label: cleanText(record.location, 140), source: 'record' };
+  return getCachedPhLocation(record?.location || '');
+}
+
+async function mapSellersPayload() {
+  const sellers = listCatalog().farmers;
+  const payload = [];
+  for (const farmer of sellers) {
+    let coords = resolveSellerCoordinates(farmer);
+    if (!coords && farmer.location) {
+      try { coords = await geocodePhilippines(farmer.location); } catch {}
+    }
+    if (!coords || !isWithinPhilippines(coords.lat, coords.lng)) continue;
+    payload.push({
+      id: farmer.id,
+      name: farmer.name,
+      location: farmer.location || coords.label,
+      specialty: farmer.specialty || '',
+      latitude: coords.lat,
+      longitude: coords.lng,
+      href: `/pages/farmer-profile/farmer-profile.html?id=${encodeURIComponent(farmer.id)}`
+    });
+  }
+  return payload;
+}
+
+function seedFarmerCoordinates() {
+  const rows = listingsDb.prepare("SELECT id, data_json FROM listings WHERE type = 'farmers'").all();
+  const update = listingsDb.prepare('UPDATE listings SET data_json = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
+  for (const row of rows) {
+    try {
+      const data = JSON.parse(row.data_json);
+      if (isWithinPhilippines(Number(data.latitude), Number(data.longitude))) continue;
+      const coords = getCachedPhLocation(data.location || '');
+      if (!coords) continue;
+      data.latitude = coords.lat;
+      data.longitude = coords.lng;
+      update.run(JSON.stringify(data), row.id);
+    } catch {}
+  }
+}
+
+function buildAssistantSystemPrompt(contextText) {
+  return [
+    'You are AniMo Assistant, the helpful AI assistant for the AniMo website.',
+    'AniMo is a local Filipino farm marketplace where users can browse products, farmers, recipes, meal kits, cart, checkout, orders, and a local map.',
+    'Answer clearly and professionally. Use plain text with short paragraphs or bullet points when helpful.',
+    'Use the provided AniMo database/context first. Do not invent prices, availability, stock, order records, farmer details, or policies that are not present.',
+    'If the requested information is missing from the provided context, say so clearly and suggest where in AniMo the user can check.',
+    'For recipe requests, prefer ingredients/products available in AniMo context and mention missing ingredients plainly.',
+    'Do not expose secrets, API keys, internal credentials, or unsafe instructions. Decline harmful or unrelated requests politely.',
+    'Keep answers grounded, practical, and specific to AniMo.',
+    'Context:',
+    contextText || 'No database context was retrieved.'
+  ].join('\n');
+}
+
+function retrieveRagContext(question) {
+  const terms = tokenizeSearch(question);
+  const normalized = cleanText(question, 400).toLowerCase();
+  const scored = [];
+  const add = (score, text) => { if (score > 0 && text) scored.push({ score, text: cleanText(text, 420) }); };
+
+  for (const record of listAssistantKnowledge()) {
+    const haystack = `${record.category} ${record.title} ${record.content}`.toLowerCase();
+    const score = terms.reduce((total, term) => total + (haystack.includes(term) ? 2 : 0), 0)
+      + (normalized.includes(record.title.toLowerCase()) ? 3 : 0);
+    add(score, `[Knowledge/${record.category}] ${record.title}: ${record.content}`);
+  }
+
+  const catalog = listCatalog();
+  for (const product of catalog.products) {
+    const haystack = `${product.name} ${product.category} ${product.location} ${product.farm} ${(product.tags || []).join(' ')} ${product.description || ''}`.toLowerCase();
+    const score = terms.reduce((total, term) => total + (haystack.includes(term) ? 2 : 0), 0);
+    add(score, `[Product] ${product.name} - ₱${product.price}/${product.unit}, stock ${product.stock}, farm ${product.farm}, location ${product.location}, delivery ${product.deliveryAvailable ? 'yes' : 'no'}, pickup ${product.pickupAvailable ? 'yes' : 'no'}.`);
+  }
+  for (const farmer of catalog.farmers) {
+    const haystack = `${farmer.name} ${farmer.location} ${farmer.specialty} ${farmer.story || ''}`.toLowerCase();
+    const score = terms.reduce((total, term) => total + (haystack.includes(term) ? 2 : 0), 0);
+    add(score, `[Farmer] ${farmer.name} - ${farmer.location}; specialty: ${farmer.specialty}. ${farmer.story || ''}`);
+  }
+  for (const recipe of catalog.recipes) {
+    const haystack = `${recipe.name} ${recipe.category} ${(recipe.ingredients || []).join(' ')} ${recipe.description || ''}`.toLowerCase();
+    const score = terms.reduce((total, term) => total + (haystack.includes(term) ? 2 : 0), 0);
+    add(score, `[Recipe] ${recipe.name} (${recipe.time || 'time n/a'}, ${recipe.difficulty || 'difficulty n/a'}): ingredients ${ (recipe.ingredients || []).join(', ') }. ${recipe.description || ''}`);
+  }
+  for (const kit of catalog.recipePackages) {
+    const haystack = `${kit.name} ${kit.description || ''}`.toLowerCase();
+    const score = terms.reduce((total, term) => total + (haystack.includes(term) ? 2 : 0), 0);
+    add(score, `[Meal Kit] ${kit.name} - ₱${kit.price}. ${kit.description || ''}`);
+  }
+
+  add(2, '[Website] Marketplace: browse local products and add to cart. Recipes: find recipes by ingredients. Meal Kits: buy bundled ingredients. Cart/Checkout: review items, vouchers, and place order. Local map: find nearby Philippine sellers/ingredients. Farmers: view farmer profiles. Chat: message farmers. Profile: view orders and account details.');
+
+  return scored
+    .sort((a, b) => b.score - a.score)
+    .filter((item, index, arr) => arr.findIndex((candidate) => candidate.text === item.text) === index)
+    .slice(0, 8)
+    .map((item) => item.text)
+    .join('\n');
+}
+
+function buildLocalAssistantReply(question) {
+  const normalized = cleanText(question, 800).toLowerCase();
+  const catalog = listCatalog();
+  const terms = tokenizeSearch(normalized);
+
+  if (/\b(recipe|cook|meal|dish|make)\b/.test(normalized)) {
+    const rankedRecipes = catalog.recipes.map((recipe) => {
+      const text = `${recipe.name} ${recipe.category} ${(recipe.ingredients || []).join(' ')} ${recipe.description || ''}`.toLowerCase();
+      return {
+        recipe,
+        score: terms.reduce((total, term) => total + (text.includes(term) ? 1 : 0), 0)
+      };
+    }).sort((a, b) => b.score - a.score);
+    const recipe = rankedRecipes[0]?.recipe;
+    if (recipe) {
+      const steps = Array.isArray(recipe.steps) ? recipe.steps.slice(0, 5) : [];
+      const ingredients = Array.isArray(recipe.ingredients) ? recipe.ingredients.join(', ') : 'Check the recipe page for ingredients.';
+      return `Try ${recipe.name}${recipe.time ? ` (${recipe.time})` : ''}.\nIngredients: ${ingredients}.${steps.length ? `\n\nSteps:\n${steps.map((step, index) => `${index + 1}. ${step}`).join('\n')}` : ''}\n\nYou can find this recipe on AniMo under Recipes.`;
+    }
+    return 'I could not find a matching recipe in AniMo listings. Browse the Recipes page to see the recipes currently available.';
+  }
+
+  if (/\b(product|ingredient|stock|price|available|buy|near|farm|seller)\b/.test(normalized)) {
+    const matches = catalog.products.map((product) => {
+      const text = `${product.name} ${product.category} ${product.location} ${product.farm} ${(product.tags || []).join(' ')} ${product.description || ''}`.toLowerCase();
+      return { product, score: terms.reduce((total, term) => total + (text.includes(term) ? 1 : 0), 0) };
+    }).filter((entry) => entry.score > 0).sort((a, b) => b.score - a.score).slice(0, 5);
+    if (matches.length) {
+      return `Here are matching AniMo products:\n${matches.map(({ product }) => `- ${product.name}: ₱${product.price} per ${product.unit}; ${product.stock} in stock; ${product.farm}, ${product.location}.`).join('\n')}\n\nCheck the product listing for the latest availability before ordering.`;
+    }
+  }
+
+  if (/\b(delivery|deliver|pickup|pick up)\b/.test(normalized)) {
+    return 'Each product listing shows whether delivery, pickup, or both are available. Review the selected products’ fulfillment options and seller locations in your cart before checkout.';
+  }
+  if (/\b(order|checkout|cart|purchase)\b/.test(normalized)) {
+    return 'To place an order, add available products to your cart, review quantities and any voucher, then continue to Checkout and submit the order. You can track orders from your Profile.';
+  }
+  if (/\b(voucher|discount|coupon)\b/.test(normalized)) {
+    return 'Open your Cart and use the voucher selector to review and apply an available voucher before continuing to checkout.';
+  }
+  if (/\b(map|location|directions|route|nearby)\b/.test(normalized)) {
+    return 'Open Local map from the Home page. Search for a Philippine city or town, or use your location while in the Philippines. Select a seller marker and choose Directions to request a road route.';
+  }
+  if (/\b(farmer|grower|seller)\b/.test(normalized)) {
+    return catalog.farmers.length
+      ? `AniMo currently lists ${catalog.farmers.length} farmer profiles. Open the Farmers page to browse growers and select a profile for details.`
+      : 'There are no farmer profiles available in AniMo listings right now.';
+  }
+
+  const context = retrieveRagContext(question).split('\n').filter(Boolean).slice(0, 3);
+  if (context.length) return `I found this in AniMo’s records:\n${context.map((line) => `- ${line}`).join('\n')}`;
+  return 'I can help with AniMo products, farmers, recipes, meal kits, orders, and the Philippines map. Ask about a specific product or how to use a feature.';
+}
+
+function getAssistantSession(sessionId) {
+  const id = cleanText(sessionId, 80) || 'anonymous';
+  const now = Date.now();
+  for (const [key, value] of assistantSessions) {
+    if (value.expiresAt <= now) assistantSessions.delete(key);
+  }
+  const existing = assistantSessions.get(id);
+  if (existing && existing.expiresAt > now) {
+    existing.expiresAt = now + assistantSessionTtlMs;
+    return existing;
+  }
+  const created = { id, messages: [], expiresAt: now + assistantSessionTtlMs };
+  assistantSessions.set(id, created);
+  return created;
+}
+
+async function callOllamaAssistant(messages) {
+  const health = await fetchJsonWithTimeout(`${ollamaUrl}/api/tags`, {}, 2000);
+  if (!health.ok || !Array.isArray(health.body?.models)) {
+    throw Object.assign(new Error('Ollama is not responding.'), { status: 503 });
+  }
+  const modelAvailable = health.body.models.some((model) => (
+    model.name === ollamaModel || model.name.startsWith(`${ollamaModel}:`)
+  ));
+  if (!modelAvailable) {
+    throw Object.assign(new Error(`Ollama model "${ollamaModel}" is not installed.`), { status: 503 });
+  }
+  const result = await fetchJsonWithTimeout(`${ollamaUrl}/api/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: ollamaModel,
+      stream: false,
+      messages,
+      options: { temperature: 0.2 }
+    })
+  }, 45000);
+  if (!result.ok) {
+    const detail = typeof result.body === 'string' ? result.body : result.body?.error || JSON.stringify(result.body);
+    throw Object.assign(new Error(cleanText(detail, 200) || 'Ollama request failed.'), { status: 502 });
+  }
+  const content = cleanText(result.body?.message?.content, 4000);
+  if (!content) throw Object.assign(new Error('Ollama returned an empty response.'), { status: 502 });
+  return content;
+}
+
+// Delivery Completion
+function setOrderStatus(orderId, status) {
+  const order = usersDb.prepare('SELECT * FROM orders WHERE id = ?').get(orderId);
+  if (!order) return { error: 'Order not found.', status: 404 };
+  if (order.status === 'completed' && status !== 'completed') {
+    return { error: 'A delivered order cannot be reopened in this demo.', status: 409 };
+  }
+  if (status === 'completed' && order.status !== 'completed') {
+    const quantities = new Map();
+    for (const item of JSON.parse(order.items_json)) {
+      if (item.id.startsWith('package:')) {
+        const packageRow = listingsDb.prepare('SELECT data_json FROM listings WHERE id = ? AND type = ?')
+          .get(item.id.slice('package:'.length), 'recipePackages');
+        const productIds = packageRow ? JSON.parse(packageRow.data_json).productIds || [] : [];
+        for (const productId of productIds) quantities.set(productId, (quantities.get(productId) || 0) + item.quantity);
+      } else {
+        quantities.set(item.id, (quantities.get(item.id) || 0) + item.quantity);
+      }
+    }
+    listingsDb.exec('BEGIN');
+    try {
+      for (const [productId, quantity] of quantities) {
+        const row = listingsDb.prepare('SELECT data_json FROM listings WHERE id = ? AND type = ?').get(productId, 'products');
+        if (!row) continue;
+        const data = JSON.parse(row.data_json);
+        const available = Number(data.stock) || 0;
+        if (available < quantity) throw Object.assign(new Error(`${data.name} no longer has enough stock to complete this delivery.`), { status: 409 });
+        data.stock = available - quantity;
+        listingsDb.prepare('UPDATE listings SET data_json = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+          .run(JSON.stringify(data), productId);
+      }
+      listingsDb.exec('COMMIT');
+    } catch (error) {
+      listingsDb.exec('ROLLBACK');
+      throw error;
+    }
+  }
+  usersDb.prepare('UPDATE orders SET status = ? WHERE id = ?').run(status, orderId);
+  return { ok: true };
+}
+
+// Farmer Order Ownership Check
+function orderTouchesOwnedListings(items, ownedIds) {
+  for (const item of items) {
+    const listingId = item.id.replace(/^package:/, '');
+    if (ownedIds.has(listingId)) return true;
+    if (item.id.startsWith('package:')) {
+      const row = listingsDb.prepare('SELECT data_json FROM listings WHERE id = ? AND type = ?')
+        .get(listingId, 'recipePackages');
+      if (row && (JSON.parse(row.data_json).productIds || []).some((id) => ownedIds.has(id))) return true;
+    }
+  }
+  return false;
 }
 
 // Input Validation Assistant Knowledge
@@ -526,6 +1227,9 @@ function createOrder(userId, body) {
   if (!['delivery', 'pickup'].includes(body.fulfillment)) {
     throw Object.assign(new Error('Choose delivery or pickup.'), { status: 400 });
   }
+  if (!['cod', 'bank-bpi', 'bank-bdo', 'instapay-demo'].includes(body.paymentMethod)) {
+    throw Object.assign(new Error('Choose cash on delivery, BPI/BDO bank transfer, or the InstaPay demo option.'), { status: 400 });
+  }
   if (typeof body.contactName !== 'string' || !body.contactName.trim() || body.contactName.trim().length > 100) {
     throw Object.assign(new Error('Enter the name for this order.'), { status: 400 });
   }
@@ -538,7 +1242,8 @@ function createOrder(userId, body) {
     if (!item || typeof item.id !== 'string' || !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 99) {
       throw Object.assign(new Error('Cart contains an invalid item or quantity.'), { status: 400 });
     }
-    const row = listingsDb.prepare('SELECT * FROM listings WHERE id = ?').get(item.id.replace(/^package:/, ''));
+    const row = listingsDb.prepare('SELECT * FROM listings WHERE id = ? AND review_status = ?')
+      .get(item.id.replace(/^package:/, ''), 'approved');
     if (!row) throw Object.assign(new Error('A cart item is no longer available.'), { status: 400 });
     const listing = readListing(row);
     const isPackage = item.id.startsWith('package:');
@@ -553,7 +1258,8 @@ function createOrder(userId, body) {
         throw Object.assign(new Error(`${listing.name} has no available products and cannot be ordered.`), { status: 400 });
       }
       for (const productId of listing.productIds) {
-        const productRow = listingsDb.prepare('SELECT * FROM listings WHERE id = ? AND type = ?').get(productId, 'products');
+        const productRow = listingsDb.prepare('SELECT * FROM listings WHERE id = ? AND type = ? AND review_status = ?')
+          .get(productId, 'products', 'approved');
         const product = productRow && readListing(productRow);
         if (!product || product.stock < item.quantity
           || (body.fulfillment === 'delivery' && !product.deliveryAvailable)
@@ -589,10 +1295,13 @@ function createOrder(userId, body) {
   const total = Math.round((subtotal + shipping - discount) * 100) / 100;
   const orderId = `AN-${Date.now().toString(36).toUpperCase()}-${randomBytes(3).toString('hex').toUpperCase()}`;
   const status = body.fulfillment === 'delivery' ? 'to_receive' : 'to_pickup';
+  const latitude = Number.isFinite(body.latitude) && Math.abs(body.latitude) <= 90 ? body.latitude : null;
+  const longitude = Number.isFinite(body.longitude) && Math.abs(body.longitude) <= 180 ? body.longitude : null;
   usersDb.prepare(
-    'INSERT INTO orders (id, user_id, status, fulfillment, contact_name, address, total, items_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+    'INSERT INTO orders (id, user_id, status, fulfillment, contact_name, address, total, items_json, payment_method, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
   ).run(orderId, userId, status, body.fulfillment, body.contactName.trim(),
-    body.fulfillment === 'delivery' ? body.address.trim() : '', total, JSON.stringify(orderItems));
+    body.fulfillment === 'delivery' ? body.address.trim() : '', total, JSON.stringify(orderItems),
+    body.paymentMethod, latitude, longitude);
   return { id: orderId, status, fulfillment: body.fulfillment, total, items: orderItems };
 }
 
@@ -604,34 +1313,123 @@ async function handleApi(request, response, url) {
     return jsonResponse(response, 200, { ok: true, databases: ['users', 'listings', 'ai'] });
   }
   if (method === 'GET' && pathname === '/api/catalog') {
-    return jsonResponse(response, 200, listCatalog());
+    const catalog = listCatalog();
+    const counts = listingOrderCounts();
+    catalog.products = catalog.products.map((product) => ({ ...product, orderCount: counts.get(product.id) || 0 }));
+    return jsonResponse(response, 200, catalog);
   }
   if (pathname.startsWith('/api/') && !requireSameOrigin(request)) {
     return jsonResponse(response, 403, { error: 'Request origin was rejected.' });
   }
 
+  if (method === 'POST' && pathname === '/api/auth/otp/send') {
+    const body = await readJson(request);
+    const contact = normalizeContact(body.contact);
+    if (!contact) {
+      return jsonResponse(response, 400, { error: 'Enter a valid email address or Philippine mobile number (09XXXXXXXXX or +639XXXXXXXXX).' });
+    }
+    if (usersDb.prepare('SELECT 1 FROM profiles WHERE contact = ?').get(contact)) {
+      return jsonResponse(response, 409, { error: 'That email address or phone number is already in use.' });
+    }
+    const challengeId = randomBytes(18).toString('hex');
+    const code = String(randomBytes(4).readUInt32BE(0) % 1000000).padStart(6, '0');
+    usersDb.prepare('DELETE FROM otp_challenges WHERE contact = ? OR expires_at < ?').run(contact, Date.now());
+    usersDb.prepare('INSERT INTO otp_challenges (id, contact, code_hash, expires_at) VALUES (?, ?, ?, ?)')
+      .run(challengeId, contact, createHash('sha256').update(`${challengeId}:${code}`).digest('hex'), Date.now() + 10 * 60 * 1000);
+    return jsonResponse(response, 200, {
+      challengeId,
+      contact,
+      expiresInSeconds: 600,
+      demoCode: code,
+      notice: 'Local demo only: no email or SMS was sent.'
+    });
+  }
+  if (method === 'POST' && pathname === '/api/auth/otp/verify') {
+    const body = await readJson(request);
+    const challenge = usersDb.prepare('SELECT * FROM otp_challenges WHERE id = ?').get(body.challengeId);
+    if (!challenge || challenge.expires_at <= Date.now() || challenge.attempts >= 5) {
+      return jsonResponse(response, 400, { error: 'This code has expired or reached its attempt limit. Request a new code.' });
+    }
+    const supplied = typeof body.code === 'string' ? body.code : '';
+    const expectedHash = createHash('sha256').update(`${challenge.id}:${supplied}`).digest('hex');
+    const matches = timingSafeEqual(Buffer.from(expectedHash, 'hex'), Buffer.from(challenge.code_hash, 'hex'));
+    if (!matches) {
+      usersDb.prepare('UPDATE otp_challenges SET attempts = attempts + 1 WHERE id = ?').run(challenge.id);
+      return jsonResponse(response, 400, { error: 'The verification code is incorrect.' });
+    }
+    usersDb.prepare('UPDATE otp_challenges SET verified = 1 WHERE id = ?').run(challenge.id);
+    return jsonResponse(response, 200, { verified: true, contact: challenge.contact });
+  }
+
   if (method === 'POST' && pathname === '/api/auth/register') {
     const body = await readJson(request);
     if (typeof body.username !== 'string' || !usernamePattern.test(body.username)
-      || typeof body.password !== 'string' || body.password.length < 8 || body.password.length > 256) {
-      return jsonResponse(response, 400, { error: 'Choose a username of 3–32 letters, numbers, dots, dashes, or underscores and a password of 8–256 characters.' });
+      || typeof body.password !== 'string' || body.password.length < 8 || body.password.length > 256
+      || typeof body.displayName !== 'string' || !body.displayName.trim() || body.displayName.trim().length > 80
+      || typeof body.profilePicture !== 'string'
+      || body.termsAccepted !== true || !['customer', 'farmer'].includes(body.accountType)) {
+      return jsonResponse(response, 400, { error: 'Enter your name, a valid username and password, choose an account type, and accept the terms.' });
     }
+    const contact = normalizeContact(body.contact);
+    const challenge = usersDb.prepare('SELECT * FROM otp_challenges WHERE id = ?').get(body.otpChallengeId);
+    if (!contact || !challenge || !challenge.verified || challenge.contact !== contact || challenge.expires_at <= Date.now()) {
+      return jsonResponse(response, 400, { error: 'Verify your email address or Philippine phone number before registering.' });
+    }
+    let farmerDocuments = null;
+    if (body.accountType === 'farmer') {
+      const requiredDocuments = ['governmentId', 'proofOfAddress', 'bankProof'];
+      if (!['individual', 'group'].includes(body.applicantType)
+        || !body.farmerProfile || typeof body.farmerProfile.name !== 'string' || !body.farmerProfile.name.trim()
+        || typeof body.farmerProfile.location !== 'string' || !body.farmerProfile.location.trim()
+        || typeof body.farmerProfile.specialty !== 'string' || !body.farmerProfile.specialty.trim()
+        || typeof body.farmerProfile.story !== 'string' || !body.farmerProfile.story.trim()
+        || !body.documents || requiredDocuments.some((key) => !body.documents[key])
+        || (body.applicantType === 'group' && !body.documents.daAccreditation)) {
+        return jsonResponse(response, 400, { error: 'Farmer applications require seller name, location, specialty, story, government ID, proof of address, bank proof, applicant type, and DA accreditation for groups.' });
+      }
+      farmerDocuments = Object.fromEntries(requiredDocuments.map((key) => [key, validateFarmerDocument(key, body.documents[key])]));
+      if (body.applicantType === 'group') {
+        farmerDocuments.daAccreditation = validateFarmerDocument('DA accreditation', body.documents.daAccreditation);
+      }
+    }
+    const profileImage = body.profilePicture ? validImage(body.profilePicture, 'profiles') : null;
     const username = body.username.toLowerCase();
     const credentials = hashPassword(body.password);
     try {
       const result = usersDb.prepare(
         'INSERT INTO users (username, password_hash, password_salt) VALUES (?, ?, ?)'
       ).run(username, credentials.hash, credentials.salt);
-      usersDb.prepare('INSERT INTO profiles (user_id, display_name) VALUES (?, ?)').run(result.lastInsertRowid, username);
+      const savedProfileImage = profileImage ? storeImage('profiles', `user-${result.lastInsertRowid}`, profileImage) : null;
+      usersDb.prepare(`INSERT INTO profiles (user_id, display_name, profile_picture, contact, account_type)
+        VALUES (?, ?, ?, ?, ?)`).run(result.lastInsertRowid, body.displayName.trim(), savedProfileImage, contact, body.accountType);
+      if (body.accountType === 'farmer') {
+        const storedDocuments = Object.fromEntries(Object.entries(farmerDocuments)
+          .map(([key, document]) => [key, storeFarmerDocument(result.lastInsertRowid, key, document)]));
+        storedDocuments.profile = {
+          name: body.farmerProfile.name.trim().slice(0, 140),
+          location: body.farmerProfile.location.trim().slice(0, 140),
+          specialty: body.farmerProfile.specialty.trim().slice(0, 240),
+          story: body.farmerProfile.story.trim().slice(0, 1200)
+        };
+        usersDb.prepare('INSERT INTO farmer_applications (user_id, applicant_type, documents_json) VALUES (?, ?, ?)')
+          .run(result.lastInsertRowid, body.applicantType, JSON.stringify(storedDocuments));
+        usersDb.prepare('DELETE FROM otp_challenges WHERE id = ?').run(challenge.id);
+        return jsonResponse(response, 202, {
+          pending: true,
+          message: 'Your farmer application is pending administrator document verification. You can sign in after approval.'
+        });
+      }
       const user = usersDb.prepare(`
-        SELECT users.id, users.username, users.role, profiles.display_name, profiles.profile_picture
+        SELECT users.id, users.username, users.role, profiles.account_type, profiles.contact,
+          profiles.display_name, profiles.profile_picture
         FROM users JOIN profiles ON profiles.user_id = users.id WHERE users.id = ?
       `).get(result.lastInsertRowid);
+      usersDb.prepare('DELETE FROM otp_challenges WHERE id = ?').run(challenge.id);
       const token = createSession(user.id);
       return jsonResponse(response, 201, { user: publicUser(user) }, { 'Set-Cookie': sessionCookieHeader(token, request) });
     } catch (error) {
       if (String(error.message).includes('UNIQUE constraint failed')) {
-        return jsonResponse(response, 409, { error: 'That username is already taken.' });
+        return jsonResponse(response, 409, { error: String(error.message).includes('profiles.contact') ? 'That email address or phone number is already in use.' : 'That username is already taken.' });
       }
       throw error;
     }
@@ -639,16 +1437,19 @@ async function handleApi(request, response, url) {
 
   if (method === 'POST' && pathname === '/api/auth/login') {
     const body = await readJson(request);
-    const username = typeof body.username === 'string' ? body.username.toLowerCase() : '';
+    const identifier = typeof body.username === 'string' ? body.username.trim().toLowerCase() : '';
     const address = request.socket.remoteAddress || 'unknown';
-    const attemptKey = `${address}:${username}`;
-    const attempt = loginAttempts.get(attemptKey) || { count: 0, until: 0 };
-    if (attempt.until > Date.now()) return jsonResponse(response, 429, { error: 'Too many login attempts. Wait a few minutes and try again.' });
+    const attemptKey = `${address}:${identifier}`;
+    const attempt = loginAttempts.get(attemptKey) || { count: 0, lockouts: 0, until: 0 };
+    if (attempt.until > Date.now()) return jsonResponse(response, 429, { error: `Too many login attempts. Try again in ${Math.ceil((attempt.until - Date.now()) / 60000)} minute(s).` });
     const user = usersDb.prepare(`
       SELECT users.id, users.username, users.role, users.password_hash, users.password_salt,
-        profiles.display_name, profiles.profile_picture
-      FROM users JOIN profiles ON profiles.user_id = users.id WHERE users.username = ?
-    `).get(username);
+        profiles.account_type, profiles.contact, profiles.display_name, profiles.profile_picture,
+        farmer_applications.status AS farmer_status
+      FROM users JOIN profiles ON profiles.user_id = users.id
+      LEFT JOIN farmer_applications ON farmer_applications.user_id = users.id
+      WHERE users.username = ? OR profiles.contact = ?
+    `).get(identifier, normalizeContact(identifier) || identifier);
     const credentials = user ? {
       hash: Buffer.from(user.password_hash),
       salt: Buffer.from(user.password_salt)
@@ -657,10 +1458,32 @@ async function handleApi(request, response, url) {
     const matches = supplied.length === credentials.hash.length && timingSafeEqual(supplied, credentials.hash);
     if (!user || !matches) {
       attempt.count += 1;
-      if (attempt.count >= 8) attempt.until = Date.now() + 5 * 60 * 1000;
+      const threshold = Math.max(3, 10 - (attempt.lockouts || 0) * 2);
+      if (attempt.count >= threshold) {
+        attempt.lockouts = (attempt.lockouts || 0) + 1;
+        attempt.count = 0;
+        attempt.until = Date.now() + Math.min(60, 5 * (2 ** (attempt.lockouts - 1))) * 60 * 1000;
+      }
       loginAttempts.set(attemptKey, attempt);
-      return jsonResponse(response, 401, { error: 'Username or password is incorrect.' });
+      return jsonResponse(response, attempt.until > Date.now() ? 429 : 401, {
+        error: attempt.until > Date.now()
+          ? `Too many login attempts. Try again in ${Math.ceil((attempt.until - Date.now()) / 60000)} minute(s).`
+          : 'Username, email/phone, or password is incorrect.'
+      });
     }
+    if (user.farmer_status === 'pending') {
+      return jsonResponse(response, 403, { error: 'Your farmer application is awaiting administrator verification.' });
+    }
+    if (user.farmer_status === 'rejected') {
+      return jsonResponse(response, 403, { error: 'Your farmer application was not approved. Contact the administrator.' });
+    }
+    const effectiveRole = user.role === 'admin' ? 'admin'
+      : user.account_type === 'farmer' && user.farmer_status === 'approved' ? 'farmer' : 'customer';
+    const selectedRole = body.accountType === 'farmer' ? 'farmer' : body.accountType === 'admin' ? 'admin' : 'customer';
+    if (selectedRole !== effectiveRole) {
+      return jsonResponse(response, 403, { error: `This account is not an approved ${selectedRole === 'customer' ? 'buyer' : selectedRole} account.` });
+    }
+    user.role = effectiveRole;
     loginAttempts.delete(attemptKey);
     const token = createSession(user.id);
     return jsonResponse(response, 200, { user: publicUser(user) }, { 'Set-Cookie': sessionCookieHeader(token, request) });
@@ -681,6 +1504,138 @@ async function handleApi(request, response, url) {
   }
   if (method === 'GET' && pathname === '/api/assistant/knowledge') {
     return jsonResponse(response, 200, { records: listAssistantKnowledge() });
+  }
+  if (method === 'POST' && pathname === '/api/assistant/chat') {
+    const body = await readJson(request);
+    const message = cleanText(body.message, 800);
+    const sessionId = cleanText(body.sessionId, 80) || `guest:${request.socket.remoteAddress || 'local'}`;
+    const mode = cleanText(body.mode, 40).toLowerCase() || 'chat';
+    if (!message) return jsonResponse(response, 400, { error: 'Enter a message for the assistant.' });
+
+    const session = getAssistantSession(sessionId);
+    const lower = message.toLowerCase();
+    const unsafe = ['api key', 'password', 'secret', 'token', 'credit card', 'hack', 'exploit', 'malware'];
+    if (unsafe.some((term) => lower.includes(term))) {
+      const reply = 'I can help with AniMo shopping, recipes, farmers, orders, and the Philippines map, but I cannot share secrets, credentials, or unsafe instructions.';
+      session.messages.push({ role: 'user', content: message }, { role: 'assistant', content: reply });
+      session.messages = session.messages.slice(-12);
+      return jsonResponse(response, 200, { reply, source: 'guardrail', model: null });
+    }
+
+    const normalizeQuestion = (value) => cleanText(value, 800).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    const exactAnswer = listAssistantKnowledge().find((record) => (
+      normalizeQuestion(record.title) === normalizeQuestion(message)
+    ));
+    if (exactAnswer) {
+      session.messages.push(
+        { role: 'user', content: message },
+        { role: 'assistant', content: exactAnswer.content }
+      );
+      session.messages = session.messages.slice(-12);
+      return jsonResponse(response, 200, {
+        reply: exactAnswer.content,
+        source: 'knowledge',
+        title: exactAnswer.title,
+        aiAvailable: null
+      });
+    }
+
+    const contextText = retrieveRagContext(message);
+    const systemPrompt = buildAssistantSystemPrompt(contextText);
+    const history = session.messages.slice(-8).map((entry) => ({ role: entry.role, content: entry.content }));
+    const modeHint = mode === 'recipe'
+      ? 'The user wants recipe help. Suggest recipes based on AniMo ingredients/products and clearly note missing ingredients.'
+      : mode === 'guide'
+        ? 'The user wants website guidance. Explain where to go in AniMo and what to do next.'
+        : 'The user wants general AniMo assistance.';
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      ...history,
+      { role: 'user', content: `${modeHint}\n\nUser message: ${message}` }
+    ];
+
+    try {
+      const reply = await callOllamaAssistant(messages);
+      session.messages.push({ role: 'user', content: message }, { role: 'assistant', content: reply });
+      session.messages = session.messages.slice(-12);
+      return jsonResponse(response, 200, { reply, source: 'ollama', model: ollamaModel, aiAvailable: true });
+    } catch (error) {
+      const fallback = buildLocalAssistantReply(message);
+      session.messages.push({ role: 'user', content: message }, { role: 'assistant', content: fallback });
+      session.messages = session.messages.slice(-12);
+      return jsonResponse(response, 200, {
+        reply: fallback,
+        source: 'local',
+        model: ollamaModel,
+        aiAvailable: false,
+        warning: `Local AI model is unavailable (${cleanText(error.message, 120)}). Start Ollama and make sure ${ollamaModel} is installed to enable generative responses.`
+      });
+    }
+  }
+  if (method === 'GET' && pathname === '/api/map/sellers') {
+    return jsonResponse(response, 200, { sellers: await mapSellersPayload() });
+  }
+  if (method === 'GET' && pathname === '/api/map/geocode') {
+    const q = cleanText(url.searchParams.get('q'), 120);
+    if (!q) return jsonResponse(response, 400, { error: 'Enter a Philippines location to search.' });
+    const location = await geocodePhilippines(q);
+    if (!location) return jsonResponse(response, 404, { error: 'No Philippines location found for that search.' });
+    return jsonResponse(response, 200, { location });
+  }
+  if (method === 'GET' && pathname === '/api/map/route') {
+    const startLat = Number(url.searchParams.get('startLat'));
+    const startLng = Number(url.searchParams.get('startLng'));
+    const endLat = Number(url.searchParams.get('endLat'));
+    const endLng = Number(url.searchParams.get('endLng'));
+    if (![startLat, startLng, endLat, endLng].every(Number.isFinite)) {
+      return jsonResponse(response, 400, { error: 'Route coordinates are required.' });
+    }
+    if (!isWithinPhilippines(startLat, startLng) || !isWithinPhilippines(endLat, endLng)) {
+      return jsonResponse(response, 400, { error: 'Routes are limited to locations within the Philippines.' });
+    }
+    const routeUrl = `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson`;
+    const routeResult = await fetchJsonWithTimeout(routeUrl, { headers: { 'Accept': 'application/json' } }, 12000);
+    if (!routeResult.ok || !routeResult.body?.routes?.[0]) {
+      return jsonResponse(response, 502, { error: 'Could not fetch a route right now.' });
+    }
+    const route = routeResult.body.routes[0];
+    return jsonResponse(response, 200, {
+      distanceMeters: route.distance,
+      durationSeconds: route.duration,
+      geometry: route.geometry
+    });
+  }
+  if (method === 'GET' && pathname === '/api/featured') {
+    const products = listCatalog().products;
+    const counts = listingOrderCounts();
+    const qualifying = products.map((product) => ({ ...product, orderCount: counts.get(product.id) || 0 }))
+      .filter((product) => product.orderCount >= 10)
+      .sort((left, right) => right.orderCount - left.orderCount || left.name.localeCompare(right.name));
+    const cutoff = qualifying.length > 5 ? qualifying[4].orderCount : 10;
+    const featured = qualifying.filter((product) => product.orderCount >= cutoff);
+    return jsonResponse(response, 200, { products: featured, count: featured.length, threshold: 10 });
+  }
+  if (method === 'GET' && pathname === '/api/reviews') {
+    const listingId = url.searchParams.get('listingId');
+    if (!listingId || listingId.length > 100) return jsonResponse(response, 400, { error: 'Choose a listing to view reviews.' });
+    const saved = usersDb.prepare(`
+      SELECT reviews.id, reviews.listing_id AS listingId, reviews.rating, reviews.comment, reviews.created_at,
+        profiles.display_name AS displayName
+      FROM reviews JOIN profiles ON profiles.user_id = reviews.user_id
+      WHERE reviews.listing_id = ? ORDER BY reviews.created_at DESC
+    `).all(listingId);
+    const reviews = [...saved, ...demoReviews.filter((review) => review.listingId === listingId)];
+    const average = reviews.length ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length : null;
+    const counts = listingOrderCounts();
+    const canReview = !!(user && usersDb.prepare("SELECT items_json FROM orders WHERE user_id = ? AND status = 'completed'").all(user.id)
+      .some((order) => orderContainsReviewTarget(JSON.parse(order.items_json), listingId)));
+    return jsonResponse(response, 200, {
+      reviews,
+      count: reviews.length,
+      rating: average ? Math.round(average * 10) / 10 : null,
+      orderCount: counts.get(listingId) || 0,
+      canReview
+    });
   }
   if (pathname.startsWith('/api/') && !user) return jsonResponse(response, 401, { error: 'Please log in.' });
 
@@ -715,13 +1670,210 @@ async function handleApi(request, response, url) {
       .map((order) => ({ ...order, items: JSON.parse(order.items_json) }));
     return jsonResponse(response, 200, { orders });
   }
+  if (method === 'POST' && pathname === '/api/reviews') {
+    const body = await readJson(request);
+    if (typeof body.listingId !== 'string' || body.listingId.length > 100
+      || !Number.isInteger(body.rating) || body.rating < 1 || body.rating > 5
+      || typeof body.comment !== 'string' || body.comment.length > 500) {
+      return jsonResponse(response, 400, { error: 'Choose a rating from 1–5 and keep the comment under 500 characters.' });
+    }
+    const eligible = usersDb.prepare("SELECT items_json FROM orders WHERE user_id = ? AND status = 'completed'").all(user.id)
+      .some((order) => orderContainsReviewTarget(JSON.parse(order.items_json), body.listingId));
+    if (!eligible) return jsonResponse(response, 403, { error: 'Reviews are available after an order containing this item is marked delivered.' });
+    usersDb.prepare(`
+      INSERT INTO reviews (user_id, listing_id, rating, comment) VALUES (?, ?, ?, ?)
+      ON CONFLICT(user_id, listing_id) DO UPDATE SET rating = excluded.rating, comment = excluded.comment, created_at = CURRENT_TIMESTAMP
+    `).run(user.id, body.listingId, body.rating, body.comment.trim());
+    return jsonResponse(response, 201, { ok: true });
+  }
   if (method === 'POST' && pathname === '/api/orders') {
     const order = createOrder(user.id, await readJson(request));
     return jsonResponse(response, 201, { order });
   }
 
+  if (method === 'POST' && pathname === '/api/chat/start') {
+    if (!['customer', 'farmer'].includes(user.role)) return jsonResponse(response, 403, { error: 'Chat is available to buyers and verified farmers.' });
+    const body = await readJson(request);
+    const target = Number(body.userId);
+    const other = usersDb.prepare(`
+      SELECT users.id, CASE WHEN profiles.account_type = 'farmer' AND farmer_applications.status = 'approved'
+        THEN 'farmer' ELSE 'customer' END AS role
+      FROM users JOIN profiles ON profiles.user_id = users.id
+      LEFT JOIN farmer_applications ON farmer_applications.user_id = users.id
+      WHERE users.id = ?
+    `).get(target);
+    if (!other || other.id === user.id || other.role === user.role || !['customer', 'farmer'].includes(other.role)) {
+      return jsonResponse(response, 400, { error: 'Choose a verified farmer or buyer to start a conversation.' });
+    }
+    const customerId = user.role === 'customer' ? user.id : other.id;
+    const farmerId = user.role === 'farmer' ? user.id : other.id;
+    usersDb.prepare('INSERT OR IGNORE INTO conversations (customer_id, farmer_id) VALUES (?, ?)').run(customerId, farmerId);
+    const conversation = usersDb.prepare('SELECT * FROM conversations WHERE customer_id = ? AND farmer_id = ?').get(customerId, farmerId);
+    return jsonResponse(response, 200, { conversation });
+  }
+  if (method === 'GET' && pathname === '/api/chat') {
+    const conversations = usersDb.prepare(`
+      SELECT conversations.*, buyer.username AS buyer_username, farmer.username AS farmer_username
+      FROM conversations
+      JOIN users AS buyer ON buyer.id = conversations.customer_id
+      JOIN users AS farmer ON farmer.id = conversations.farmer_id
+      WHERE customer_id = ? OR farmer_id = ?
+      ORDER BY conversations.created_at DESC
+    `).all(user.id, user.id).map((conversation) => ({
+      ...conversation,
+      relatedOrders: usersDb.prepare(`
+        SELECT orders.id, orders.status, orders.fulfillment, orders.created_at
+        FROM conversation_orders
+        JOIN orders ON orders.id = conversation_orders.order_id
+        WHERE conversation_orders.conversation_id = ?
+        ORDER BY orders.created_at DESC
+      `).all(conversation.id),
+      messages: usersDb.prepare(`
+        SELECT messages.id, messages.sender_id AS senderId, messages.body, messages.created_at,
+          profiles.display_name AS senderName
+        FROM messages JOIN profiles ON profiles.user_id = messages.sender_id
+        WHERE conversation_id = ? ORDER BY messages.created_at
+      `).all(conversation.id)
+    }));
+    return jsonResponse(response, 200, { conversations });
+  }
+  if (method === 'POST' && pathname === '/api/chat') {
+    const body = await readJson(request);
+    const message = typeof body.message === 'string' ? body.message.trim() : '';
+    const conversationId = Number(body.conversationId);
+    if (!Number.isInteger(conversationId) || !message || message.length > 2000) {
+      return jsonResponse(response, 400, { error: 'Enter a message up to 2,000 characters.' });
+    }
+    const conversation = usersDb.prepare('SELECT * FROM conversations WHERE id = ? AND (customer_id = ? OR farmer_id = ?)')
+      .get(conversationId, user.id, user.id);
+    if (!conversation) return jsonResponse(response, 404, { error: 'Conversation not found.' });
+    usersDb.prepare('INSERT INTO messages (conversation_id, sender_id, body) VALUES (?, ?, ?)')
+      .run(conversationId, user.id, message);
+    return jsonResponse(response, 201, { ok: true });
+  }
+
+  if (pathname.startsWith('/api/farmer/')) {
+    if (user.role !== 'farmer') return jsonResponse(response, 403, { error: 'Verified farmer access is required.' });
+    if (method === 'GET' && pathname === '/api/farmer/listings') {
+      const entries = listingsDb.prepare("SELECT * FROM listings WHERE owner_id = ? AND type <> 'farmers' ORDER BY updated_at DESC").all(user.id).map(readListing);
+      return jsonResponse(response, 200, { entries });
+    }
+    if (method === 'POST' && pathname === '/api/farmer/listings') {
+      const body = await readJson(request);
+      if (!['products', 'recipes', 'recipePackages'].includes(body.type)) return jsonResponse(response, 400, { error: 'Farmers may submit products, recipes, and meal kits.' });
+      const validated = validateListing(body.type, body.entry);
+      const id = `${body.type === 'recipePackages' ? 'kit' : body.type.slice(0, -1)}-${randomBytes(8).toString('hex')}`;
+      const folder = { products: 'marketplace', recipes: 'recipes', recipePackages: 'meal_kits' }[body.type];
+      const imagePath = storeImage(folder, id, validated.image);
+      listingsDb.prepare(`
+        INSERT INTO listings (id, type, name, data_json, image_path, owner_id, review_status)
+        VALUES (?, ?, ?, ?, ?, ?, 'pending')
+      `).run(id, body.type, validated.name, JSON.stringify(validated.payload), imagePath, user.id);
+      return jsonResponse(response, 202, { entry: readListing(listingsDb.prepare('SELECT * FROM listings WHERE id = ?').get(id)) });
+    }
+    const farmerListingMatch = /^\/api\/farmer\/listings\/([a-zA-Z0-9_-]+)$/.exec(pathname);
+    if (farmerListingMatch && method === 'PUT') {
+      const row = listingsDb.prepare('SELECT * FROM listings WHERE id = ? AND owner_id = ?').get(farmerListingMatch[1], user.id);
+      if (!row) return jsonResponse(response, 404, { error: 'Farmer listing not found.' });
+      const body = await readJson(request);
+      const validated = validateListing(row.type, body.entry);
+      const updatedImage = storeImage({ products: 'marketplace', recipes: 'recipes', recipePackages: 'meal_kits' }[row.type], row.id, validated.image);
+      listingsDb.prepare(`
+        UPDATE listings SET name = ?, data_json = ?, image_path = ?, review_status = 'pending', updated_at = CURRENT_TIMESTAMP
+        WHERE id = ? AND owner_id = ?
+      `).run(validated.name, JSON.stringify(validated.payload), updatedImage, row.id, user.id);
+      return jsonResponse(response, 202, { entry: readListing(listingsDb.prepare('SELECT * FROM listings WHERE id = ?').get(row.id)) });
+    }
+    if (method === 'GET' && pathname === '/api/farmer/orders') {
+      const ownedIds = new Set(listingsDb.prepare('SELECT id FROM listings WHERE owner_id = ?').all(user.id).map((row) => row.id));
+      const orders = usersDb.prepare(`
+        SELECT orders.*, users.username
+        FROM orders JOIN users ON users.id = orders.user_id
+        ORDER BY orders.created_at DESC
+      `).all().map((order) => ({ ...order, items: JSON.parse(order.items_json) }))
+        .filter((order) => orderTouchesOwnedListings(order.items, ownedIds));
+      return jsonResponse(response, 200, { orders });
+    }
+    const farmerOrderMatch = /^\/api\/farmer\/orders\/([a-zA-Z0-9_-]+)$/.exec(pathname);
+    if (farmerOrderMatch && method === 'PATCH') {
+      const order = usersDb.prepare('SELECT * FROM orders WHERE id = ?').get(farmerOrderMatch[1]);
+      if (!order) return jsonResponse(response, 404, { error: 'Order not found.' });
+      const ownedIds = new Set(listingsDb.prepare('SELECT id FROM listings WHERE owner_id = ?').all(user.id).map((row) => row.id));
+      const hasOwnedItem = orderTouchesOwnedListings(JSON.parse(order.items_json), ownedIds);
+      if (!hasOwnedItem) return jsonResponse(response, 403, { error: 'This order does not contain your listings.' });
+      const body = await readJson(request);
+      if (!['to_receive', 'to_pickup', 'completed'].includes(body.status)) return jsonResponse(response, 400, { error: 'Choose a valid delivery status.' });
+      const result = setOrderStatus(order.id, body.status);
+      return result.error ? jsonResponse(response, result.status, { error: result.error }) : jsonResponse(response, 200, { ok: true });
+    }
+    return jsonResponse(response, 404, { error: 'Farmer route not found.' });
+  }
+
   if (pathname.startsWith('/api/admin/') && user.role !== 'admin') {
     return jsonResponse(response, 403, { error: 'Administrator access is required.' });
+  }
+  if (method === 'GET' && pathname === '/api/admin/farmer-applications') {
+    const applications = usersDb.prepare(`
+      SELECT farmer_applications.user_id AS userId, farmer_applications.applicant_type AS applicantType,
+        farmer_applications.documents_json AS documents, farmer_applications.status, farmer_applications.submitted_at AS submittedAt,
+        users.username, profiles.display_name AS displayName, profiles.contact
+      FROM farmer_applications JOIN users ON users.id = farmer_applications.user_id
+      JOIN profiles ON profiles.user_id = users.id
+      ORDER BY farmer_applications.submitted_at
+    `).all().map((application) => ({ ...application, documents: JSON.parse(application.documents) }));
+    return jsonResponse(response, 200, { applications });
+  }
+  const farmerDocumentMatch = /^\/api\/admin\/farmer-documents\/(\d+)\/(governmentId|proofOfAddress|bankProof|daAccreditation)$/.exec(pathname);
+  if (farmerDocumentMatch && method === 'GET') {
+    const application = usersDb.prepare('SELECT documents_json FROM farmer_applications WHERE user_id = ?')
+      .get(Number(farmerDocumentMatch[1]));
+    const document = application && JSON.parse(application.documents_json)[farmerDocumentMatch[2]];
+    if (!document || !/^\d+-(?:governmentId|proofOfAddress|bankProof|daAccreditation)-[a-f0-9]{24}\.(?:pdf|jpg|png)$/.test(document.filename)) {
+      return jsonResponse(response, 404, { error: 'Verification document not found.' });
+    }
+    const file = resolve(dataDirectory, 'farmer-documents', document.filename);
+    if (!existsSync(file)) return jsonResponse(response, 404, { error: 'Verification document is no longer available.' });
+    const contentType = ['application/pdf', 'image/jpeg', 'image/png'].includes(document.contentType)
+      ? document.contentType : 'application/octet-stream';
+    response.writeHead(200, {
+      'Content-Type': contentType,
+      'Content-Disposition': 'inline',
+      'Cache-Control': 'no-store',
+      'X-Content-Type-Options': 'nosniff'
+    });
+    return response.end(readFileSync(file));
+  }
+  const applicationMatch = /^\/api\/admin\/farmer-applications\/(\d+)$/.exec(pathname);
+  if (applicationMatch && method === 'PATCH') {
+    const body = await readJson(request);
+    if (!['approved', 'rejected'].includes(body.status)) return jsonResponse(response, 400, { error: 'Choose approved or rejected.' });
+    const application = usersDb.prepare(`
+      SELECT applicant_type, documents_json FROM farmer_applications WHERE user_id = ?
+    `).get(Number(applicationMatch[1]));
+    if (!application) return jsonResponse(response, 404, { error: 'Farmer application not found.' });
+    const result = usersDb.prepare(`
+      UPDATE farmer_applications SET status = ?, reviewed_at = CURRENT_TIMESTAMP WHERE user_id = ?
+    `).run(body.status, Number(applicationMatch[1]));
+    if (body.status === 'approved') {
+      const farmerProfile = JSON.parse(application.documents_json).profile;
+      if (farmerProfile) {
+        const farmerId = `farmer-user-${applicationMatch[1]}`;
+        const farmerData = {
+          type: application.applicant_type === 'group' ? 'Group of farmers' : 'Individual producer',
+          location: farmerProfile.location,
+          specialty: farmerProfile.specialty,
+          story: farmerProfile.story,
+          rating: 0,
+          followers: 0
+        };
+        listingsDb.prepare(`
+          INSERT OR REPLACE INTO listings (id, type, name, data_json, owner_id, review_status)
+          VALUES (?, 'farmers', ?, ?, ?, 'approved')
+        `).run(farmerId, farmerProfile.name, JSON.stringify(farmerData), Number(applicationMatch[1]));
+      }
+    }
+    return result.changes ? jsonResponse(response, 200, { ok: true })
+      : jsonResponse(response, 404, { error: 'Farmer application not found.' });
   }
   if (method === 'GET' && pathname === '/api/admin/assistant-data') {
     return jsonResponse(response, 200, { records: listAssistantKnowledge(true) });
@@ -756,7 +1908,7 @@ async function handleApi(request, response, url) {
       : jsonResponse(response, 404, { error: 'Assistant data entry not found.' });
   }
   if (method === 'GET' && pathname === '/api/admin/listings') {
-    return jsonResponse(response, 200, listCatalog());
+    return jsonResponse(response, 200, listCatalog(true));
   }
   if (method === 'POST' && pathname === '/api/admin/listings') {
     const body = await readJson(request);
@@ -813,6 +1965,15 @@ async function handleApi(request, response, url) {
     if (result.changes) removeUploadedImage(row.image_path);
     return result.changes ? jsonResponse(response, 200, { ok: true }) : jsonResponse(response, 404, { error: 'Listing not found.' });
   }
+  const listingStatusMatch = /^\/api\/admin\/listings\/([a-zA-Z0-9_-]+)\/status$/.exec(pathname);
+  if (listingStatusMatch && method === 'PATCH') {
+    const body = await readJson(request);
+    if (!['approved', 'rejected'].includes(body.status)) return jsonResponse(response, 400, { error: 'Choose approved or rejected.' });
+    const result = listingsDb.prepare('UPDATE listings SET review_status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+      .run(body.status, listingStatusMatch[1]);
+    return result.changes ? jsonResponse(response, 200, { ok: true })
+      : jsonResponse(response, 404, { error: 'Listing not found.' });
+  }
   if (method === 'GET' && pathname === '/api/admin/orders') {
     const orders = usersDb.prepare(`
       SELECT orders.*, users.username
@@ -827,8 +1988,8 @@ async function handleApi(request, response, url) {
     if (!['to_receive', 'to_pickup', 'completed'].includes(body.status)) {
       return jsonResponse(response, 400, { error: 'Choose a valid order status.' });
     }
-    const result = usersDb.prepare('UPDATE orders SET status = ? WHERE id = ?').run(body.status, orderMatch[1]);
-    return result.changes ? jsonResponse(response, 200, { ok: true }) : jsonResponse(response, 404, { error: 'Order not found.' });
+    const result = setOrderStatus(orderMatch[1], body.status);
+    return result.error ? jsonResponse(response, result.status, { error: result.error }) : jsonResponse(response, 200, { ok: true });
   }
 
   return jsonResponse(response, 404, { error: 'API route not found.' });
@@ -837,25 +1998,46 @@ async function handleApi(request, response, url) {
 // Static File Serving
 function serveStatic(request, response, url, user) {
   if (url.pathname === '/server.js' || url.pathname.startsWith('/data/')) return response.writeHead(404).end('Not found');
-  if (url.pathname === '/admin') return redirect(response, '/admin/');
-  if (url.pathname === '/' || url.pathname === '/index.html') return redirect(response, '/pages/login/login.html');
+  if (url.pathname === '/' || url.pathname === '/index.html') return redirect(response, '/pages/home/home.html');
   const isAuthPage = ['/pages/login/login.html', '/pages/register/register.html'].includes(url.pathname);
   const isPageDocument = url.pathname.endsWith('.html');
-  if (!user && isPageDocument && url.pathname.startsWith('/pages/') && !isAuthPage) {
-    const next = `${url.pathname}${url.search}`;
-    return redirect(response, `/pages/login/login.html?next=${encodeURIComponent(next)}`);
-  }
   if (user && isAuthPage) return redirect(response, '/pages/home/home.html');
-  const adminFile = url.pathname.startsWith('/admin/');
-  if (adminFile && (!user || user.role !== 'admin')) {
-    if (url.pathname === '/admin/' || url.pathname === '/admin/index.html') {
-      return redirect(response, user ? '/pages/home/home.html' : '/pages/login/login.html?next=%2Fadmin%2F');
+  const protectedDocuments = [
+    '/pages/cart/cart.html',
+    '/pages/checkout/checkout.html',
+    '/pages/profile/profile.html',
+    '/pages/chat/chat.html',
+    '/pages/farmer-dashboard/farmer-dashboard.html'
+  ];
+  if (!user && isPageDocument && protectedDocuments.includes(url.pathname)) {
+    return redirect(response, `/pages/login/login.html?next=${encodeURIComponent(`${url.pathname}${url.search}`)}`);
+  }
+  if (user && url.pathname === '/pages/farmer-dashboard/farmer-dashboard.html' && user.role !== 'farmer') {
+    return redirect(response, '/pages/home/home.html');
+  }
+  const isPrivateAdmin = url.pathname === privateAdminPath || url.pathname.startsWith(privateAdminPath);
+  if (isPrivateAdmin && (!user || user.role !== 'admin')) {
+    if (isPageDocument || url.pathname === privateAdminPath || url.pathname === `${privateAdminPath}/`) {
+      return redirect(response, `/pages/login/login.html?next=${encodeURIComponent(`${url.pathname}${url.search}`)}`);
     }
     return response.writeHead(404).end('Not found');
   }
   let pathname;
   try {
-    const resourcePath = url.pathname.endsWith('/') ? `${url.pathname}index.html` : url.pathname;
+    let requestPath = url.pathname;
+    if (isPrivateAdmin) {
+      const suffix = requestPath.slice(privateAdminPath.length).replace(/^\/+/, '');
+      requestPath = `/admin/${suffix || 'index.html'}`;
+    } else if (requestPath === '/admin/admin.js' || requestPath === '/admin/admin.css') {
+      requestPath = requestPath;
+    } else if (requestPath === '/admin' || requestPath.startsWith('/admin/')) {
+      if (user && user.role === 'admin') {
+        const suffix = requestPath === '/admin' ? '' : requestPath.slice('/admin'.length);
+        return redirect(response, `${privateAdminPath}${suffix}${url.search}`);
+      }
+      return response.writeHead(404).end('Not found');
+    }
+    const resourcePath = requestPath.endsWith('/') ? `${requestPath}index.html` : requestPath;
     pathname = decodeURIComponent(resourcePath);
   } catch {
     return response.writeHead(400).end('Bad request');
@@ -871,7 +2053,9 @@ function serveStatic(request, response, url, user) {
     response.writeHead(200, {
       'Content-Type': mimeTypes[extension],
       'X-Content-Type-Options': 'nosniff',
-      'Content-Security-Policy': "default-src 'self' data: blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
+      'Content-Security-Policy': url.pathname === '/pages/home/home.html'
+        ? "default-src 'self' data: blob:; img-src 'self' data: blob: https://*.tile.openstreetmap.org https://tile.openstreetmap.org; style-src 'self' 'unsafe-inline' https://unpkg.com; script-src 'self' https://unpkg.com; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+        : "default-src 'self' data: blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
       'Cache-Control': extension === '.html' ? 'no-store' : 'public, max-age=300'
     });
     response.end(content);
@@ -899,8 +2083,9 @@ const server = createServer(async (request, response) => {
 
 server.listen(port, '127.0.0.1', () => {
   console.log(`AniMo is available at http://127.0.0.1:${port}`);
+  console.log(`Private administrator sign-in: http://127.0.0.1:${port}${privateAdminPath}`);
   console.log(`User, listing, and AI databases are stored separately in ${dataDirectory}`);
-  if (!process.env.ANIMO_ADMIN_USERNAME) console.warn('Set ANIMO_ADMIN_USERNAME and ANIMO_ADMIN_PASSWORD before opening /admin/.');
+  if (!process.env.ANIMO_ADMIN_USERNAME) console.warn('Set ANIMO_ADMIN_USERNAME and ANIMO_ADMIN_PASSWORD to enable the private administrator route.');
 });
 
 // Database Shutdown

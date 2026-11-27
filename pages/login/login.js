@@ -3,7 +3,9 @@
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('loginForm');
   const status = document.getElementById('authStatus');
-  const isAdminLogin = new URLSearchParams(window.location.search).get('next') === '/admin/';
+  const requested = new URLSearchParams(window.location.search).get('next') || '';
+  const isAdminLogin = /^\/control\/[a-f0-9]{48}\/?$/.test(requested);
+  const accountType = document.getElementById('accountType');
   const password = document.getElementById('loginPassword');
   const passwordToggle = document.getElementById('passwordToggle');
 
@@ -14,8 +16,21 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('loginHeading').textContent = 'Admin Log In';
     document.getElementById('registerLink').hidden = true;
     document.getElementById('userLoginLink').hidden = false;
+    document.getElementById('accountChoice').hidden = true;
+    accountType.value = 'admin';
   } else {
-    document.getElementById('adminLoginLink').hidden = false;
+    document.querySelectorAll('[data-account-type]').forEach((choice) => {
+      choice.addEventListener('click', () => {
+        accountType.value = choice.dataset.accountType;
+        document.querySelectorAll('[data-account-type]').forEach((item) => {
+          const selected = item === choice;
+          item.classList.toggle('active', selected);
+          item.setAttribute('aria-pressed', String(selected));
+        });
+        document.getElementById('loginHeading').textContent = choice.dataset.accountType === 'farmer'
+          ? 'Farmer Log In' : 'Buyer Log In';
+      });
+    });
   }
 
   // Click Interaction
@@ -38,19 +53,18 @@ document.addEventListener('DOMContentLoaded', () => {
         method: 'POST',
         body: JSON.stringify({
           username: form.elements.username.value,
+          accountType: accountType.value,
           password: form.elements.password.value
         })
       });
-      const requested = new URLSearchParams(window.location.search).get('next');
-      if (requested === '/admin/' && user.role !== 'admin') {
-        throw new Error('Administrator access requires an administrator account.');
-      }
-      const safeNext = requested === '/admin/' && user.role === 'admin'
-        ? '/admin/'
+      if (isAdminLogin && user.role !== 'admin') throw new Error('Administrator access requires an administrator account.');
+      const safeNext = isAdminLogin && user.role === 'admin'
+        ? requested
         : requested && requested.startsWith('/pages/')
         && !requested.startsWith('/pages/login/') && !requested.startsWith('/pages/register/')
         ? requested
-        : user.role === 'admin' ? '/admin/' : '/pages/home/home.html';
+        : user.role === 'farmer' ? '/pages/farmer-dashboard/farmer-dashboard.html'
+        : user.role === 'admin' ? '/pages/home/home.html' : '/pages/home/home.html';
       window.location.assign(safeNext);
     } catch (error) {
       status.textContent = error.message || 'Could not log in. Please try again.';
