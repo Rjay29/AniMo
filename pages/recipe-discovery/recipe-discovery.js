@@ -71,20 +71,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const matches = window.aniMoData.recipes.filter((recipe) => (
       [...selected].every((ingredient) => recipe.ingredients.includes(ingredient))
     ));
-    grid.innerHTML = matches.map((recipe) => `
-      <article class="recipe-card">
-        <!-- Image Placeholder -->
-        ${ui.renderCatalogImage(recipe.image, recipe.name, recipe.category)}
-        <div class="body">
-          <div class="card-meta"><span>${ui.escapeHTML(recipe.category)}</span><strong>${ui.escapeHTML(recipe.time)}</strong></div>
-          <h3>${ui.escapeHTML(recipe.name)}</h3>
-          <p>${ui.escapeHTML(recipe.description)}</p>
-          <div class="tag-list">${recipe.ingredients.map((ingredient) => `<span class="tag">${ui.escapeHTML(ingredient)}</span>`).join('')}</div>
-          <div class="availability-list">${(recipe.productIds || []).map((id) => window.aniMoUtils.getProductById(id)).filter(Boolean).map((product) => `<span class="badge${Number(product.stock) < 1 ? ' sold-out' : ''}">${ui.escapeHTML(product.name)} · ${Number(product.stock) < 1 ? 'Sold out' : `${ui.escapeHTML(product.stock)} in stock`}</span>`).join('')}</div>
-          <a href="../recipe-details/recipe-details.html?id=${encodeURIComponent(recipe.id)}" class="btn btn-secondary recipe-link">View recipe and steps</a>
-        </div>
-      </article>
-    `).join('');
+    grid.innerHTML = matches.map((recipe) => ui.renderRecipeCard(recipe)).join('');
     emptyState.hidden = matches.length > 0;
   }
 

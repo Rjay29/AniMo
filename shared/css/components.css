@@ -110,25 +110,6 @@
   transition: transform 0.5s var(--ease-out, ease);
 }
 
-.product-card > .image-placeholder,
-.product-card > .catalog-card-image,
-.farmer-card > .image-placeholder,
-.farmer-card > .catalog-card-image,
-.recipe-card > .image-placeholder,
-.recipe-card > .catalog-card-image,
-.package-card > .image-placeholder,
-.package-card > .catalog-card-image {
-  aspect-ratio: 1 / 1 !important;
-  height: auto !important;
-  min-height: 0 !important;
-}
-
-.product-card:hover .catalog-card-image,
-.farmer-card:hover .catalog-card-image,
-.recipe-card:hover .catalog-card-image,
-.package-card:hover .catalog-card-image,
-.post-card:hover .catalog-card-image { transform: scale(1.04); }
-
 .rating-stars { display: inline-flex; align-items: center; gap: 2px; vertical-align: middle; }
 .rating-stars img { width: 14px; height: 14px; object-fit: contain; }
 .rating-stars .rating-star-empty { opacity: 0.28; }
@@ -156,87 +137,105 @@
   color: var(--dark-green);
 }
 
-.product-card,
-.farmer-card,
-.recipe-card,
-.package-card,
-.post-card {
+/* Shared Catalog Card
+   One layout for products, recipes, meal kits, and farmers (built by renderCard in utilities.js). */
+.catalog-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
   background: var(--card);
   border: 1px solid var(--border, rgba(38, 52, 45, 0.11));
   border-radius: 16px;
   overflow: hidden;
   box-shadow: var(--shadow);
+  text-align: left;
   transition: transform 0.28s var(--ease-out, ease), box-shadow 0.28s var(--ease-out, ease), border-color 0.28s ease;
 }
-
-.product-card:hover,
-.farmer-card:hover,
-.recipe-card:hover,
-.package-card:hover,
-.post-card:hover {
+.catalog-card:hover {
   transform: translateY(-6px);
   box-shadow: var(--shadow-lg, 0 22px 40px rgba(35, 53, 43, 0.16));
   border-color: rgba(49, 90, 75, 0.18);
 }
-
-.product-card .body,
-.farmer-card .body,
-.recipe-card .body,
-.package-card .body,
-.post-card .body {
-  padding: 12px;
+.catalog-card-media {
+  display: block;
+  flex: 0 0 auto;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: #e8e6d8;
 }
-
-.card-meta {
+.catalog-card-media .catalog-card-image { width: 100%; height: 100%; aspect-ratio: auto; object-fit: cover; }
+.catalog-card:hover .catalog-card-image { transform: scale(1.04); filter: saturate(1.03); }
+.catalog-card-body { display: flex; flex: 1; flex-direction: column; gap: 6px; padding: 12px; }
+.catalog-card-meta {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 6px;
-  margin-bottom: 6px;
+  min-height: 1.2em;
   color: var(--muted);
   font-size: 0.74rem;
 }
-
-.card-meta strong { color: var(--dark-green); font-weight: 700; }
-:root[data-theme="dark"] .card-meta strong { color: var(--dark-green); }
-
-.product-card h3, .product-card h4,
-.farmer-card h3, .farmer-card h4,
-.recipe-card h3, .recipe-card h4,
-.package-card h3, .package-card h4,
-.post-card h3, .post-card h4 {
-  margin: 0 0 6px;
-  font-size: 0.98rem;
+.catalog-card-meta > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.catalog-card-rating { flex-shrink: 0; display: inline-flex; align-items: center; color: var(--dark-green); font-weight: 700; }
+.catalog-card-title {
+  display: -webkit-box;
+  min-height: 2.6em;
+  margin: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   color: var(--dark-green);
   font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.98rem;
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.3;
 }
-:root[data-theme="dark"] .product-card h3, :root[data-theme="dark"] .product-card h4,
-:root[data-theme="dark"] .farmer-card h3, :root[data-theme="dark"] .farmer-card h4,
-:root[data-theme="dark"] .recipe-card h3, :root[data-theme="dark"] .recipe-card h4,
-:root[data-theme="dark"] .package-card h3, :root[data-theme="dark"] .package-card h4,
-:root[data-theme="dark"] .post-card h3, :root[data-theme="dark"] .post-card h4 { color: var(--dark-green); }
-
-.product-card p,
-.farmer-card p,
-.recipe-card p,
-.package-card p,
-.post-card p {
-  margin: 0 0 10px;
+.catalog-card-title a { color: inherit; }
+.catalog-card-title a:hover { color: var(--clay); }
+.catalog-card-text {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   color: var(--muted);
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   line-height: 1.45;
 }
-
-.card-footer {
+.catalog-card-text a { color: var(--green); font-weight: 700; }
+.catalog-card-note {
+  margin: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.catalog-card-note.sold-out { align-self: flex-start; max-width: 100%; padding: 2px 8px; border: 1px solid; border-radius: 999px; }
+.catalog-card-footer {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   gap: 8px;
   margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--border, rgba(38, 52, 45, 0.1));
 }
+.catalog-card-footer .price { font-size: 1rem; }
+.catalog-card-detail { color: var(--muted); font-size: 0.8rem; font-weight: 700; }
+.catalog-card-footer .btn {
+  flex-shrink: 0;
+  margin: 0 0 0 auto;
+  min-height: 36px;
+  padding: 0.45rem 0.8rem;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+.catalog-card-footer .btn[disabled] { opacity: 0.55; cursor: not-allowed; }
 
 .price {
   font-size: 1.05rem;

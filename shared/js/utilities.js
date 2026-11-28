@@ -121,4 +121,109 @@ function renderCatalogImage(image, alt, placeholder, className = '') {
   return `<img class="catalog-card-image ${safeClass}" src="${escapeHTML(source)}" alt="${imageAlt}" loading="lazy" decoding="async" />`;
 }
 
-window.aniMoUtilities = { renderStars, toTitleCase, escapeHTML, renderCatalogImage };
+// Shared Catalog Card
+// One card layout for products, recipes, meal kits, and farmers (see .catalog-card in components.css).
+function formatCardPrice(value) {
+  return typeof formatCurrency === 'function'
+    ? formatCurrency(value)
+    : `₱${Number(value || 0).toLocaleString('en-PH')}`;
+}
+
+function renderCard({
+  image, imageAlt, placeholder, href, meta = '', metaRight = '', title,
+  text = '', note = '', noteSoldOut = false, footerStart = '', action = ''
+}) {
+  const link = escapeHTML(href);
+  return `
+    <article class="catalog-card">
+      <a class="catalog-card-media" href="${link}" tabindex="-1" aria-hidden="true">${renderCatalogImage(image, imageAlt, placeholder)}</a>
+      <div class="catalog-card-body">
+        <div class="catalog-card-meta"><span>${meta}</span>${metaRight ? `<span class="catalog-card-rating">${metaRight}</span>` : ''}</div>
+        <h3 class="catalog-card-title"><a href="${link}">${escapeHTML(title)}</a></h3>
+        ${text ? `<p class="catalog-card-text">${text}</p>` : ''}
+        ${note ? `<p class="catalog-card-note${noteSoldOut ? ' sold-out' : ''}">${note}</p>` : ''}
+        <div class="catalog-card-footer">${footerStart}${action}</div>
+      </div>
+    </article>`;
+}
+
+function renderProductCard(product, { showOrders = false } = {}) {
+  const soldOut = Number(product.stock) < 1;
+  const farmer = (window.aniMoData?.farmers || []).find((entry) => entry.name === product.farm);
+  const seller = farmer
+    ? `<a href="../farmer-profile/farmer-profile.html?id=${encodeURIComponent(farmer.id)}">${escapeHTML(product.farm)}</a>`
+    : escapeHTML(product.farm);
+  const fulfillment = [product.deliveryAvailable ? 'Delivery' : '', product.pickupAvailable ? 'Pickup' : ''].filter(Boolean);
+  const stock = soldOut ? 'Sold out' : `${escapeHTML(product.stock)} ${escapeHTML(product.unit)} in stock`;
+  return renderCard({
+    image: product.image,
+    imageAlt: product.name,
+    placeholder: product.category,
+    href: `../product-details/product-details.html?id=${encodeURIComponent(product.id)}`,
+    meta: escapeHTML(product.location),
+    metaRight: renderStars(product.rating),
+    title: product.name,
+    text: `Sold by ${seller}${showOrders ? ` · ${Number(product.orderCount) || 0} orders` : ''}`,
+    note: [stock, ...fulfillment].join(' · '),
+    noteSoldOut: soldOut,
+    footerStart: `<span class="price">${formatCardPrice(product.price)} / ${escapeHTML(product.unit)}</span>`,
+    action: `<button class="btn btn-primary" type="button" data-add-cart="${escapeHTML(product.id)}" ${soldOut ? 'disabled' : ''}>${soldOut ? 'Sold out' : 'Add to cart'}</button>`
+  });
+}
+
+function renderRecipeCard(recipe) {
+  const href = `../recipe-details/recipe-details.html?id=${encodeURIComponent(recipe.id)}`;
+  return renderCard({
+    image: recipe.image,
+    imageAlt: recipe.name,
+    placeholder: recipe.category,
+    href,
+    meta: escapeHTML(recipe.category),
+    metaRight: renderStars(recipe.rating),
+    title: recipe.name,
+    text: escapeHTML(recipe.description),
+    footerStart: `<span class="catalog-card-detail">${[recipe.time, recipe.difficulty].filter(Boolean).map(escapeHTML).join(' · ')}</span>`,
+    action: `<a href="${href}" class="btn btn-secondary">View recipe</a>`
+  });
+}
+
+function renderPackageCard(pkg) {
+  const products = (pkg.productIds || []).map((id) => window.aniMoUtils?.getProductById(id)).filter(Boolean);
+  const soldOut = products.length > 0 && products.every((product) => Number(product.stock) < 1);
+  return renderCard({
+    image: pkg.image,
+    imageAlt: pkg.name,
+    placeholder: 'Local meal package',
+    href: `../package-details/package-details.html?id=${encodeURIComponent(pkg.id)}`,
+    meta: 'Meal kit',
+    metaRight: renderStars(pkg.rating),
+    title: pkg.name,
+    text: escapeHTML(pkg.description),
+    note: products.length ? `${products.length} ingredient${products.length === 1 ? '' : 's'}${soldOut ? ' · Sold out' : ''}` : '',
+    noteSoldOut: soldOut,
+    footerStart: `<span class="price">${formatCardPrice(pkg.price)}</span>`,
+    action: `<button class="btn btn-primary" type="button" data-add-cart="package:${escapeHTML(pkg.id)}" ${soldOut ? 'disabled' : ''}>${soldOut ? 'Sold out' : 'Add to cart'}</button>`
+  });
+}
+
+function renderFarmerCard(farmer) {
+  const href = `../farmer-profile/farmer-profile.html?id=${encodeURIComponent(farmer.id)}`;
+  return renderCard({
+    image: farmer.image,
+    imageAlt: farmer.name,
+    placeholder: 'Local grower',
+    href,
+    meta: escapeHTML(farmer.location),
+    metaRight: renderStars(farmer.rating),
+    title: farmer.name,
+    text: escapeHTML(farmer.specialty),
+    note: escapeHTML(farmer.type),
+    footerStart: `<span class="catalog-card-detail">${escapeHTML(farmer.followers ?? 0)} followers</span>`,
+    action: `<a href="${href}" class="btn btn-secondary">View profile</a>`
+  });
+}
+
+window.aniMoUtilities = {
+  renderStars, toTitleCase, escapeHTML, renderCatalogImage,
+  renderCard, renderProductCard, renderRecipeCard, renderPackageCard, renderFarmerCard
+};

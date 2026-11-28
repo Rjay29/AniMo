@@ -51,11 +51,7 @@
 
 /* Dark Theme Surfaces */
 :root[data-theme="dark"] .card,
-:root[data-theme="dark"] .product-card,
-:root[data-theme="dark"] .recipe-card,
-:root[data-theme="dark"] .package-card,
-:root[data-theme="dark"] .farmer-card,
-:root[data-theme="dark"] .post-card,
+:root[data-theme="dark"] .catalog-card,
 :root[data-theme="dark"] .input,
 :root[data-theme="dark"] .select,
 :root[data-theme="dark"] .textarea {
@@ -394,20 +390,14 @@ main { flex: 1; }
 
 .page-hero p { margin: 0; color: rgba(241, 244, 236, 0.92); max-width: 60ch; font-size: 0.96rem; }
 
-.card-meta,
-.product-card p,
-.farmer-card p,
-.recipe-card p,
-.package-card p,
-.post-card p {
+.catalog-card-meta,
+.catalog-card-text,
+.catalog-card-note {
   color: #555b52;
 }
-:root[data-theme="dark"] .card-meta,
-:root[data-theme="dark"] .product-card p,
-:root[data-theme="dark"] .farmer-card p,
-:root[data-theme="dark"] .recipe-card p,
-:root[data-theme="dark"] .package-card p,
-:root[data-theme="dark"] .post-card p { color: var(--muted); }
+:root[data-theme="dark"] .catalog-card-meta,
+:root[data-theme="dark"] .catalog-card-text,
+:root[data-theme="dark"] .catalog-card-note { color: var(--muted); }
 
 .hero .eyebrow,
 .page-hero .eyebrow {
@@ -459,8 +449,6 @@ main { flex: 1; }
 }
 .card:hover::after { opacity: 1; animation: shimmer-sweep 1.15s ease; }
 .image-placeholder, .catalog-card-image { transition: transform .55s var(--ease-out), filter .55s ease; }
-.product-card:hover .image-placeholder, .recipe-card:hover .image-placeholder, .package-card:hover .image-placeholder,
-.farmer-card:hover .image-placeholder, .product-card:hover .catalog-card-image { transform: scale(1.035); filter: saturate(1.03); }
 
 @media (max-width: 1200px) {
   .grid-3 { grid-template-columns: repeat(4, minmax(0, 1fr)); }

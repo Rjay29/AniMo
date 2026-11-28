@@ -1,31 +1,8 @@
 /* Marketplace */
 .filter-panel { padding: 16px; border-radius: var(--radius); }
 .filter-row { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 10px; }
-.availability-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 4px; }
-.marketplace-grid { margin-top: 18px; grid-auto-rows: 1fr; align-items: stretch; gap: 16px; }
+.marketplace-grid { margin-top: 18px; gap: 16px; }
 @media (min-width: 1201px) { .marketplace-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
-.marketplace-product-card { display: flex; flex-direction: column; height: 100%; }
-.marketplace-product-card > .image-placeholder,
-.marketplace-product-card > .catalog-card-image { aspect-ratio: 1 / 1 !important; height: auto !important; min-height: 0 !important; flex: 0 0 auto; }
-.marketplace-product-card > .body { display: flex; flex: 1; flex-direction: column; }
-.marketplace-product-card .card-meta { min-height: 1.3em; }
-.marketplace-product-card .card-meta > span {
-  display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
-}
-.marketplace-product-card h3 {
-  display: -webkit-box; min-height: 2.4em; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
-}
-.marketplace-product-card .body > p {
-  display: -webkit-box; min-height: 3em; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
-}
-.marketplace-product-card .availability-list { min-height: 56px; align-content: flex-start; }
-.marketplace-card-bottom {
-  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: auto; padding-top: 12px;
-}
-.marketplace-price { grid-column: 1 / -1; min-height: 1.4em; display: flex; align-items: center; }
-.marketplace-product-card .marketplace-card-bottom .btn {
-  width: 100%; height: 40px; min-height: 40px; padding: 0.5rem 0.35rem; font-size: 0.85rem; line-height: 1.2; margin: 0;
-}
 .no-products { grid-column: 1 / -1; padding: 28px; text-align: center; border-radius: var(--radius); background: var(--surface-muted); border: 1px dashed var(--border-strong); }
 @media (max-width: 900px) { .filter-row { grid-template-columns: 1fr 1fr; } .filter-row > :first-child { grid-column: 1 / -1; } }
 @media (max-width: 640px) { .filter-row { grid-template-columns: 1fr; } .filter-row > :first-child { grid-column: auto; } .marketplace-grid { gap: 14px; } }
