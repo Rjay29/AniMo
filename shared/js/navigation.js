@@ -225,9 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
       themeButton.innerHTML = isDark ? sunIcon : moonIcon;
       const label = isDark ? 'Switch to light mode' : 'Switch to dark mode';
       themeButton.setAttribute('aria-label', label);
-      themeButton.setAttribute('data-tooltip', label);
       themeButton.setAttribute('aria-pressed', String(isDark));
-      themeButton.title = '';
     };
     setThemeUi(document.documentElement.dataset.theme === 'dark');
     themeButton.addEventListener('click', () => {
@@ -242,7 +240,6 @@ document.addEventListener('DOMContentLoaded', () => {
     accessibilityButton.type = 'button';
     accessibilityButton.innerHTML = accessIcon;
     accessibilityButton.setAttribute('aria-label', 'Accessibility settings');
-    accessibilityButton.setAttribute('data-tooltip', 'Accessibility settings');
     accessibilityButton.setAttribute('aria-expanded', 'false');
     const panel = document.createElement('section');
     panel.className = 'accessibility-settings-panel card';
@@ -286,30 +283,6 @@ document.addEventListener('DOMContentLoaded', () => {
     link.append(icon);
     if (count) link.append(count);
     link.setAttribute('aria-label', 'Cart');
-    link.setAttribute('data-tooltip', 'Cart');
-  });
-
-  // Tooltip Accessibility
-  function decorateTooltips() {
-    document.querySelectorAll('button, a.icon-btn').forEach((element) => {
-      const visibleText = element.textContent.trim().replace(/\s+/g, ' ');
-      const label = element.getAttribute('aria-label')
-        || element.getAttribute('title')
-        || (element.classList.contains('cart-pill') ? 'Cart' : '')
-        || visibleText;
-      if (label && !element.hasAttribute('data-tooltip')) {
-        element.setAttribute('data-tooltip', label);
-      }
-      if (label && !element.hasAttribute('aria-label')) {
-        element.setAttribute('aria-label', label);
-      }
-      element.removeAttribute('title');
-    });
-  }
-  decorateTooltips();
-  new MutationObserver(decorateTooltips).observe(document.body, {
-    childList: true,
-    subtree: true
   });
 
   // Cart Event Delegation
@@ -479,8 +452,6 @@ document.addEventListener('DOMContentLoaded', () => {
   assistant.querySelectorAll('[data-assistant-prompt]').forEach((button) => {
     button.addEventListener('click', () => sendMessage(button.dataset.assistantPrompt, button.dataset.assistantMode || 'chat'));
   });
-
-  decorateTooltips();
 
   // Progressive UI enhancements loader
   if (!document.querySelector('script[data-animo-ui-enhancements]')) {
