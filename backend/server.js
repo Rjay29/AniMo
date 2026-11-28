@@ -12,20 +12,23 @@ const { extname, resolve, sep } = require('node:path');
 const vm = require('node:vm');
 
 // Environment File
-// Settings such as GEMINI_API_KEY are loaded from this .env file. It sits at the repo root next to
-// server.js; update this one path if server.js moves (for example into backend/).
-const ENV_FILE = resolve(__dirname, '.env');
+// Settings such as GEMINI_API_KEY are loaded from this .env file in the repo root (one level above backend/).
+// Update this one path if server.js moves again.
+const ENV_FILE = resolve(__dirname, '..', '.env');
 try {
   process.loadEnvFile(ENV_FILE);
 } catch (error) {
   if (error.code !== 'ENOENT') console.warn(`Could not load the .env file (${error.code || error.name}). Continuing without it.`);
 }
-const { createExpandedDemoData } = require('./data/expanded-demo-data');
+const { createExpandedDemoData } = require('../data/expanded-demo-data');
 
 // Project Paths
-const root = __dirname;
-// Database Directory
-const dataDirectory = resolve(root, 'data');
+// Every path is built from this file's own folder (backend/), so the server works from any working directory.
+const projectRoot = resolve(__dirname, '..');
+// Web root: only files inside frontend/ can be served by URL.
+const frontendRoot = resolve(projectRoot, 'frontend');
+// Database Directory (local databases, farmer documents, and seed files)
+const dataDirectory = resolve(projectRoot, 'data');
 // Server Configuration
 const port = Number(process.env.PORT || 8000);
 // Session Timing
@@ -184,7 +187,7 @@ aiDb.exec(`
 `);
 
 // Catalog Image Data
-const uniqueCatalogImages = JSON.parse(readFileSync(resolve(root, 'data', 'catalog-image-map.json'), 'utf8'));
+const uniqueCatalogImages = JSON.parse(readFileSync(resolve(dataDirectory, 'catalog-image-map.json'), 'utf8'));
 const builtInImages = {
   products: {
     ...uniqueCatalogImages.products,
@@ -260,7 +263,7 @@ function seedAdministrator() {
 function seedBuiltInListings() {
   const seeded = listingsDb.prepare('SELECT value FROM app_settings WHERE key = ?').get('built_in_catalog_seeded');
   if (seeded) return;
-  const samplePath = resolve(root, 'shared', 'js', 'sample-data.js');
+  const samplePath = resolve(frontendRoot, 'shared', 'js', 'sample-data.js');
   // Run the whole browser file with a minimal stub: the catalog is assigned synchronously,
   // and the browser-only loading code (fetch, timers, DOM) stays inert.
   const noTimer = () => 0;
@@ -484,7 +487,7 @@ function validImage(image, folder) {
   }
   if (image.startsWith('/shared/assets/')) {
     const match = new RegExp(`^/shared/assets/${folder}/[A-Za-z0-9._-]+\\.(?:webp|png|jpe?g)$`).exec(image);
-    if (!match || !existsSync(resolve(root, `.${image}`))) {
+    if (!match || !existsSync(resolve(frontendRoot, `.${image}`))) {
       throw Object.assign(new Error('Choose a valid image from this listing folder.'), { status: 400 });
     }
     return image;
@@ -503,7 +506,7 @@ function storeImage(folder, identifier, image) {
   if (!match) throw Object.assign(new Error('Image must be JPG, PNG, or WebP.'), { status: 400 });
   const extension = match[1] === 'jpeg' ? 'jpg' : match[1];
   const filename = `upload-${String(identifier).replace(/[^a-zA-Z0-9_-]/g, '-')}-${randomBytes(8).toString('hex')}.${extension}`;
-  const directory = resolve(root, 'shared', 'assets', folder);
+  const directory = resolve(frontendRoot, 'shared', 'assets', folder);
   mkdirSync(directory, { recursive: true });
   writeFileSync(resolve(directory, filename), Buffer.from(match[2], 'base64'), { flag: 'wx' });
   return `/shared/assets/${folder}/${filename}`;
@@ -513,7 +516,7 @@ function storeImage(folder, identifier, image) {
 function removeUploadedImage(imagePath) {
   const match = /^\/shared\/assets\/(marketplace|farmers|recipes|meal_kits|profiles)\/(upload-[A-Za-z0-9_-]+)\.(?:webp|png|jpg)$/.exec(imagePath || '');
   if (!match) return;
-  const file = resolve(root, 'shared', 'assets', match[1], `${match[2]}${extname(imagePath)}`);
+  const file = resolve(frontendRoot, 'shared', 'assets', match[1], `${match[2]}${extname(imagePath)}`);
   if (!existsSync(file)) return;
   try {
     unlinkSync(file);
@@ -2067,7 +2070,6 @@ async function handleApi(request, response, url) {
 const mapPages = new Set(['/pages/home/home.html', '/pages/local-map/local-map.html']);
 
 function serveStatic(request, response, url, user) {
-  if (url.pathname === '/server.js' || url.pathname.startsWith('/data/')) return response.writeHead(404).end('Not found');
   if (url.pathname === '/' || url.pathname === '/index.html') return redirect(response, '/pages/home/home.html');
   if (url.pathname === '/favicon.ico') return redirect(response, '/shared/assets/logo.png');
   const isAuthPage = ['/pages/login/login.html', '/pages/register/register.html'].includes(url.pathname);
@@ -2114,8 +2116,9 @@ function serveStatic(request, response, url, user) {
     return response.writeHead(400).end('Bad request');
   }
   if (pathname.startsWith('/shared/assets/profiles/') && !user) return response.writeHead(404).end('Not found');
-  const file = resolve(root, `.${pathname}`);
-  if (!file.startsWith(`${root}${sep}`) || file === root) return response.writeHead(403).end('Forbidden');
+  // Only files inside frontend/ are served; backend/, data/, and .env are outside the web root.
+  const file = resolve(frontendRoot, `.${pathname}`);
+  if (!file.startsWith(`${frontendRoot}${sep}`) || file === frontendRoot) return response.writeHead(403).end('Forbidden');
   if (!existsSync(file)) return response.writeHead(404).end('Not found');
   const extension = extname(file).toLowerCase();
   if (!mimeTypes[extension]) return response.writeHead(404).end('Not found');

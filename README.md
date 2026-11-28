@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="shared/assets/logo.png" alt="AniMo logo" width="120" />
+<img src="frontend/shared/assets/logo.png" alt="AniMo logo" width="120" />
 
 # AniMo local marketplace demo
 
@@ -41,7 +41,7 @@ The first server start seeds 25 additional Philippine farmer profiles, 155 produ
 ### Local implementation boundaries
 
 - Checkout records orders and supports COD, BPI/BDO transfer, and InstaPay/e-wallet **as labels only**. No bank, e-wallet, or payment provider is contacted.
-- The local map is shown on the Home page and also has its own page (**Local map** in the navigation bar, `pages/local-map/`). Both use the same shared code (`shared/js/local-map.js`, `shared/css/local-map.css`). It uses Leaflet, OpenStreetMap tiles, Nominatim geocoding, and OSRM road routes. Map searches, seller pins, current location, and directions are limited to Philippine bounds. Public map services require an internet connection and are subject to their usage policies; this is not a courier booking or delivery guarantee. No map API key is needed.
+- The local map is shown on the Home page and also has its own page (**Local map** in the navigation bar, `frontend/pages/local-map/`). Both use the same shared code (`frontend/shared/js/local-map.js`, `frontend/shared/css/local-map.css`). It uses Leaflet, OpenStreetMap tiles, Nominatim geocoding, and OSRM road routes. Map searches, seller pins, current location, and directions are limited to Philippine bounds. Public map services require an internet connection and are subject to their usage policies; this is not a courier booking or delivery guarantee. No map API key is needed.
 - Farmer document approval is a manual local workflow. There is no government-ID, DA, bank, or address validation service.
 - Email/phone OTP, delivery tracking, SMS/email messages, and chats are local demos; chats refresh by polling.
 - This is not a production deployment. Production use needs HTTPS, external provider integrations, legal/privacy review, hardened operational rate limiting, backups, audit/retention policy for sensitive documents, and deployment security review.
@@ -81,11 +81,27 @@ cp .env.example .env
 
 Open `.env` in your editor and fill in a private admin username, a password of **12+ characters**, and (optionally) your `GEMINI_API_KEY`. See [Environment variables](#environment-variables) for every setting.
 
-**2.** Start the server:
+**2.** Start the server from the project folder:
+
+<details open>
+<summary><b>🪟 Windows (PowerShell)</b></summary>
+
+```powershell
+node backend/server.js
+```
+
+</details>
+
+<details>
+<summary><b>🍎 macOS / 🐧 Linux</b></summary>
 
 ```bash
-node server.js
+node backend/server.js
 ```
+
+</details>
+
+The server finds `frontend/`, `data/`, and `.env` from its own location, so it also works when started from another folder (for example `cd backend` then `node server.js`).
 
 The admin settings are optional for browsing, but without them there is no administrator account.
 
@@ -132,7 +148,7 @@ Without a key, or when Gemini fails or is busy, the server still runs and the as
 | `GEMINI_API_KEY` | (none) | Google Gemini API key for the assistant. Read only by the server |
 | `GEMINI_MODEL` | `gemini-3.5-flash-lite` | Gemini model name (letters, numbers, `.` and `-` only) |
 
-**How `.env` works:** on startup, `server.js` loads `.env` from the project root (next to `server.js`) if it exists; the server also starts without it. Variables already set in the terminal take precedence over `.env`. `ANIMO_ADMIN_USERNAME` and `ANIMO_ADMIN_PASSWORD` only set the admin password the **first** time that admin account is created; changing the password in `.env` later does not change an existing admin's password.
+**How `.env` works:** on startup, `backend/server.js` loads `.env` from the project root (the folder with `README.md` and `.env.example`, not `backend/`) if it exists; the server also starts without it. Variables already set in the terminal take precedence over `.env`. `ANIMO_ADMIN_USERNAME` and `ANIMO_ADMIN_PASSWORD` only set the admin password the **first** time that admin account is created; changing the password in `.env` later does not change an existing admin's password.
 
 ---
 
@@ -140,13 +156,13 @@ Without a key, or when Gemini fails or is busy, the server still runs and the as
 
 | Home (mobile) | Marketplace (mobile) | Meal kits (tablet) |
 |---------------|----------------------|--------------------|
-| <img src="files/home-mobile.png" alt="AniMo Home page on a phone" width="240" /> | <img src="files/marketplace-mobile.png" alt="AniMo Marketplace on a phone" width="240" /> | <img src="files/meal-kits-tablet.png" alt="AniMo meal kits on a tablet" width="240" /> |
+| <img src="docs/screenshots/home-mobile.png" alt="AniMo Home page on a phone" width="240" /> | <img src="docs/screenshots/marketplace-mobile.png" alt="AniMo Marketplace on a phone" width="240" /> | <img src="docs/screenshots/meal-kits-tablet.png" alt="AniMo meal kits on a tablet" width="240" /> |
 
 | AniMo Assistant |
 |-----------------|
-| <img src="files/home-current.png" alt="AniMo Assistant chat panel open on the Home page" width="600" /> |
+| <img src="docs/screenshots/home-current.png" alt="AniMo Assistant chat panel open on the Home page" width="600" /> |
 
-More layout screenshots are in [`files/`](files/).
+More layout screenshots are in [`docs/screenshots/`](docs/screenshots/).
 
 ---
 
@@ -154,24 +170,31 @@ More layout screenshots are in [`files/`](files/).
 
 ```text
 AniMo/
-├── server.js               # Node.js server: pages, APIs, auth, OTP, maps, assistant, seeding
-├── index.html              # Redirects to AniMo Home
-├── admin/                  # Administrator dashboard (served only at the private /control/<code> URL)
-│   ├── index.html
-│   ├── admin.css
-│   └── admin.js
-├── pages/                  # Site pages, one folder each (html/css/js):
-│                           #   home, marketplace, product-details, farmers, farmer-profile,
-│                           #   recipe-discovery, recipe-details, recipe-packages, package-details,
-│                           #   local-map, cart, checkout, chat, login, register, profile, about,
-│                           #   farmer-dashboard
-├── shared/
-│   ├── css/                # Global styles, components, navbar, footer
-│   ├── js/                 # API client, cart, navigation + assistant, local map, reviews, theme, catalog data
-│   └── assets/             # Logo, icons, and listing/profile photos by category
-├── data/                   # SQLite databases, demo seed data, farmer documents (private)
-├── files/                  # Layout screenshots
-└── development-days/       # Learning snapshots from HTML-only to the connected app
+├── backend/
+│   └── server.js           # Node.js server: pages, APIs, auth, OTP, maps, assistant, seeding
+├── frontend/               # Web root: the only folder the server serves by URL
+│   ├── index.html          # Redirects to AniMo Home
+│   ├── admin/              # Administrator dashboard (served only at the private /control/<code> URL)
+│   │   ├── index.html
+│   │   ├── admin.css
+│   │   └── admin.js
+│   ├── pages/              # Site pages, one folder each (html/css/js):
+│   │                       #   home, marketplace, product-details, farmers, farmer-profile,
+│   │                       #   recipe-discovery, recipe-details, recipe-packages, package-details,
+│   │                       #   local-map, cart, checkout, chat, login, register, profile, about,
+│   │                       #   farmer-dashboard
+│   └── shared/
+│       ├── css/            # Global styles, components, navbar, footer
+│       ├── js/             # API client, cart, navigation + assistant, local map, reviews, theme, catalog data
+│       └── assets/         # Logo, icons, and listing/profile photos by category
+├── data/                   # SQLite databases, demo seed data, farmer documents (private, not served)
+├── docs/
+│   └── screenshots/        # Layout screenshots
+├── development-days/       # Learning snapshots from HTML-only to the connected app
+├── .env.example            # Settings template; copy to .env in this folder (.env is ignored by Git)
+└── README.md
+
+Website URLs match the paths inside `frontend/`: `frontend/pages/home/home.html` is served at `/pages/home/home.html`.
 ```
 
 ---
@@ -198,7 +221,7 @@ Notes:
 - **Start fresh** by stopping the server, then deleting `data/*.sqlite*` (all `.sqlite`, `-shm`, and `-wal` files together). The next start creates and seeds new databases. Your accounts, orders, and chats are lost, so back up first if you need them.
 - ⚠️ `data/` contains personal information (orders, contacts, farmer documents). **Keep it private.**
 
-Uploaded catalog/profile images are validated and saved as files beneath their matching `shared\assets\` subfolders. Existing local visuals are organized under `shared\assets\`: brand/profile photos at the root and categorized `icons\`, `marketplace\`, `farmers\`, `recipes\`, and `meal_kits\` folders. The Home map loads Leaflet from unpkg and map data/tiles from OpenStreetMap-compatible services; these are the only required third-party map assets/services.
+Uploaded catalog/profile images are validated and saved as files beneath their matching `frontend\shared\assets\` subfolders. Existing local visuals are organized under `frontend\shared\assets\`: brand/profile photos at the root and categorized `icons\`, `marketplace\`, `farmers\`, `recipes\`, and `meal_kits\` folders. The Home map loads Leaflet from unpkg and map data/tiles from OpenStreetMap-compatible services; these are the only required third-party map assets/services.
 
 ---
 
@@ -214,7 +237,7 @@ Start the server with the admin variables set, open the **private administrator 
 | 🧾 Orders | Change order and delivery status |
 | 🤖 Assistant data | Add, edit, enable, or remove the assistant's knowledge entries |
 
-Customer profile pictures are managed by users on their own profile page and saved in `shared/assets/profiles/`.
+Customer profile pictures are managed by users on their own profile page and saved in `frontend/shared/assets/profiles/`.
 
 ---
 
@@ -251,7 +274,7 @@ Customer profile pictures are managed by users on their own profile page and sav
 | Login or profile pages don't work | Use `http://127.0.0.1:8000`, not a `file://` path |
 | Can't find the admin dashboard | Use the `Private administrator sign-in` URL printed in the terminal; `/admin/` is no longer used |
 | Admin URL stopped working | It changes on every restart; copy the new one from the terminal |
-| Can't sign in as admin | Set both admin settings in `.env` (or the terminal) before `node server.js`; password must be 12+ characters. If the admin already existed, its original password still applies |
+| Can't sign in as admin | Set both admin settings in `.env` (or the terminal) before `node backend/server.js`; password must be 12+ characters. If the admin already existed, its original password still applies |
 | Server stops with an admin username error | That username already belongs to a customer account; choose another |
 | Farmer can't sign in | An admin must approve the farmer application first |
 | Assistant shows `AI offline · set GEMINI_API_KEY` | No key is set. Add `GEMINI_API_KEY` to `.env` and restart (optional; built-in answers still work) |
@@ -268,7 +291,7 @@ Customer profile pictures are managed by users on their own profile page and sav
 - `.env` is listed in `.gitignore`, so local settings files are not committed. Check with `git check-ignore .env`.
 - The SQLite databases (`data/*.sqlite*`) are **no longer tracked**. Each computer keeps its own local databases, which the server creates on first run. They contain password hashes, sessions, contacts, and orders, so never commit them. Copies pushed earlier remain in Git history.
 - ⚠️ **Back up `data/` before pulling the commit that untracked the databases.** When Git applies that change it deletes the tracked database files from your working folder. Stop the server, copy `data/` somewhere outside the repo, pull, then copy your `*.sqlite` files back (or skip that and let the server create fresh ones).
-- Uploaded personal files are ignored too: `data/farmer-documents/`, `shared/assets/profiles/`, and new uploads saved as `shared/assets/*/upload-*`.
+- Uploaded personal files are ignored too: `data/farmer-documents/`, `frontend/shared/assets/profiles/`, and new uploads saved as `frontend/shared/assets/*/upload-*`.
 - To clean up after local testing, stop the server and delete `data/*.sqlite*`; the next start recreates them. `git restore data/` no longer applies to the databases.
 - Add files by name instead of `git add .`.
 

@@ -12,7 +12,7 @@ window.aniMoApi = async function (url, options = {}) {
       }
     });
   } catch {
-    throw new Error('Cannot reach the AniMo server. Start it with node server.js and open http://127.0.0.1:8000.');
+    throw new Error('Cannot reach the AniMo server. Start it with node backend/server.js and open http://127.0.0.1:8000.');
   }
 
   let text;
@@ -27,10 +27,10 @@ window.aniMoApi = async function (url, options = {}) {
     try {
       result = JSON.parse(text);
     } catch {
-      throw new Error('AniMo received a non-JSON response. Start it with node server.js and open http://127.0.0.1:8000 (do not open the HTML file directly).');
+      throw new Error('AniMo received a non-JSON response. Start it with node backend/server.js and open http://127.0.0.1:8000 (do not open the HTML file directly).');
     }
   } else if (response.status !== 204) {
-    throw new Error('AniMo received an empty response. Restart the server with node server.js and try again.');
+    throw new Error('AniMo received an empty response. Restart the server with node backend/server.js and try again.');
   }
 
   if (!response.ok) {
