@@ -417,7 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (normalized.includes('recipe') || normalized.includes('ingredient')) return 'Open Recipes to browse dishes, or ask me for a recipe idea using AniMo ingredients. I can suggest options based on available products and clearly note anything missing.';
     if (normalized.includes('map') || normalized.includes('location') || normalized.includes('near')) return 'Use the Local map on the Home page to search Philippine locations, pin your location, and view nearby AniMo sellers.';
     if (normalized.includes('order') || normalized.includes('cart') || normalized.includes('buy')) return 'Browse the Marketplace, add items to your cart, review vouchers in Cart, then continue to Checkout to place your order.';
-    return 'I can help with AniMo products, farmers, recipes, meal kits, orders, and the Philippines map. Ask me a specific question and I?ll do my best.';
+    return 'I can help with AniMo products, farmers, recipes, meal kits, orders, and the Philippines map. Ask me a specific question and I\'ll do my best.';
   }
 
   async function sendMessage(text, mode = 'chat') {
