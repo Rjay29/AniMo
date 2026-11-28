@@ -18,18 +18,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Product Summary Rendering
   container.innerHTML = `
-    <div class="product-gallery">${ui.renderCatalogImage(product.image, product.name, product.category)}</div>
-    <div class="product-info">
+    <div class="detail-media">${ui.renderCatalogImage(product.image, product.name, product.category)}</div>
+    <div class="detail-content">
       <span class="eyebrow">${ui.escapeHTML(product.category)}</span>
       <h1>${ui.escapeHTML(product.name)}</h1>
-      <div class="product-meta">
+      <div class="detail-meta">
         <span class="badge">${renderStars(product.rating)} ${ui.escapeHTML(product.rating)}</span>
         <span class="badge">${ui.escapeHTML(product.location)}</span>
         <span class="badge">${Number(product.orderCount) || 0} orders</span>
       </div>
-      <div class="price product-price">${formatCurrency(product.price)} / ${ui.escapeHTML(product.unit)}</div>
+      <div class="price detail-price">${formatCurrency(product.price)} / ${ui.escapeHTML(product.unit)}</div>
       <p>${ui.escapeHTML(product.description)}</p>
-      <div class="product-meta">
+      <div class="detail-meta">
         ${product.deliveryAvailable ? '<span class="badge">Delivery available</span>' : ''}
         ${product.pickupAvailable ? '<span class="badge">Pickup available</span>' : ''}
       </div>
@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         ${soldOut ? `<br>Estimated return: ${new Date(Date.now() + 7 * 86400000).toLocaleDateString()} (demo estimate)` : ''}
       </p>
       <p class="freshness-note">Listed ${ui.escapeHTML(listed)} · Stock last updated ${ui.escapeHTML(freshness)}</p>
-      <div class="product-actions">
+      <div class="detail-actions">
         <button class="btn btn-primary" type="button" data-add-cart="${ui.escapeHTML(product.id)}" ${soldOut ? 'disabled' : ''}>Add to cart</button>
         <button class="btn btn-secondary" type="button" id="orderNowButton" ${soldOut ? 'disabled' : ''}>Get it now</button>
         ${product.ownerId ? `<a class="btn btn-secondary" href="../chat/chat.html?userId=${encodeURIComponent(product.ownerId)}">Message seller</a>` : ''}

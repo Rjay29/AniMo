@@ -18,16 +18,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Recipe Instructions
   container.innerHTML = `
-    <article class="recipe-detail-card">
-      <div>
-        <!-- Image Placeholder -->
-        ${ui.renderCatalogImage(recipe.image, recipe.name, recipe.category, 'recipe-detail-image')}
-      </div>
-      <div class="recipe-detail-copy">
+    <div class="detail-media">${ui.renderCatalogImage(recipe.image, recipe.name, recipe.category)}</div>
+      <div class="detail-content">
         <span class="eyebrow">${ui.escapeHTML(recipe.category)}</span>
         <h1>${ui.escapeHTML(recipe.name)}</h1>
         <p>${ui.escapeHTML(recipe.description)}</p>
-        <div class="recipe-facts"><span class="badge">${ui.escapeHTML(recipe.time)}</span><span class="badge">${ui.escapeHTML(recipe.difficulty)}</span></div>
+        <div class="detail-meta"><span class="badge">${ui.escapeHTML(recipe.time)}</span><span class="badge">${ui.escapeHTML(recipe.difficulty)}</span></div>
         <h2>Ingredients</h2>
         <ul>${recipe.ingredients.map((ingredient) => {
           const linked = products.find((product) => product.name.toLowerCase().includes(ingredient.toLowerCase())
@@ -44,9 +40,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             : 'No matching sample products are available to order for this recipe.'}</p>
           <button class="btn btn-primary" type="button" id="orderRecipeButton" ${available.length ? '' : 'disabled'}>Add available ingredients to cart</button>
         </div>
-        <a href="../recipe-discovery/recipe-discovery.html" class="btn btn-secondary recipe-back-link">Back to recipes</a>
+        <div class="detail-actions"><a href="../recipe-discovery/recipe-discovery.html" class="btn btn-secondary">Back to recipes</a></div>
       </div>
-    </article>
   `;
 
   const orderButton = document.getElementById('orderRecipeButton');

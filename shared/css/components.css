@@ -314,3 +314,50 @@
 :root[data-theme="dark"] .review-stars-empty { color: rgba(255,255,255,0.28); }
 :root[data-theme="dark"] .review-status.error { color: #fca5a5; }
 @media (max-width: 900px) { .product-review-head { flex-direction: column; align-items: flex-start; } }
+
+/* Shared Detail Page Layout
+   Product, recipe, meal kit, and farmer pages: image on the left, content on the right. */
+.detail-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(20px, 3vw, 32px);
+  align-items: start;
+}
+.detail-media,
+.detail-content {
+  min-width: 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+.detail-media { overflow: hidden; }
+.detail-media .catalog-card-image { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; }
+.detail-content { padding: clamp(22px, 3vw, 30px); }
+.detail-content > * { max-width: 65ch; }
+.detail-content h1 {
+  margin: 8px 0 12px;
+  color: var(--dark-green);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  line-height: 1.12;
+}
+.detail-content h2,
+.detail-content h3 { margin: 24px 0 12px; color: var(--dark-green); font-size: 1.2rem; }
+.detail-content p,
+.detail-content li { color: var(--muted); line-height: 1.7; }
+.detail-content ul,
+.detail-content ol { margin: 0; padding-left: 20px; }
+.detail-content li { margin: 8px 0; }
+.detail-meta { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 16px; }
+.detail-price { margin: 4px 0 12px; font-size: 1.8rem; }
+.detail-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
+.detail-actions .btn[disabled] { opacity: 0.55; cursor: not-allowed; }
+@media (max-width: 900px) {
+  .detail-layout { grid-template-columns: 1fr; gap: 20px; }
+}
+@media (max-width: 640px) {
+  .detail-content { padding: 18px; }
+  .detail-content h1 { font-size: clamp(1.65rem, 6vw, 2.2rem); }
+  .detail-actions .btn { flex: 1; }
+}

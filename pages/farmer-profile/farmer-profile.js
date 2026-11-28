@@ -12,20 +12,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!container) return;
 
   container.innerHTML = `
-    <div class="profile-card">
-      <!-- Image Placeholder -->
-      ${ui.renderCatalogImage(farmer.image, farmer.name, 'Local grower', 'farmer-profile-image')}
-    </div>
-    <div class="profile-detail">
+    <div class="detail-media">${ui.renderCatalogImage(farmer.image, farmer.name, 'Local grower')}</div>
+    <div class="detail-content">
       <span class="eyebrow">Local grower</span>
       <h1>${ui.escapeHTML(farmer.name)}</h1>
-      <div class="profile-meta">
+      <div class="detail-meta">
         <span class="badge">${ui.escapeHTML(farmer.location)}</span>
         <span class="badge">${renderStars(farmer.rating)}</span>
         <span class="badge">${ui.escapeHTML(farmer.type)}</span>
       </div>
       <p>${ui.escapeHTML(farmer.story)}</p>
-      <div class="badges">
+      <div class="detail-meta">
         <span class="tag">${ui.escapeHTML(farmer.specialty)}</span>
         <span class="tag">${ui.escapeHTML(farmer.followers)} community followers</span>
       </div>
@@ -35,8 +32,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         <li>Small-batch pantry goods from local harvests</li>
         <li>Transparent pricing and direct farmer support</li>
       </ul>
-      <a href="../farmers/farmers.html" class="btn btn-secondary">Back to farmers</a>
-      ${farmer.ownerId ? `<a href="../chat/chat.html?userId=${encodeURIComponent(farmer.ownerId)}" class="btn btn-primary">Message this farmer</a>` : ''}
+      <div class="detail-actions">
+        ${farmer.ownerId ? `<a href="../chat/chat.html?userId=${encodeURIComponent(farmer.ownerId)}" class="btn btn-primary">Message this farmer</a>` : ''}
+        <a href="../farmers/farmers.html" class="btn btn-secondary">Back to farmers</a>
+      </div>
     </div>
   `;
   const products = window.aniMoData.products.filter((product) => (

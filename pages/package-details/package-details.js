@@ -13,22 +13,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   const available = products.filter((product) => Number(product.stock) > 0);
 
   container.innerHTML = `
-    <div class="package-detail">
-      <!-- Image Placeholder -->
-      ${ui.renderCatalogImage(pkg.image, pkg.name, 'Local meal package', 'package-detail-image')}
-      <div>
+    <div class="detail-media">${ui.renderCatalogImage(pkg.image, pkg.name, 'Local meal package')}</div>
+      <div class="detail-content">
         <span class="eyebrow">Meal kit</span>
         <h1>${ui.escapeHTML(pkg.name)}</h1>
         <p>${ui.escapeHTML(pkg.description)}</p>
-        <div class="price" style="font-size:2rem; margin-bottom: 16px;">${formatCurrency(pkg.price)}</div>
-        <div class="tag-list"><span class="tag">Local ingredients</span><span class="tag">Easy prep</span><span class="tag">Farmer sourced</span></div>
+        <div class="price detail-price">${formatCurrency(pkg.price)}</div>
+        <div class="detail-meta"><span class="tag">Local ingredients</span><span class="tag">Easy prep</span><span class="tag">Farmer sourced</span></div>
         <h2>Package ingredients</h2>
         <ul>${products.map((product) => `<li${Number(product.stock) < 1 ? ' class="sold-out"' : ''}>${ui.escapeHTML(product.name)} from ${ui.escapeHTML(product.location)} · ${Number(product.stock) < 1 ? 'SOLD OUT' : `${ui.escapeHTML(product.stock)} in stock`}</li>`).join('')}</ul>
         ${unavailable.length ? `<p class="sold-out" role="status">Unavailable ingredients: ${unavailable.map((product) => ui.escapeHTML(product.name)).join(', ')}.</p>` : ''}
-        <button id="addPackageButton" class="btn btn-primary" type="button" ${available.length ? '' : 'disabled'}>${unavailable.length ? 'Add available ingredients only' : 'Add package to cart'}</button>
-        <a href="../recipe-packages/recipe-packages.html" class="btn btn-secondary">Back to packages</a>
+        <div class="detail-actions">
+          <button id="addPackageButton" class="btn btn-primary" type="button" ${available.length ? '' : 'disabled'}>${unavailable.length ? 'Add available ingredients only' : 'Add package to cart'}</button>
+          <a href="../recipe-packages/recipe-packages.html" class="btn btn-secondary">Back to packages</a>
+        </div>
       </div>
-    </div>
   `;
 
   document.getElementById('addPackageButton').addEventListener('click', async (event) => {
