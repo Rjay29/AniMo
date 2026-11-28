@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const ui = window.aniMoUtilities;
   if (!container) return;
   if (!product) {
-    container.innerHTML = '<p class="card">This product is no longer available.</p>';
+    container.innerHTML = '<div class="empty-state" role="status"><p class="empty-state-title">Product not available</p><p>This product is no longer available.</p><a class="btn btn-secondary" href="../marketplace/marketplace.html">Back to the marketplace</a></div>';
     return;
   }
   const soldOut = Number(product.stock) < 1;
@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           <div class="product-review-rating">${ui.renderStars(review.rating)}<span>${review.rating}/5</span></div>
         </div>
         <p class="product-review-comment">${ui.escapeHTML(review.comment || 'Left a rating without a written comment.')}</p>
-      </article>`).join('') : '<div class="product-review-empty"><p>No reviews yet.</p><span>Reviews appear here after delivered orders are rated.</span></div>';
+      </article>`).join('') : '<div class="empty-state" role="status"><p class="empty-state-title">No reviews yet</p><p>Reviews appear here after delivered orders are rated.</p></div>';
 
     const canReview = !!result.canReview;
     reviewForm.hidden = !canReview;

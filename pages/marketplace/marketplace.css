@@ -3,6 +3,5 @@
 .filter-row { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 10px; }
 .marketplace-grid { margin-top: 18px; gap: 16px; }
 @media (min-width: 1201px) { .marketplace-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
-.no-products { grid-column: 1 / -1; padding: 28px; text-align: center; border-radius: var(--radius); background: var(--surface-muted); border: 1px dashed var(--border-strong); }
 @media (max-width: 900px) { .filter-row { grid-template-columns: 1fr 1fr; } .filter-row > :first-child { grid-column: 1 / -1; } }
 @media (max-width: 640px) { .filter-row { grid-template-columns: 1fr; } .filter-row > :first-child { grid-column: auto; } .marketplace-grid { gap: 14px; } }

@@ -44,5 +44,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   const productGrid = document.getElementById('farmerProductGrid');
   productGrid.innerHTML = products.length
     ? products.map((product) => ui.renderProductCard(product)).join('')
-    : '<p class="card">This farmer has no approved product listings yet.</p>';
+    : '<div class="empty-state" role="status"><p class="empty-state-title">No products yet</p><p>This farmer has no approved product listings yet.</p></div>';
 });

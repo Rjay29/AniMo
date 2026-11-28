@@ -192,7 +192,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               <button class="btn btn-secondary" type="button" data-edit-type="${type}" data-edit-id="${escapeHtml(entry.id)}">Edit</button>
               <button class="btn btn-secondary" type="button" data-delete-type="${type}" data-delete-id="${escapeHtml(entry.id)}">Remove</button>
             </span>
-          </article>`).join('') : '<p class="muted">No listings yet.</p>'}
+          </article>`).join('') : '<div class="empty-state" role="status"><p class="empty-state-title">No listings yet</p><p>Listings you add appear here.</p></div>'}
       </section>`;
     }).join('');
     list.innerHTML = groups;
@@ -358,7 +358,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           <div class="application-documents">${documentLinks || '<span>No documents attached.</span>'}</div></div>
         ${application.status === 'pending' ? `<div class="listing-actions"><button class="btn btn-primary" data-approve-application="${application.userId}" type="button">Approve</button><button class="btn btn-secondary" data-reject-application="${application.userId}" type="button">Reject</button></div>` : ''}
       </article>`;
-    }).join('') : '<p class="muted">No farmer applications yet.</p>';
+    }).join('') : '<div class="empty-state" role="status"><p class="empty-state-title">No farmer applications</p><p>New applications will appear here for review.</p></div>';
   }
 
   try {

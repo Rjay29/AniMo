@@ -32,7 +32,6 @@
 .order-state { padding: 5px 10px; border-radius: 999px; background: rgba(191, 209, 138, 0.35); color: var(--dark-green); font-size: 0.8rem; font-weight: 700; white-space: nowrap; }
 :root[data-theme="dark"] .order-state { background: rgba(191, 209, 138, 0.18); color: #dce8c4; }
 .order-items { padding-left: 20px; margin: 8px 0 0; color: var(--muted); }
-.order-empty { padding: 28px; color: var(--muted); text-align: center; background: var(--surface-muted); border-radius: 14px; }
 @media (max-width: 900px) { .profile-page-layout { grid-template-columns: 1fr; } }
 @media (max-width: 640px) { .profile-account-card, .profile-orders-card { padding: 16px; } .profile-order { padding: 14px; } }
 @media (max-width: 520px) { .profile-orders-heading { align-items: flex-start; flex-direction: column; } .profile-order-header { flex-direction: column; } .profile-picture-control { align-items: flex-start; } .profile-picture-control > img, .profile-picture-control > .profile-picture-placeholder { width: 80px; height: 80px; } }

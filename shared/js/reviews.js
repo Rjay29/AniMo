@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     list.innerHTML = result.reviews.length ? result.reviews.map((review) => `
       <article class="product-review"><strong>${escape(review.displayName)}</strong><span class="badge">${stars(review.rating)} ${review.rating}/5</span>
       <p>${escape(review.comment || 'Rating only')}</p><small>Verified order · ${escape(review.created_at)}</small></article>`).join('')
-      : '<p>No reviews yet. Ratings and comments appear after a delivered order.</p>';
+      : '<div class="empty-state" role="status"><p class="empty-state-title">No reviews yet</p><p>Ratings and comments appear after a delivered order.</p></div>';
 
     const canReview = Boolean(result.canReview);
     form.hidden = !canReview;

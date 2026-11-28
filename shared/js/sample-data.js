@@ -359,7 +359,7 @@ document.querySelectorAll('#featured-products, #recipe-cards, #package-cards, #f
         if (html) { container.innerHTML = html; return; }
         if (!catalogFallbackIds.has(container.id)) return;
         container.innerHTML = window.aniMoCatalogLoadError
-          ? '<p class="card" role="status">AniMo listings could not load. Check the local server and refresh.</p>'
+          ? '<div class="empty-state" role="status"><p class="empty-state-title">Listings could not load</p><p>Check that the local server is running, then refresh the page.</p></div>'
           : '<p class="card" role="status">Content is taking longer than expected. Please refresh.</p>';
       });
     };

@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div class="farmer-list-row-copy"><strong>${escape(entry.name)}</strong><span class="farmer-review-state ${entry.status === 'approved' ? 'approved' : ''}">${escape(entry.status)}</span>
           <p>${entry.listingType === 'products' ? `${escape(entry.stock)} ${escape(entry.unit)} in stock` : escape(entry.listingType)}</p></div>
         <button class="btn btn-secondary" type="button" data-edit-listing="${escape(entry.id)}">Edit / stock</button>
-      </article>`).join('') : '<p>No listings yet. New submissions are reviewed before appearing publicly.</p>';
+      </article>`).join('') : '<div class="empty-state" role="status"><p class="empty-state-title">No listings yet</p><p>New submissions are reviewed before appearing publicly.</p></div>';
   }
   async function loadOrders() {
     const { orders } = await window.aniMoApi('/api/farmer/orders');
@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       <article class="farmer-list-row">
         <div><strong>${escape(order.id)} · ${escape(order.username)}</strong><p>${order.items.map((item) => `${escape(item.name)} × ${escape(item.quantity)}`).join(', ')}</p><small>${escape(order.fulfillment)} · ${escape(order.status)} · ${escape(order.address)}</small></div>
         ${order.status === 'completed' ? '<span class="badge">Delivered</span>' : `<button class="btn btn-primary" type="button" data-deliver-order="${escape(order.id)}">Mark delivered</button>`}
-      </article>`).join('') : '<p>No orders for your listings yet.</p>';
+      </article>`).join('') : '<div class="empty-state" role="status"><p class="empty-state-title">No orders yet</p><p>Orders for your listings will appear here.</p></div>';
   }
   try {
     await Promise.all([loadListings(), loadOrders()]);

@@ -99,7 +99,7 @@ function initializeLocalMap() {
     title.textContent = heading;
     description.textContent = detail;
     if (!list.length) {
-      nearbyProducts.innerHTML = '<p class="map-empty">No Philippine seller locations are available for this view.</p>';
+      nearbyProducts.innerHTML = '<div class="empty-state empty-state-compact" role="status"><p>No Philippine seller locations are available for this view.</p></div>';
       return;
     }
     nearbyProducts.innerHTML = list.map((seller) => `

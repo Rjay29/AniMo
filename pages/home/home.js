@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (featuredContainer) {
     featuredContainer.innerHTML = featuredProducts.length
       ? featuredProducts.map((product) => ui.renderProductCard(product, { showOrders: true })).join('')
-      : '<p class="card">Featured products appear after they reach 10 verified orders.</p>';
+      : '<div class="empty-state" role="status"><p class="empty-state-title">No featured products yet</p><p>Products appear here once they reach 10 verified orders.</p></div>';
   }
 
   // Recipe Highlights

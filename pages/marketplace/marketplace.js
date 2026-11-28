@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     grid.innerHTML = filtered.map((product) => ui.renderProductCard(product)).join('');
 
     if (!filtered.length) {
-      grid.innerHTML = '<div class="card no-products">No products found. Try another search or category.</div>';
+      grid.innerHTML = '<div class="empty-state" role="status"><p class="empty-state-title">No products found</p><p>Try another search or category.</p></div>';
     }
   }
 

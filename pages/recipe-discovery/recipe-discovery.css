@@ -26,10 +26,8 @@
 }
 .muted-note, .prototype-note { color: var(--muted); font-size: 0.92rem; }
 .recipe-link { display: flex; margin-top: 14px; }
-.empty-recipes { margin-top: 16px; padding: 18px; border-radius: var(--radius); background: var(--surface-muted); border: 1px solid var(--border); }
-.empty-recipes[hidden] { display: none; }
 @media (max-width: 640px) {
   .selected-heading, .recipe-results-heading { margin-top: 20px; }
   .selected-chip { font-size: 0.84rem; }
-  .empty-recipes { padding: 14px; }
 }
+#emptyRecipes { margin-top: 16px; }
