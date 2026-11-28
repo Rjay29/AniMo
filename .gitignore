@@ -1,5 +1,16 @@
+# Local secrets
+.env
+
+# Local databases (created and seeded by server.js on first run)
 data/*.sqlite
 data/*.sqlite-shm
 data/*.sqlite-wal
-.env
+data/*.sqlite-journal
+
+# Uploaded personal data and user uploads
+data/farmer-documents/
+shared/assets/profiles/
+shared/assets/*/upload-*
+
+# Accidentally nested copy of the repository
 /AniMo/
