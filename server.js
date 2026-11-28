@@ -1446,10 +1446,15 @@ async function handleApi(request, response, url) {
   }
 
   const user = currentUser(request);
+  // Administrators also get their private dashboard address so the navbar link works.
+  const sessionPayload = () => ({ ...publicUser(user), ...(user.role === 'admin' ? { adminPath: `${privateAdminPath}/` } : {}) });
   if (method === 'GET' && pathname === '/api/auth/me') {
     if (!user) return jsonResponse(response, 401, { error: 'Please log in.' });
-    // Administrators also get their private dashboard address so the navbar link works.
-    return jsonResponse(response, 200, { user: { ...publicUser(user), ...(user.role === 'admin' ? { adminPath: `${privateAdminPath}/` } : {}) } });
+    return jsonResponse(response, 200, { user: sessionPayload() });
+  }
+  // Like /api/auth/me, but guests get 200 with user null, so public pages don't log an error.
+  if (method === 'GET' && pathname === '/api/auth/session') {
+    return jsonResponse(response, 200, { user: user ? sessionPayload() : null });
   }
   if (method === 'GET' && pathname === '/api/assistant/knowledge') {
     return jsonResponse(response, 200, { records: listAssistantKnowledge() });

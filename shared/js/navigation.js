@@ -1,5 +1,16 @@
 // Shared Navigation And Assistant
 
+// The signed-in user, or null for guests (never throws).
+window.aniMoSessionUser = async function () {
+  try {
+    const response = await fetch('/api/auth/session', { credentials: 'same-origin' });
+    if (!response.ok) return null;
+    return (await response.json()).user || null;
+  } catch {
+    return null;
+  }
+};
+
 // Log out (the button lives on the profile page). Throws if the server rejects the request.
 window.aniMoLogout = async function () {
   const response = await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
@@ -91,10 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
       };
 
       window.aniMoRequireLogin = async function (options = {}) {
-        try {
-          const response = await fetch('/api/auth/me', { credentials: 'same-origin' });
-          if (response.ok) return true;
-        } catch {}
+        if (await window.aniMoSessionUser()) return true;
         const next = options.next || `${window.location.pathname}${window.location.search}`;
         if (options.pendingCart) {
           localStorage.setItem('animo-pending-cart', JSON.stringify(options.pendingCart));
@@ -173,9 +181,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       return user;
     };
-    fetch('/api/auth/me', { credentials: 'same-origin' }).then(async (response) => {
-      if (!response.ok) { setGuestMode(); return; }
-      const { user } = await response.json();
+    window.aniMoSessionUser().then((user) => {
+      if (!user) { setGuestMode(); return; }
       setAuthMode(user);
       const accountLink = document.createElement('a');
       accountLink.className = 'profile-avatar-link';
@@ -302,10 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('click', async (event) => {
     const orderLink = event.target.closest('a[href*="checkout/checkout.html"], a[href*="/checkout"], [data-require-login-order]');
     if (!orderLink) return;
-    try {
-      const response = await fetch('/api/auth/me', { credentials: 'same-origin' });
-      if (response.ok) return;
-    } catch {}
+    if (await window.aniMoSessionUser()) return;
     event.preventDefault();
     const href = orderLink.href ? new URL(orderLink.href, window.location.origin) : null;
     const next = href ? (href.pathname + href.search) : window.location.pathname;
