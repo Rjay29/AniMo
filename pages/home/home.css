@@ -122,14 +122,11 @@
   border-color: #f4fbf6;
 }
 
-.bulletin-section {
-  background:
-    linear-gradient(rgba(49, 90, 75, 0.03) 1px, transparent 1px),
-    linear-gradient(180deg, #efece2 0%, #eae6da 100%);
-  background-size: 100% 36px, 100% 100%;
-  border-bottom: 1px solid rgba(38, 52, 45, 0.1);
-}
-.bulletin-section { padding-top: clamp(3rem, 6vw, 4.5rem); }
+/* Below the hero, every home section sits on the page background with the same gap between them. */
+:root { --home-section-gap: clamp(36px, 5vw, 52px); }
+.bulletin-section { padding-top: clamp(3rem, 6vw, 4.5rem); padding-bottom: 0; }
+.home-section { padding: var(--home-section-gap) 0 0; background: none; }
+main > .home-section:last-child { padding-bottom: clamp(3rem, 6vw, 4.5rem); }
 .bulletin-title {
   margin: 0 0 clamp(8px, 2vw, 16px);
   padding-bottom: clamp(18px, 3vw, 26px);
@@ -141,7 +138,7 @@
   letter-spacing: -0.03em;
   text-align: center;
 }
-.board-block { margin-top: 44px; }
+.board-block { margin-top: var(--home-section-gap); }
 /* One header format for every home section: serif title, muted subtitle, button on the right. */
 .home-section-heading { align-items: center; }
 .home-section-heading h2,
@@ -221,15 +218,9 @@
   border-color: #f4fbf6;
 }
 
-:root[data-theme="dark"] .bulletin-section {
-  background:
-    linear-gradient(rgba(167, 207, 181, 0.04) 1px, transparent 1px),
-    linear-gradient(180deg, #18231d 0%, #151f1a 100%);
-  background-size: 100% 36px, 100% 100%;
-  border-bottom-color: var(--border);
-}
 :root[data-theme="dark"] .bulletin-title { border-bottom-color: var(--border); }
 :root[data-theme="dark"] .home-section-heading h2,
 :root[data-theme="dark"] .home-section-heading h3 { color: var(--dark); }
 :root[data-theme="dark"] .home-section-heading p { color: var(--muted); }
 
+:root[data-theme="dark"] .home-section { background: none; }
