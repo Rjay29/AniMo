@@ -25,7 +25,6 @@
   font-size: 1rem; line-height: 1; cursor: pointer;
 }
 .muted-note, .prototype-note { color: var(--muted); font-size: 0.92rem; }
-.recipe-link { display: flex; margin-top: 14px; }
 @media (max-width: 640px) {
   .selected-heading, .recipe-results-heading { margin-top: 20px; }
   .selected-chip { font-size: 0.84rem; }

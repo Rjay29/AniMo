@@ -172,8 +172,10 @@
 }
 
 /* Shared Catalog Card
-   One layout for products, recipes, meal kits, and farmers (built by renderCard in utilities.js). */
+   One card for products, recipes, meal kits, and farmers (built by renderCard in utilities.js).
+   Minimal: image, meta line, name. With footer: plus the price and one fixed-width button. */
 .catalog-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -192,15 +194,14 @@
   border-color: rgba(49, 90, 75, 0.18);
 }
 .catalog-card-media {
-  display: block;
   flex: 0 0 auto;
   aspect-ratio: 1 / 1;
   overflow: hidden;
-  background: #e8e6d8;
+  background: var(--surface-muted, #e8e6d8);
 }
 .catalog-card-media .catalog-card-image { width: 100%; height: 100%; aspect-ratio: auto; object-fit: cover; }
 .catalog-card:hover .catalog-card-image { transform: scale(1.04); filter: saturate(1.03); }
-.catalog-card-body { display: flex; flex: 1; flex-direction: column; gap: 6px; padding: 12px; }
+.catalog-card-body { display: flex; flex: 1; flex-direction: column; gap: 6px; padding: 12px 12px 14px; }
 .catalog-card-meta {
   display: flex;
   justify-content: space-between;
@@ -211,7 +212,7 @@
   font-size: 0.74rem;
 }
 .catalog-card-meta > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.catalog-card-rating { flex-shrink: 0; display: inline-flex; align-items: center; color: var(--dark-green); font-weight: 700; }
+.catalog-card-rating { flex-shrink: 0; display: inline-flex; align-items: center; }
 .catalog-card-title {
   display: -webkit-box;
   min-height: 2.6em;
@@ -225,60 +226,38 @@
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.3;
+  transition: color 0.2s ease;
 }
-.catalog-card-title a { color: inherit; }
-.catalog-card-title a:hover { color: var(--clay); }
-.catalog-card-text {
-  display: -webkit-box;
-  margin: 0;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  color: var(--muted);
-  font-size: 0.85rem;
-  line-height: 1.45;
-}
-.catalog-card-text a { color: var(--green); font-weight: 700; }
-.catalog-card-note {
-  margin: 0;
-  overflow: hidden;
-  color: var(--muted);
-  font-size: 0.78rem;
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.catalog-card-note.sold-out { align-self: flex-start; max-width: 100%; padding: 2px 8px; border: 1px solid; border-radius: 999px; }
+.catalog-card:hover .catalog-card-title { color: var(--clay); }
+
+/* The title link's click area is stretched over the whole card. */
+.catalog-card-link { color: inherit; }
+.catalog-card-link::after { content: ""; position: absolute; inset: 0; z-index: 1; border-radius: inherit; }
+.catalog-card-link:focus-visible { outline: none; }
+.catalog-card-link:focus-visible::after { outline: 3px solid var(--green); outline-offset: 2px; }
+
+/* Footer: price on the left, one fixed-width button on the right, pinned to the bottom. */
 .catalog-card-footer {
   display: flex;
-  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   gap: 8px;
   margin-top: auto;
   padding-top: 10px;
-  border-top: 1px solid var(--border, rgba(38, 52, 45, 0.1));
 }
-.catalog-card-footer .price { font-size: 1rem; }
-.catalog-card-detail { color: var(--muted); font-size: 0.8rem; font-weight: 700; }
-.catalog-card-footer .btn {
-  flex-shrink: 0;
-  margin: 0 0 0 auto;
+.catalog-card-footer .price { min-width: 0; font-size: 1rem; white-space: nowrap; }
+.catalog-card-button {
+  position: relative;
+  z-index: 2;
+  flex: 0 0 7.25rem;
+  width: 7.25rem;
   min-height: 36px;
-  padding: 0.45rem 0.8rem;
+  margin: 0;
+  padding: 0.45rem 0.5rem;
   font-size: 0.82rem;
   white-space: nowrap;
 }
-.catalog-card-footer .btn[disabled] { opacity: 0.55; cursor: not-allowed; }
-
-/* Clickable card: the title link's click area is stretched over the whole card. */
-.catalog-card { position: relative; }
-.catalog-card-link { color: inherit; }
-.catalog-card-link::after { content: ""; position: absolute; inset: 0; z-index: 1; border-radius: inherit; }
-.catalog-card-link:focus-visible { outline: none; }
-.catalog-card-link:focus-visible::after { outline: 3px solid var(--green); outline-offset: 2px; }
-.catalog-card:hover .catalog-card-title { color: var(--clay); }
-.catalog-card-minimal .catalog-card-body { padding: 12px 12px 14px; }
+.catalog-card-button[disabled] { opacity: 0.55; cursor: not-allowed; }
 
 .price {
   font-size: 1.05rem;

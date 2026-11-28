@@ -390,14 +390,10 @@ main { flex: 1; }
 
 .page-hero p { margin: 0; color: rgba(241, 244, 236, 0.92); max-width: 60ch; font-size: 0.96rem; }
 
-.catalog-card-meta,
-.catalog-card-text,
-.catalog-card-note {
+.catalog-card-meta {
   color: #555b52;
 }
-:root[data-theme="dark"] .catalog-card-meta,
-:root[data-theme="dark"] .catalog-card-text,
-:root[data-theme="dark"] .catalog-card-note { color: var(--muted); }
+:root[data-theme="dark"] .catalog-card-meta { color: var(--muted); }
 
 .hero .eyebrow,
 .page-hero .eyebrow {
