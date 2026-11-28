@@ -271,6 +271,15 @@
 }
 .catalog-card-footer .btn[disabled] { opacity: 0.55; cursor: not-allowed; }
 
+/* Clickable card: the title link's click area is stretched over the whole card. */
+.catalog-card { position: relative; }
+.catalog-card-link { color: inherit; }
+.catalog-card-link::after { content: ""; position: absolute; inset: 0; z-index: 1; border-radius: inherit; }
+.catalog-card-link:focus-visible { outline: none; }
+.catalog-card-link:focus-visible::after { outline: 3px solid var(--green); outline-offset: 2px; }
+.catalog-card:hover .catalog-card-title { color: var(--clay); }
+.catalog-card-minimal .catalog-card-body { padding: 12px 12px 14px; }
+
 .price {
   font-size: 1.05rem;
   font-weight: 800;

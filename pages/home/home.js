@@ -30,23 +30,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Seasonal Picks
   if (featuredContainer) {
     featuredContainer.innerHTML = featuredProducts.length
-      ? featuredProducts.map((product) => ui.renderProductCard(product, { showOrders: true })).join('')
+      ? featuredProducts.map((product) => ui.renderProductCard(product, { variant: 'minimal' })).join('')
       : '<div class="empty-state" role="status"><p class="empty-state-title">No featured products yet</p><p>Products appear here once they reach 10 verified orders.</p></div>';
   }
 
   // Recipe Highlights
   if (recipeContainer) {
-    recipeContainer.innerHTML = window.aniMoData.recipes.slice(0, 5).map((recipe) => ui.renderRecipeCard(recipe)).join('');
+    recipeContainer.innerHTML = window.aniMoData.recipes.slice(0, 5).map((recipe) => ui.renderRecipeCard(recipe, { variant: 'minimal' })).join('');
   }
 
   // Featured Meal Kits
   if (packageContainer) {
-    packageContainer.innerHTML = window.aniMoData.recipePackages.slice(0, 5).map((recipePackage) => ui.renderPackageCard(recipePackage)).join('');
+    packageContainer.innerHTML = window.aniMoData.recipePackages.slice(0, 5).map((recipePackage) => ui.renderPackageCard(recipePackage, { variant: 'minimal' })).join('');
   }
 
   // Farmer Preview
   if (farmerContainer) {
-    farmerContainer.innerHTML = window.aniMoData.farmers.slice(0, 3).map((farmer) => ui.renderFarmerCard(farmer)).join('');
+    farmerContainer.innerHTML = window.aniMoData.farmers.slice(0, 3).map((farmer) => ui.renderFarmerCard(farmer, { variant: 'minimal' })).join('');
   }
 
 });

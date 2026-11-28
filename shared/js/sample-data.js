@@ -335,7 +335,9 @@ document.querySelectorAll('#featured-products, #recipe-cards, #package-cards, #f
     const fallbackHtml = (id) => {
       const d = window.aniMoData || {};
       const ui = window.aniMoUtilities || {};
-      const cards = (items, render) => (items.length && typeof render === 'function' ? items.map((item) => render(item)).join('') : '');
+      const homeGrids = new Set(['featured-products', 'recipe-cards', 'package-cards', 'farmer-cards']);
+      const variant = homeGrids.has(id) ? 'minimal' : 'full';
+      const cards = (items, render) => (items.length && typeof render === 'function' ? items.map((item) => render(item, { variant })).join('') : '');
       if (id === 'featured-products' || id === 'productGrid') return cards((d.products || []).slice(0, id === 'featured-products' ? 3 : 12), ui.renderProductCard);
       if (id === 'recipe-cards' || id === 'recipeGrid') return cards((d.recipes || []).slice(0, id === 'recipe-cards' ? 3 : 12), ui.renderRecipeCard);
       if (id === 'package-cards' || id === 'packageGrid') return cards((d.recipePackages || []).slice(0, id === 'package-cards' ? 3 : 12), ui.renderPackageCard);

@@ -140,9 +140,20 @@ function formatCardPrice(value) {
 
 function renderCard({
   image, imageAlt, placeholder, href, meta = '', metaRight = '', title,
-  text = '', note = '', noteSoldOut = false, footerStart = '', action = ''
+  text = '', note = '', noteSoldOut = false, footerStart = '', action = '', variant = 'full'
 }) {
   const link = escapeHTML(href);
+  if (variant === 'minimal') {
+    // Image, one meta line, and the name. The title link covers the whole card.
+    return `
+    <article class="catalog-card catalog-card-minimal">
+      <div class="catalog-card-media">${renderCatalogImage(image, imageAlt, placeholder)}</div>
+      <div class="catalog-card-body">
+        <div class="catalog-card-meta"><span>${meta}</span>${metaRight ? `<span class="catalog-card-rating">${metaRight}</span>` : ''}</div>
+        <h3 class="catalog-card-title"><a class="catalog-card-link" href="${link}">${escapeHTML(title)}</a></h3>
+      </div>
+    </article>`;
+  }
   return `
     <article class="catalog-card">
       <a class="catalog-card-media" href="${link}" tabindex="-1" aria-hidden="true">${renderCatalogImage(image, imageAlt, placeholder)}</a>
@@ -156,7 +167,7 @@ function renderCard({
     </article>`;
 }
 
-function renderProductCard(product, { showOrders = false } = {}) {
+function renderProductCard(product, { variant = 'full' } = {}) {
   const soldOut = Number(product.stock) < 1;
   const farmer = (window.aniMoData?.farmers || []).find((entry) => entry.name === product.farm);
   const seller = farmer
@@ -172,15 +183,16 @@ function renderProductCard(product, { showOrders = false } = {}) {
     meta: escapeHTML(product.location),
     metaRight: renderRating(product),
     title: product.name,
-    text: `Sold by ${seller}${showOrders ? ` · ${Number(product.orderCount) || 0} orders` : ''}`,
+    text: `Sold by ${seller}`,
     note: [stock, ...fulfillment].join(' · '),
     noteSoldOut: soldOut,
     footerStart: `<span class="price">${formatCardPrice(product.price)} / ${escapeHTML(product.unit)}</span>`,
-    action: `<button class="btn btn-primary" type="button" data-add-cart="${escapeHTML(product.id)}" ${soldOut ? 'disabled' : ''}>${soldOut ? 'Sold out' : 'Add to cart'}</button>`
+    action: `<button class="btn btn-primary" type="button" data-add-cart="${escapeHTML(product.id)}" ${soldOut ? 'disabled' : ''}>${soldOut ? 'Sold out' : 'Add to cart'}</button>`,
+    variant
   });
 }
 
-function renderRecipeCard(recipe) {
+function renderRecipeCard(recipe, { variant = 'full' } = {}) {
   const href = `../recipe-details/recipe-details.html?id=${encodeURIComponent(recipe.id)}`;
   return renderCard({
     image: recipe.image,
@@ -192,11 +204,12 @@ function renderRecipeCard(recipe) {
     title: recipe.name,
     text: escapeHTML(recipe.description),
     footerStart: `<span class="catalog-card-detail">${[recipe.time, recipe.difficulty].filter(Boolean).map(escapeHTML).join(' · ')}</span>`,
-    action: `<a href="${href}" class="btn btn-secondary">View recipe</a>`
+    action: `<a href="${href}" class="btn btn-secondary">View recipe</a>`,
+    variant
   });
 }
 
-function renderPackageCard(pkg) {
+function renderPackageCard(pkg, { variant = 'full' } = {}) {
   const products = (pkg.productIds || []).map((id) => window.aniMoUtils?.getProductById(id)).filter(Boolean);
   const soldOut = products.length > 0 && products.every((product) => Number(product.stock) < 1);
   return renderCard({
@@ -211,11 +224,12 @@ function renderPackageCard(pkg) {
     note: products.length ? `${products.length} ingredient${products.length === 1 ? '' : 's'}${soldOut ? ' · Sold out' : ''}` : '',
     noteSoldOut: soldOut,
     footerStart: `<span class="price">${formatCardPrice(pkg.price)}</span>`,
-    action: `<button class="btn btn-primary" type="button" data-add-cart="package:${escapeHTML(pkg.id)}" ${soldOut ? 'disabled' : ''}>${soldOut ? 'Sold out' : 'Add to cart'}</button>`
+    action: `<button class="btn btn-primary" type="button" data-add-cart="package:${escapeHTML(pkg.id)}" ${soldOut ? 'disabled' : ''}>${soldOut ? 'Sold out' : 'Add to cart'}</button>`,
+    variant
   });
 }
 
-function renderFarmerCard(farmer) {
+function renderFarmerCard(farmer, { variant = 'full' } = {}) {
   const href = `../farmer-profile/farmer-profile.html?id=${encodeURIComponent(farmer.id)}`;
   return renderCard({
     image: farmer.image,
@@ -228,7 +242,8 @@ function renderFarmerCard(farmer) {
     text: escapeHTML(farmer.specialty),
     note: escapeHTML(farmer.type),
     footerStart: `<span class="catalog-card-detail">${escapeHTML(farmer.followers ?? 0)} followers</span>`,
-    action: `<a href="${href}" class="btn btn-secondary">View profile</a>`
+    action: `<a href="${href}" class="btn btn-secondary">View profile</a>`,
+    variant
   });
 }
 
