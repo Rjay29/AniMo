@@ -199,7 +199,7 @@ Uploaded catalog/profile images are validated and saved as files beneath their m
 
 ## 🛠️ Admin Dashboard
 
-Start the server with the admin variables set, open the **private administrator URL printed in the terminal** (`/control/<random code>`), and sign in. The old `/admin/` address no longer works.
+Start the server with the admin variables set, open the **private administrator URL printed in the terminal** (`/control/<random code>`), and sign in. The old `/admin/` address no longer works. While you are signed in as the administrator, the **Admin dashboard** button in the navbar also opens it.
 
 | Tool | What you can do |
 |------|-----------------|

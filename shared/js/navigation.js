@@ -201,10 +201,10 @@ document.addEventListener('DOMContentLoaded', () => {
         farmerLink.textContent = 'Farmer dashboard';
         navActions.insertBefore(farmerLink, authBtn);
       }
-      if (user.role === 'admin' && !document.querySelector('.admin-dashboard-link')) {
+      if (user.role === 'admin' && user.adminPath && !document.querySelector('.admin-dashboard-link')) {
         const adminLink = document.createElement('a');
         adminLink.className = 'btn btn-secondary admin-dashboard-link';
-        adminLink.href = '/admin/';
+        adminLink.href = user.adminPath;
         adminLink.textContent = 'Admin dashboard';
         navActions.insertBefore(adminLink, authBtn);
       }

@@ -1448,7 +1448,8 @@ async function handleApi(request, response, url) {
   const user = currentUser(request);
   if (method === 'GET' && pathname === '/api/auth/me') {
     if (!user) return jsonResponse(response, 401, { error: 'Please log in.' });
-    return jsonResponse(response, 200, { user: publicUser(user) });
+    // Administrators also get their private dashboard address so the navbar link works.
+    return jsonResponse(response, 200, { user: { ...publicUser(user), ...(user.role === 'admin' ? { adminPath: `${privateAdminPath}/` } : {}) } });
   }
   if (method === 'GET' && pathname === '/api/assistant/knowledge') {
     return jsonResponse(response, 200, { records: listAssistantKnowledge() });
