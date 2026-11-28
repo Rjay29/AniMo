@@ -1,8 +1,6 @@
 /* Farmer dashboard */
-.farmer-dashboard { padding-top: 32px; padding-bottom: 48px; }
-.farmer-dashboard-heading { margin: 0 0 20px; }
-.farmer-dashboard-heading h1 { margin: 8px 0 6px; font-family: Georgia, "Times New Roman", serif; font-size: clamp(1.75rem, 4vw, 2.6rem); }
-.farmer-dashboard-heading p { color: var(--muted); max-width: 70ch; font-size: 0.95rem; }
+.page-hero-inner > .btn { flex-shrink: 0; }
+@media (max-width: 900px) { .page-hero-inner > .btn { margin-top: 14px; } }
 .farmer-dashboard-grid { display: grid; grid-template-columns: minmax(280px, .88fr) minmax(0, 1.12fr); gap: 18px; align-items: start; }
 .farmer-panel { padding: clamp(16px, 2.5vw, 24px); border-radius: var(--radius); }
 .farmer-panel h2 { margin: 0 0 6px; font-family: Georgia, "Times New Roman", serif; color: var(--dark-green); }
@@ -32,5 +30,5 @@
 .farmer-status.error { color: #b4544a; }
 :root[data-theme="dark"] .farmer-status.error { color: #ff8a80; }
 @media (max-width: 860px) { .farmer-dashboard-grid { grid-template-columns: 1fr; } }
-@media (max-width: 640px) { .farmer-dashboard { padding-top: 24px; padding-bottom: 36px; } .farmer-panel { padding: 16px; } }
+@media (max-width: 640px) { .farmer-panel { padding: 16px; } }
 @media (max-width: 520px) { .farmer-list-row { align-items: flex-start; flex-direction: column; } .farmer-list-row.farmer-listing-row { grid-template-columns: 48px minmax(0, 1fr); } .farmer-listing-row .farmer-list-thumbnail { width: 48px; height: 48px; } .farmer-listing-row .btn { grid-column: 2; justify-self: start; } .farmer-panel-heading { align-items: flex-start; } }
