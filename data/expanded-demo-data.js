@@ -143,7 +143,7 @@ const assistantFaq = [
   ['Accessibility', 'How do I make the text larger?', 'Open Accessibility settings in the navigation and enable Larger text. The setting is saved in this browser.'],
   ['Security', 'How do I log out?', 'Choose Log out in the navigation. AniMo will end the current session and return you to the login page.'],
   ['Troubleshooting', 'Why can’t I add a product to my cart?', 'The item may be out of stock, the quantity may exceed available stock, or the selected delivery/pickup option may not be supported. Check the listing and cart message.'],
-  ['Troubleshooting', 'Why is the AI model offline?', 'The AniMo assistant uses a local Ollama model for generative answers. Start Ollama and install the configured model; AniMo’s local catalog and help responses remain available when it is offline.'],
+  ['Troubleshooting', 'Why is the AI model offline?', 'The AniMo assistant uses Google Gemini for generated answers. It is offline when the server has no GEMINI_API_KEY, the key is invalid, or the free usage limit has been reached (wait a minute and try again). AniMo’s built-in catalog and help answers remain available while it is offline.'],
   ['Support', 'How can I contact support?', 'Use the Chats feature to contact a farmer about a listing. For account, payment, or technical concerns, use the contact information provided by the AniMo project administrator.']
 ];
 

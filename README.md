@@ -55,19 +55,17 @@ The first server start seeds 25 additional Philippine farmer profiles, 155 produ
 - **Node.js 22.13+** (needs the built-in `node:sqlite` module)
 - A modern browser (Chrome, Edge, Firefox, Safari)
 - ✅ No npm packages. Nothing to `npm install`.
-- Optional: [Ollama](https://ollama.com) for free-form assistant answers (see [Optional generative assistant](#optional-generative-assistant)).
+- Optional: a free Google Gemini API key for generated assistant answers (see [AI assistant (Google Gemini)](#ai-assistant-google-gemini)).
 
 ### Start the server
 
-**1.** Open a terminal in the project folder and set a private admin username and a password of **12+ characters**.
+**1.** Open a terminal in the project folder and create your local settings file from the example:
 
 <details open>
 <summary><b>🪟 Windows (PowerShell)</b></summary>
 
 ```powershell
-$env:ANIMO_ADMIN_USERNAME = "your-admin-name"
-$env:ANIMO_ADMIN_PASSWORD = "use-a-long-private-password"
-node server.js
+Copy-Item .env.example .env
 ```
 
 </details>
@@ -76,18 +74,24 @@ node server.js
 <summary><b>🍎 macOS / 🐧 Linux</b></summary>
 
 ```bash
-export ANIMO_ADMIN_USERNAME="your-admin-name"
-export ANIMO_ADMIN_PASSWORD="use-a-long-private-password"
-node server.js
+cp .env.example .env
 ```
 
 </details>
 
-The admin variables are optional for browsing, but without them there is no administrator account.
+Open `.env` in your editor and fill in a private admin username, a password of **12+ characters**, and (optionally) your `GEMINI_API_KEY`. See [Environment variables](#environment-variables) for every setting.
 
-**2.** Open **http://127.0.0.1:8000**. The server starts at AniMo Home.
+**2.** Start the server:
 
-**3.** To use the admin dashboard, copy the private administrator URL printed in the terminal:
+```bash
+node server.js
+```
+
+The admin settings are optional for browsing, but without them there is no administrator account.
+
+**3.** Open **http://127.0.0.1:8000**. The server starts at AniMo Home.
+
+**4.** To use the admin dashboard, copy the private administrator URL printed in the terminal:
 
 ```text
 Private administrator sign-in: http://127.0.0.1:8000/control/<random code>
@@ -95,27 +99,28 @@ Private administrator sign-in: http://127.0.0.1:8000/control/<random code>
 
 Open it and sign in with the configured admin credentials. The URL changes every time the server restarts. Do not expose the development server to the internet.
 
-**4.** Stop the server with **Ctrl+C**.
+**5.** Stop the server with **Ctrl+C**.
 
 > **Tip:** Never open `index.html` or any page directly as a `file://` URL. Login, profiles, the catalog, and all database APIs need the Node.js server running.
 
 <details>
 <summary><b>🔁 Already initialized the database without admin settings?</b></summary>
 
-Set both environment variables and restart. The admin account is created on startup. If that username was previously registered as a customer, pick a different admin username. If the admin account already exists, restarting with a different `ANIMO_ADMIN_PASSWORD` does **not** change its password.
+Set both admin settings (in `.env` or the terminal) and restart. The admin account is created on startup. If that username was previously registered as a customer, pick a different admin username. If the admin account already exists, restarting with a different `ANIMO_ADMIN_PASSWORD` does **not** change its password.
 
 </details>
 
-### Optional generative assistant
+### AI assistant (Google Gemini)
 
-The assistant always has local AniMo catalog/help responses and exact-match Assistant Data answers. For free-form generated answers, install Ollama, download a local model, and run the Ollama service:
+The assistant (the chat button on every page) does two things: it **generates recipes** and **answers questions about using AniMo** (ordering, cart, checkout, accounts, farmers, chat, reviews, meal kits, the local map). Anything else gets a short, polite refusal.
 
-```powershell
-ollama pull llama3.1
-ollama serve
-```
+It always has built-in AniMo catalog/help answers and exact-match Assistant Data answers. For generated answers, add a free Google Gemini API key:
 
-By default the server calls `http://127.0.0.1:11434` using model `llama3.1`. Override these with `OLLAMA_URL` and `OLLAMA_MODEL` before starting `node server.js`. No cloud AI credentials are required or sent. If Ollama is not running, the server still starts and the assistant uses its local answers.
+1. Sign in at [Google AI Studio](https://aistudio.google.com/apikey) and create an API key.
+2. Put it in `.env`: `GEMINI_API_KEY=your-key` (create `.env` from `.env.example` if you haven't).
+3. Restart the server. The terminal shows `AI assistant: Google Gemini enabled (model gemini-3.5-flash-lite).`
+
+Without a key, or when Gemini fails or is busy, the server still runs and the assistant uses its built-in answers. The chat header then shows `AI offline · set GEMINI_API_KEY` (or `AI busy` when the free usage limit is reached). Guests can use the assistant; each visitor is limited to 8 messages per minute, and messages are capped at 500 characters.
 
 ### Environment variables
 
@@ -124,10 +129,10 @@ By default the server calls `http://127.0.0.1:11434` using model `llama3.1`. Ove
 | `ANIMO_ADMIN_USERNAME` | (none) | Administrator username (3–32 letters, numbers, `.`, `_`, `-`) |
 | `ANIMO_ADMIN_PASSWORD` | (none) | Administrator password, 12+ characters |
 | `PORT` | `8000` | Server port (always bound to `127.0.0.1`) |
-| `OLLAMA_URL` | `http://127.0.0.1:11434` | Local Ollama service for the assistant |
-| `OLLAMA_MODEL` | `llama3.1` | Ollama model name |
+| `GEMINI_API_KEY` | (none) | Google Gemini API key for the assistant. Read only by the server |
+| `GEMINI_MODEL` | `gemini-3.5-flash-lite` | Gemini model name (letters, numbers, `.` and `-` only) |
 
-Set these in the terminal before `node server.js`. The server does not read a `.env` file.
+**How `.env` works:** on startup, `server.js` loads `.env` from the project root (next to `server.js`) if it exists; the server also starts without it. Variables already set in the terminal take precedence over `.env`. `ANIMO_ADMIN_USERNAME` and `ANIMO_ADMIN_PASSWORD` only set the admin password the **first** time that admin account is created; changing the password in `.env` later does not change an existing admin's password.
 
 ---
 
@@ -220,7 +225,7 @@ Customer profile pictures are managed by users on their own profile page and sav
 - **Data Storage:** SQLite (`users.sqlite`, `listings.sqlite`, `ai.sqlite`)
 - **Auth:** scrypt password hashing, hashed session tokens in `HttpOnly` cookies, local demo OTP
 - **Maps:** Leaflet with OpenStreetMap tiles, Nominatim geocoding, and OSRM routing (no API key)
-- **Assistant:** local knowledge answers, optional local [Ollama](https://ollama.com) model
+- **Assistant:** local knowledge answers, optional [Google Gemini API](https://ai.google.dev/gemini-api/docs) (REST, called with Node's built-in `fetch`)
 
 ---
 
@@ -233,6 +238,8 @@ Customer profile pictures are managed by users on their own profile page and sav
 - The server binds only to `127.0.0.1` and is meant for **local development and demos**.
 - 🚫 **Do not expose this server to the internet.** A public deployment needs HTTPS, secure hosting, backups, monitoring, production-grade rate limiting, and a reviewed security setup.
 - Checkout records demo orders and **does not process payments**.
+- The Gemini API key stays on the server: it is read from `.env` (or the terminal), sent only to Google in a request header, and never included in pages, browser scripts, or logs.
+- When a key is set, each assistant question, recent chat turns, and matching catalog/help snippets are sent to Google. Account details (names, emails, addresses, orders) are never sent. On the **free tier, Google may use this content to improve its products**, so the chat panel asks users not to type personal information.
 
 ---
 
@@ -244,10 +251,12 @@ Customer profile pictures are managed by users on their own profile page and sav
 | Login or profile pages don't work | Use `http://127.0.0.1:8000`, not a `file://` path |
 | Can't find the admin dashboard | Use the `Private administrator sign-in` URL printed in the terminal; `/admin/` is no longer used |
 | Admin URL stopped working | It changes on every restart; copy the new one from the terminal |
-| Can't sign in as admin | Set both env variables in the same terminal before `node server.js`; password must be 12+ characters |
+| Can't sign in as admin | Set both admin settings in `.env` (or the terminal) before `node server.js`; password must be 12+ characters. If the admin already existed, its original password still applies |
 | Server stops with an admin username error | That username already belongs to a customer account; choose another |
 | Farmer can't sign in | An admin must approve the farmer application first |
-| Assistant only gives short built-in answers | Ollama isn't running or the model isn't installed; run `ollama pull llama3.1` and `ollama serve` (optional) |
+| Assistant shows `AI offline · set GEMINI_API_KEY` | No key is set. Add `GEMINI_API_KEY` to `.env` and restart (optional; built-in answers still work) |
+| Key is set but the assistant stays offline | The key is invalid or revoked. The terminal shows `Gemini error 400` or `403`; create a new key in Google AI Studio and restart |
+| Assistant shows `AI busy` | Gemini returned 429 (free usage limit reached). Wait a minute and try again |
 | Map is blank or search fails | The map needs an internet connection for OpenStreetMap tiles, search, and routes |
 | Port 8000 in use | Stop the other process, or set `PORT` to another number, then restart |
 | Data is broken or you want a clean demo | Stop the server, delete `data/*.sqlite*`, then start it again to recreate the seeded databases |
@@ -318,4 +327,4 @@ The `development-days\` directory contains the project's learning snapshots, fro
 
 ## 📝 Notes
 
-> AniMo is a learning project built to demonstrate a connected full-stack web app (authentication, databases, and an admin dashboard) with no npm dependencies. The only outside services are the public OpenStreetMap map services and, optionally, a local Ollama model.
+> AniMo is a learning project built to demonstrate a connected full-stack web app (authentication, databases, and an admin dashboard) with no npm dependencies. The only outside services are the public OpenStreetMap map services and, optionally, the Google Gemini API.

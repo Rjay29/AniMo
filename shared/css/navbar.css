@@ -282,6 +282,17 @@
   color: var(--dark);
   border-color: rgba(255,255,255,0.06);
 }
+/* Formatted bot replies (recipes and help answers built by appendBotReply in navigation.js). */
+.assistant-message-rich { display: grid; gap: 6px; }
+.assistant-message-rich p { margin: 0; }
+.assistant-message-rich h4 { margin: 4px 0 0; color: var(--dark-green, #183c32); font-family: Georgia, "Times New Roman", serif; font-size: 0.98rem; line-height: 1.3; }
+.assistant-message-rich h4:first-child { margin-top: 0; }
+.assistant-message-rich ul, .assistant-message-rich ol { margin: 0; padding-left: 1.2rem; display: grid; gap: 3px; }
+.assistant-message-rich a { color: var(--green, #315a4b); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+.assistant-ai-label { color: var(--muted, #5f6b62); font-size: 0.72rem; }
+:root[data-theme="dark"] .assistant-message-rich h4 { color: var(--dark); }
+:root[data-theme="dark"] .assistant-message-rich a { color: var(--dark-green); }
+.assistant-privacy-note { margin: 0; padding: 0 14px 12px; background: var(--card, #fffdf7); color: var(--muted, #5f6b62); font-size: 0.72rem; line-height: 1.4; }
 .assistant-message-user {
   margin-left: auto;
   background: linear-gradient(135deg, #315a4b, #2a5042);
