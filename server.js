@@ -251,9 +251,18 @@ function seedBuiltInListings() {
   const seeded = listingsDb.prepare('SELECT value FROM app_settings WHERE key = ?').get('built_in_catalog_seeded');
   if (seeded) return;
   const samplePath = resolve(root, 'shared', 'js', 'sample-data.js');
-  const context = { window: {} };
-  const sampleData = readFileSync(samplePath, 'utf8').split('window.aniMoDataReady =')[0];
-  vm.runInNewContext(sampleData, context, { filename: samplePath });
+  // Run the whole browser file with a minimal stub: the catalog is assigned synchronously,
+  // and the browser-only loading code (fetch, timers, DOM) stays inert.
+  const noTimer = () => 0;
+  const context = {
+    window: { setTimeout: noTimer, clearTimeout: noTimer },
+    document: { querySelectorAll: () => [] },
+    fetch: () => new Promise(() => {}),
+    setTimeout: noTimer,
+    clearTimeout: noTimer,
+    console: { log() {}, warn() {}, error() {} }
+  };
+  vm.runInNewContext(readFileSync(samplePath, 'utf8'), context, { filename: samplePath, timeout: 2000 });
   const data = context.window.aniMoData;
   const insert = listingsDb.prepare(
     'INSERT OR IGNORE INTO listings (id, type, name, data_json, image_data, image_path) VALUES (?, ?, ?, ?, ?, ?)'
@@ -718,10 +727,14 @@ function seedExpandedDemoCatalog() {
   const data = createExpandedDemoData();
   const marker = listingsDb.prepare('SELECT value FROM app_settings WHERE key = ?').get('expanded_demo_catalog_seeded');
   if (!marker) {
-    const insert = listingsDb.prepare(`
-      INSERT OR IGNORE INTO listings (id, type, name, data_json, owner_id, review_status)
-      VALUES (?, ?, ?, ?, ?, 'approved')
+    const insertListing = listingsDb.prepare(`
+      INSERT OR IGNORE INTO listings (id, type, name, data_json, owner_id, review_status, image_path)
+      VALUES (?, ?, ?, ?, ?, 'approved', ?)
     `);
+    // Attach the mapped catalog image now; the startup image backfill runs before this seeding.
+    const insert = {
+      run: (id, type, name, dataJson, ownerId) => insertListing.run(id, type, name, dataJson, ownerId, builtInImagePath(type, id))
+    };
     listingsDb.exec('BEGIN');
     try {
       for (const farmer of data.farmers) {
