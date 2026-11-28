@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       <span class="eyebrow">${ui.escapeHTML(product.category)}</span>
       <h1>${ui.escapeHTML(product.name)}</h1>
       <div class="detail-meta">
-        <span class="badge">${renderStars(product.rating)} ${ui.escapeHTML(product.rating)}</span>
+        <span class="badge">${ui.renderRating(product, { showCount: true })}</span>
         <span class="badge">${ui.escapeHTML(product.location)}</span>
         <span class="badge">${Number(product.orderCount) || 0} orders</span>
       </div>
@@ -71,8 +71,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const reviewStatus = document.getElementById('reviewStatus');
   const reviewForm = document.getElementById('reviewForm');
   const reviewEligibility = document.getElementById('reviewEligibility');
-  const renderReviewStars = (rating) => '<span class="review-stars" aria-label="' + rating + ' out of 5 stars">' +
-    '<span class="review-stars-filled">' + '★'.repeat(rating) + '</span><span class="review-stars-empty">' + '☆'.repeat(5 - rating) + '</span></span>';
 
   async function loadReviews() {
     const response = await fetch(`/api/reviews?listingId=${encodeURIComponent(product.id)}`, { credentials: 'same-origin' });
@@ -82,7 +80,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       <div class="review-summary-card">
         <div class="review-summary-score">${result.rating ? result.rating.toFixed(1) : '—'}</div>
         <div>
-          <div class="review-summary-stars">${result.rating ? renderReviewStars(Math.round(result.rating)) : '<span class="review-stars-empty">☆☆☆☆☆</span>'}</div>
+          <div class="review-summary-stars">${result.rating ? ui.renderStars(result.rating, 'lg') : '<span class="rating-none">No reviews yet</span>'}</div>
           <p class="review-summary-meta">${result.count} rating${result.count === 1 ? '' : 's'} · ${result.orderCount} placed order${result.orderCount === 1 ? '' : 's'}</p>
         </div>
       </div>`;
@@ -91,9 +89,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div class="product-review-head">
           <div>
             <strong class="product-review-name">${ui.escapeHTML(review.displayName)}</strong>
-            <div class="product-review-meta">${review.demo ? 'Demo buyer' : 'Verified buyer'} · ${ui.escapeHTML(review.created_at)}</div>
+            <div class="product-review-meta">Verified buyer · ${ui.escapeHTML(review.created_at)}</div>
           </div>
-          <div class="product-review-rating">${renderReviewStars(review.rating)}<span>${review.rating}/5</span></div>
+          <div class="product-review-rating">${ui.renderStars(review.rating)}<span>${review.rating}/5</span></div>
         </div>
         <p class="product-review-comment">${ui.escapeHTML(review.comment || 'Left a rating without a written comment.')}</p>
       </article>`).join('') : '<div class="product-review-empty"><p>No reviews yet.</p><span>Reviews appear here after delivered orders are rated.</span></div>';

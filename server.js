@@ -578,17 +578,15 @@ function listCatalog(includePending = false) {
   ).all(...(includePending ? [] : ['approved']));
   for (const row of rows) catalog[row.type].push(readListing(row));
   catalog.ingredients = [...new Set(catalog.recipes.flatMap((recipe) => recipe.ingredients || []))];
-  const savedReviews = usersDb.prepare('SELECT listing_id, rating FROM reviews').all();
+  // Ratings shown in AniMo come only from saved buyer reviews; preset seed ratings are ignored.
+  const reviewStats = new Map(usersDb.prepare(
+    'SELECT listing_id, AVG(rating) AS average, COUNT(*) AS count FROM reviews GROUP BY listing_id'
+  ).all().map((row) => [row.listing_id, row]));
   for (const collection of [catalog.products, catalog.farmers, catalog.recipes, catalog.recipePackages]) {
     for (const listing of collection) {
-      const ratings = [
-        ...demoReviews.filter((review) => review.listingId === listing.id).map((review) => review.rating),
-        ...savedReviews.filter((review) => review.listing_id === listing.id).map((review) => review.rating)
-      ];
-      if (ratings.length) {
-        listing.rating = Math.round(ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length * 10) / 10;
-        listing.reviewCount = ratings.length;
-      }
+      const stats = reviewStats.get(listing.id);
+      listing.rating = stats ? Math.round(stats.average * 10) / 10 : null;
+      listing.reviewCount = stats ? stats.count : 0;
     }
   }
   return catalog;
@@ -689,40 +687,6 @@ function listingOrderCounts() {
   return counts;
 }
 
-// Demo Review Fixtures
-const demoReviews = [
-  ['okra', 'Mila Santos', 5, 'Picked fresh and tender; perfect for pinakbet.'],
-  ['okra', 'Ramon Dela Cruz', 4, 'Good quality and carefully packed.'],
-  ['coconut', 'Liza Mercado', 5, 'Lovely caramel flavor in coffee and champorado.'],
-  ['coconut', 'Paolo Reyes', 5, 'A little goes a long way.'],
-  ['cassava', 'Nina Flores', 5, 'Crisp snack with a clean, homemade taste.'],
-  ['cassava', 'Arman Cruz', 4, 'Arrived intact and not too salty.'],
-  ['native-rice', 'Jessa Lim', 5, 'Fragrant rice with a satisfying texture.'],
-  ['malunggay', 'Cora Bautista', 4, 'Fresh leaves; I added them to soup.'],
-  ['siling-labuyo', 'Ben Garcia', 5, 'Very spicy, just as expected.'],
-  ['ginataang-labong', 'Ella Navarro', 5, 'Comforting recipe with clear instructions.'],
-  ['vegetable-adobo', 'Tomas Aquino', 4, 'Easy weeknight bowl.'],
-  ['banana-coco-smoothie', 'Bea Ramos', 5, 'Quick and refreshing.'],
-  ['spicy-cassava-bites', 'Noel Santiago', 5, 'Great merienda idea.'],
-  ['sinigang-kit', 'Kaye Villanueva', 4, 'Useful kit for a simple sour soup.'],
-  ['adobo-kit', 'Migs Flores', 5, 'Convenient local ingredients.'],
-  ['malunggay-rice-soup', 'Ari Mendoza', 5, 'A soothing recipe for a rainy afternoon.'],
-  ['vegetable-bowl-kit', 'Tina Dizon', 4, 'Good portions for a quick lunch.'],
-  ['merienda-kit', 'Jun Pangan', 5, 'A fun snack to prepare with the family.'],
-  ['coconut-breakfast-kit', 'Maya Cortez', 4, 'Nice local pantry combination.'],
-  ['timpla', 'Gina Reyes', 5, 'Friendly grower with a thoughtful selection.'],
-  ['arawan', 'Leo Santos', 5, 'Great story and carefully grown ingredients.'],
-  ['kusina', 'Mara Lopez', 4, 'A welcoming local producer.']
-].map(([listingId, displayName, rating, comment], index) => ({
-  id: `demo-${index + 1}`,
-  listingId,
-  displayName,
-  rating,
-  comment,
-  created_at: '2026-11-20',
-  demo: true
-}));
-
 function seedExpandedDemoCatalog() {
   const data = createExpandedDemoData();
   const marker = listingsDb.prepare('SELECT value FROM app_settings WHERE key = ?').get('expanded_demo_catalog_seeded');
@@ -771,35 +735,6 @@ function seedExpandedDemoCatalog() {
   `);
   for (const [category, title, content] of data.assistantFaq) {
     knowledgeInsert.run(category, title, content, title);
-  }
-
-  const count = data.products.length + data.farmers.length + data.recipes.length + data.recipePackages.length;
-  for (let index = 0; index < count; index += 1) {
-    const listingId = index < 25
-      ? data.farmers[index].id
-      : index < 180
-        ? data.products[index - 25].id
-        : index < 200
-          ? data.recipes[index - 180].id
-          : data.recipePackages[index - 200].id;
-    const kind = index < 25 ? 'farmer' : index < 180 ? 'product' : index < 200 ? 'recipe' : 'meal kit';
-    const authorNames = ['Lina M.', 'Rogelio D.', 'Carmen P.', 'Noel A.', 'Mila S.'];
-    const comments = [
-      `The ${kind} was carefully prepared and the listing details were helpful.`,
-      `A lovely local ${kind}; the quality and description matched what I expected.`
-    ];
-    comments.forEach((comment, noteIndex) => {
-      if (demoReviews.some((review) => review.id === `demo-expanded-${index}-${noteIndex}`)) return;
-      demoReviews.push({
-        id: `demo-expanded-${index}-${noteIndex}`,
-        listingId,
-        displayName: authorNames[(index + noteIndex) % authorNames.length],
-        rating: 4 + ((index + noteIndex) % 2),
-        comment: comment.replaceAll(kind, kind === 'product' ? 'produce' : kind),
-        created_at: '2026-11-25',
-        demo: true
-      });
-    });
   }
 
   seedJevAustinDemoChat();
@@ -1637,7 +1572,7 @@ async function handleApi(request, response, url) {
       FROM reviews JOIN profiles ON profiles.user_id = reviews.user_id
       WHERE reviews.listing_id = ? ORDER BY reviews.created_at DESC
     `).all(listingId);
-    const reviews = [...saved, ...demoReviews.filter((review) => review.listingId === listingId)];
+    const reviews = saved;
     const average = reviews.length ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length : null;
     const counts = listingOrderCounts();
     const canReview = !!(user && usersDb.prepare("SELECT items_json FROM orders WHERE user_id = ? AND status = 'completed'").all(user.id)

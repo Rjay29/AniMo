@@ -1,11 +1,20 @@
 // Presentation Helpers
 // Rating Display
-function renderStars(rating) {
+// Five stars filled to the rating, rounded to the nearest half star (styled by .rating-stars).
+function renderStars(rating, size = '') {
   const value = Math.max(0, Math.min(5, Number(rating) || 0));
-  const rounded = Math.round(value);
-  return `<span class="rating-stars" role="img" aria-label="Rated ${value.toFixed(1)} out of 5">${
-    Array.from({ length: 5 }, (_, index) => `<img src="/shared/assets/icons/star.png" alt=""${index >= rounded ? ' class="rating-star-empty"' : ''} />`).join('')
-  }</span>`;
+  const filled = (Math.round(value * 2) / 2 / 5) * 100;
+  return `<span class="rating-stars${size ? ` rating-stars-${size}` : ''}" role="img" aria-label="Rated ${value.toFixed(1)} out of 5" style="--rating: ${filled}%"></span>`;
+}
+
+// A listing's rating from real buyer reviews, or "No reviews yet" when it has none.
+function renderRating(item, { showCount = false } = {}) {
+  const count = Number(item?.reviewCount) || 0;
+  if (!count || !Number(item.rating)) return '<span class="rating-none">No reviews yet</span>';
+  const summary = showCount
+    ? ` <span class="rating-value">${Number(item.rating).toFixed(1)} · ${count} review${count === 1 ? '' : 's'}</span>`
+    : '';
+  return `<span class="rating-summary">${renderStars(item.rating)}${summary}</span>`;
 }
 
 // Title Formatting
@@ -161,7 +170,7 @@ function renderProductCard(product, { showOrders = false } = {}) {
     placeholder: product.category,
     href: `../product-details/product-details.html?id=${encodeURIComponent(product.id)}`,
     meta: escapeHTML(product.location),
-    metaRight: renderStars(product.rating),
+    metaRight: renderRating(product),
     title: product.name,
     text: `Sold by ${seller}${showOrders ? ` · ${Number(product.orderCount) || 0} orders` : ''}`,
     note: [stock, ...fulfillment].join(' · '),
@@ -179,7 +188,7 @@ function renderRecipeCard(recipe) {
     placeholder: recipe.category,
     href,
     meta: escapeHTML(recipe.category),
-    metaRight: renderStars(recipe.rating),
+    metaRight: renderRating(recipe),
     title: recipe.name,
     text: escapeHTML(recipe.description),
     footerStart: `<span class="catalog-card-detail">${[recipe.time, recipe.difficulty].filter(Boolean).map(escapeHTML).join(' · ')}</span>`,
@@ -196,7 +205,7 @@ function renderPackageCard(pkg) {
     placeholder: 'Local meal package',
     href: `../package-details/package-details.html?id=${encodeURIComponent(pkg.id)}`,
     meta: 'Meal kit',
-    metaRight: renderStars(pkg.rating),
+    metaRight: renderRating(pkg),
     title: pkg.name,
     text: escapeHTML(pkg.description),
     note: products.length ? `${products.length} ingredient${products.length === 1 ? '' : 's'}${soldOut ? ' · Sold out' : ''}` : '',
@@ -214,7 +223,7 @@ function renderFarmerCard(farmer) {
     placeholder: 'Local grower',
     href,
     meta: escapeHTML(farmer.location),
-    metaRight: renderStars(farmer.rating),
+    metaRight: renderRating(farmer),
     title: farmer.name,
     text: escapeHTML(farmer.specialty),
     note: escapeHTML(farmer.type),
@@ -224,6 +233,6 @@ function renderFarmerCard(farmer) {
 }
 
 window.aniMoUtilities = {
-  renderStars, toTitleCase, escapeHTML, renderCatalogImage,
+  renderStars, renderRating, toTitleCase, escapeHTML, renderCatalogImage,
   renderCard, renderProductCard, renderRecipeCard, renderPackageCard, renderFarmerCard
 };

@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       <h1>${ui.escapeHTML(farmer.name)}</h1>
       <div class="detail-meta">
         <span class="badge">${ui.escapeHTML(farmer.location)}</span>
-        <span class="badge">${renderStars(farmer.rating)}</span>
+        <span class="badge">${ui.renderRating(farmer, { showCount: true })}</span>
         <span class="badge">${ui.escapeHTML(farmer.type)}</span>
       </div>
       <p>${ui.escapeHTML(farmer.story)}</p>

@@ -27,13 +27,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const response = await fetch(`/api/reviews?listingId=${encodeURIComponent(listingId)}`, { credentials: 'same-origin' });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Could not load reviews.');
-    const avg = result.rating ? Number(result.rating).toFixed(1) : 'No rating yet';
+    const avg = result.rating ? Number(result.rating).toFixed(1) : '';
     summary.textContent = result.rating
       ? `${avg} average · ${result.count} rating${result.count === 1 ? '' : 's'} · ${result.orderCount} placed order${result.orderCount === 1 ? '' : 's'}`
-      : `No ratings yet · ${result.orderCount} placed order${result.orderCount === 1 ? '' : 's'}`;
+      : `No reviews yet · ${result.orderCount} placed order${result.orderCount === 1 ? '' : 's'}`;
+    const stars = (rating) => (window.aniMoUtilities ? window.aniMoUtilities.renderStars(rating) : '');
     list.innerHTML = result.reviews.length ? result.reviews.map((review) => `
-      <article class="product-review"><strong>${escape(review.displayName)}</strong><span class="badge">${'★'.repeat(review.rating)} ${review.rating}/5</span>
-      <p>${escape(review.comment || 'Rating only')}</p><small>${review.demo ? 'Demo buyer' : 'Verified order'} · ${escape(review.created_at)}</small></article>`).join('')
+      <article class="product-review"><strong>${escape(review.displayName)}</strong><span class="badge">${stars(review.rating)} ${review.rating}/5</span>
+      <p>${escape(review.comment || 'Rating only')}</p><small>Verified order · ${escape(review.created_at)}</small></article>`).join('')
       : '<p>No reviews yet. Ratings and comments appear after a delivered order.</p>';
 
     const canReview = Boolean(result.canReview);
