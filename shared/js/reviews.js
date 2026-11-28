@@ -1,4 +1,4 @@
-﻿// Shared Rating And Review Interface
+// Shared Rating And Review Interface
 document.addEventListener('DOMContentLoaded', () => {
   const section = document.querySelector('[data-listing-reviews]');
   if (!section) return;

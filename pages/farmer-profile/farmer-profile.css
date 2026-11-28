@@ -1,4 +1,4 @@
-﻿/* Farmer profile */
+/* Farmer profile */
 .profile-layout { display: grid; grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr); gap: clamp(20px, 3vw, 32px); align-items: start; }
 .profile-card .farmer-profile-image,
 .profile-card .catalog-card-image.farmer-profile-image {

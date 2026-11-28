@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
   const KEY = 'animo-theme';
   const apply = (theme) => { document.documentElement.dataset.theme = theme === 'dark' ? 'dark' : 'light'; };
   apply(localStorage.getItem(KEY) || 'light');
