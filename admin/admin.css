@@ -59,10 +59,10 @@
 .admin-status.error { color: #8a3026; }
 
 /* Layout Dimension */
-.admin-tabs { display: flex; gap: 8px; margin: 12px 0 20px; border-bottom: 1px solid rgba(38, 52, 45, 0.15); }
+.admin-tabs { display: flex; gap: 8px; margin: 12px 0 20px; overflow-x: auto; border-bottom: 1px solid rgba(38, 52, 45, 0.15); scrollbar-width: thin; }
 
 /* Layout Dimension */
-.admin-tab { padding: 10px 16px; border: 0; border-bottom: 3px solid transparent; background: transparent; color: var(--dark-green); font-weight: 700; cursor: pointer; }
+.admin-tab { flex: 0 0 auto; white-space: nowrap; padding: 10px 16px; border: 0; border-bottom: 3px solid transparent; background: transparent; color: var(--dark-green); font-weight: 700; cursor: pointer; }
 
 /* Surface Styling */
 .admin-tab.active { border-bottom-color: var(--clay); }
@@ -101,7 +101,6 @@
 .admin-field textarea { min-height: 85px; resize: vertical; }
 
 /* Text Dimension */
-.admin-rating-preview { display: block; margin-top: 5px; color: var(--muted); font-size: 0.86rem; }
 
 /* Layout Dimension */
 .admin-check { display: flex; align-items: center; gap: 8px; min-height: 42px; }

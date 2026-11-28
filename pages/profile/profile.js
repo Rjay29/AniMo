@@ -11,6 +11,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   let filter = 'all';
   let removePicture = false;
 
+  // Log Out
+  const logoutButton = document.getElementById('logoutButton');
+  const logoutStatus = document.getElementById('logoutStatus');
+  logoutButton.addEventListener('click', async () => {
+    logoutButton.disabled = true;
+    logoutStatus.classList.remove('error');
+    logoutStatus.textContent = '';
+    try {
+      await window.aniMoLogout();
+    } catch (error) {
+      logoutStatus.textContent = error.message;
+      logoutStatus.classList.add('error');
+      logoutButton.disabled = false;
+    }
+  });
+
   // Section State
   async function api(url, options = {}) {
     try {
@@ -37,7 +53,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         <p>${escapeHtml(order.created_at)} · ${escapeHtml(order.fulfillment === 'pickup' ? 'Pickup' : 'Delivery')} · ₱${Number(order.total).toFixed(2)}</p>
         <ul class="order-items">${order.items.map((item) => `<li>${escapeHtml(item.name)} × ${escapeHtml(item.quantity)}${order.status === 'completed' && !item.id.startsWith('package:') ? ` · <a href="../product-details/product-details.html?id=${encodeURIComponent(item.id)}#productReviews">Rate this product</a>` : ''}</li>`).join('')}</ul>
         ${order.address ? `<p>Delivery address: ${escapeHtml(order.address)}</p>` : ''}
-      </article>`).join('') : `<p class="order-empty">${filter === 'all' ? 'No orders yet. Browse the market to place your first order.' : `No orders in “${escapeHtml(labels[filter])}” yet.`}</p>`;
+      </article>`).join('') : (filter === 'all'
+        ? '<div class="empty-state" role="status"><p class="empty-state-title">No orders yet</p><p>Browse the market to place your first order.</p><a class="btn btn-secondary" href="../marketplace/marketplace.html">Browse the marketplace</a></div>'
+        : `<div class="empty-state" role="status"><p class="empty-state-title">Nothing here</p><p>No orders in “${escapeHtml(labels[filter])}” yet.</p></div>`);
   }
 
   // Order Loading

@@ -1,11 +1,20 @@
 // Presentation Helpers
 // Rating Display
-function renderStars(rating) {
+// Five stars filled to the rating, rounded to the nearest half star (styled by .rating-stars).
+function renderStars(rating, size = '') {
   const value = Math.max(0, Math.min(5, Number(rating) || 0));
-  const rounded = Math.round(value);
-  return `<span class="rating-stars" role="img" aria-label="Rated ${value.toFixed(1)} out of 5">${
-    Array.from({ length: 5 }, (_, index) => `<img src="/shared/assets/icons/star.png" alt=""${index >= rounded ? ' class="rating-star-empty"' : ''} />`).join('')
-  }</span>`;
+  const filled = (Math.round(value * 2) / 2 / 5) * 100;
+  return `<span class="rating-stars${size ? ` rating-stars-${size}` : ''}" role="img" aria-label="Rated ${value.toFixed(1)} out of 5" style="--rating: ${filled}%"></span>`;
+}
+
+// A listing's rating from real buyer reviews, or "No reviews yet" when it has none.
+function renderRating(item, { showCount = false } = {}) {
+  const count = Number(item?.reviewCount) || 0;
+  if (!count || !Number(item.rating)) return '<span class="rating-none">No reviews yet</span>';
+  const summary = showCount
+    ? ` <span class="rating-value">${Number(item.rating).toFixed(1)} · ${count} review${count === 1 ? '' : 's'}</span>`
+    : '';
+  return `<span class="rating-summary">${renderStars(item.rating)}${summary}</span>`;
 }
 
 // Title Formatting
@@ -121,4 +130,95 @@ function renderCatalogImage(image, alt, placeholder, className = '') {
   return `<img class="catalog-card-image ${safeClass}" src="${escapeHTML(source)}" alt="${imageAlt}" loading="lazy" decoding="async" />`;
 }
 
-window.aniMoUtilities = { renderStars, toTitleCase, escapeHTML, renderCatalogImage };
+// Shared Catalog Card
+// One card for products, recipes, meal kits, and farmers (see .catalog-card in components.css).
+// variant 'minimal': image, one meta line with the rating, and the name.
+// variant 'footer': the same, plus the price and one button pinned to the bottom.
+// The title link's click area covers the whole card; the footer button sits above it.
+function formatCardPrice(value) {
+  return typeof formatCurrency === 'function'
+    ? formatCurrency(value)
+    : `₱${Number(value || 0).toLocaleString('en-PH')}`;
+}
+
+function renderCard({ image, imageAlt, placeholder, href, meta = '', rating = '', title, price = null, action = '', variant = 'minimal' }) {
+  const footer = variant === 'footer'
+    ? `<div class="catalog-card-footer"><span class="price">${formatCardPrice(price)}</span>${action}</div>`
+    : '';
+  return `
+    <article class="catalog-card${footer ? ' catalog-card-with-footer' : ''}">
+      <div class="catalog-card-media">${renderCatalogImage(image, imageAlt, placeholder)}</div>
+      <div class="catalog-card-body">
+        <div class="catalog-card-meta"><span>${meta}</span>${rating ? `<span class="catalog-card-rating">${rating}</span>` : ''}</div>
+        <h3 class="catalog-card-title"><a class="catalog-card-link" href="${escapeHTML(href)}">${escapeHTML(title)}</a></h3>
+        ${footer}
+      </div>
+    </article>`;
+}
+
+function renderCartButton(cartId, soldOut) {
+  return `<button class="btn btn-primary catalog-card-button" type="button" data-add-cart="${escapeHTML(cartId)}" ${soldOut ? 'disabled' : ''}>${soldOut ? 'Sold out' : 'Add to cart'}</button>`;
+}
+
+function renderProductCard(product, { variant = 'footer' } = {}) {
+  return renderCard({
+    image: product.image,
+    imageAlt: product.name,
+    placeholder: product.category,
+    href: `../product-details/product-details.html?id=${encodeURIComponent(product.id)}`,
+    meta: escapeHTML(product.location),
+    rating: renderRating(product),
+    title: product.name,
+    price: product.price,
+    action: renderCartButton(product.id, Number(product.stock) < 1),
+    variant
+  });
+}
+
+function renderRecipeCard(recipe, { variant = 'minimal' } = {}) {
+  return renderCard({
+    image: recipe.image,
+    imageAlt: recipe.name,
+    placeholder: recipe.category,
+    href: `../recipe-details/recipe-details.html?id=${encodeURIComponent(recipe.id)}`,
+    meta: escapeHTML(recipe.category),
+    rating: renderRating(recipe),
+    title: recipe.name,
+    variant
+  });
+}
+
+function renderPackageCard(pkg, { variant = 'footer' } = {}) {
+  const products = (pkg.productIds || []).map((id) => window.aniMoUtils?.getProductById(id)).filter(Boolean);
+  const soldOut = products.length > 0 && products.every((product) => Number(product.stock) < 1);
+  return renderCard({
+    image: pkg.image,
+    imageAlt: pkg.name,
+    placeholder: 'Local meal package',
+    href: `../package-details/package-details.html?id=${encodeURIComponent(pkg.id)}`,
+    meta: 'Meal kit',
+    rating: renderRating(pkg),
+    title: pkg.name,
+    price: pkg.price,
+    action: renderCartButton(`package:${pkg.id}`, soldOut),
+    variant
+  });
+}
+
+function renderFarmerCard(farmer, { variant = 'minimal' } = {}) {
+  return renderCard({
+    image: farmer.image,
+    imageAlt: farmer.name,
+    placeholder: 'Local grower',
+    href: `../farmer-profile/farmer-profile.html?id=${encodeURIComponent(farmer.id)}`,
+    meta: escapeHTML(farmer.location),
+    rating: renderRating(farmer),
+    title: farmer.name,
+    variant
+  });
+}
+
+window.aniMoUtilities = {
+  renderStars, renderRating, toTitleCase, escapeHTML, renderCatalogImage,
+  renderCard, renderProductCard, renderRecipeCard, renderPackageCard, renderFarmerCard
+};

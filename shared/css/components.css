@@ -106,36 +106,52 @@
   aspect-ratio: 1 / 1;
   height: auto;
   object-fit: cover;
-  background: #e8e6d8;
+  background: var(--surface-muted, #e8e6d8);
   transition: transform 0.5s var(--ease-out, ease);
 }
 
-.product-card > .image-placeholder,
-.product-card > .catalog-card-image,
-.farmer-card > .image-placeholder,
-.farmer-card > .catalog-card-image,
-.recipe-card > .image-placeholder,
-.recipe-card > .catalog-card-image,
-.package-card > .image-placeholder,
-.package-card > .catalog-card-image {
-  aspect-ratio: 1 / 1 !important;
-  height: auto !important;
-  min-height: 0 !important;
+/* Shared Empty State
+   Used wherever a list or grid has nothing to show (no products, no reviews, empty cart...). */
+.empty-state {
+  grid-column: 1 / -1;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: clamp(28px, 5vw, 44px) 24px;
+  color: var(--muted);
+  text-align: center;
+  background: var(--card);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
 }
+.empty-state[hidden] { display: none; }
+.empty-state p { max-width: 52ch; margin: 0; line-height: 1.55; }
+.empty-state .empty-state-title { color: var(--dark-green); font-size: 1.05rem; font-weight: 700; }
+.empty-state .btn { margin-top: 8px; }
+.empty-state-compact { padding: 18px 16px; border-radius: var(--radius); }
 
-.product-card:hover .catalog-card-image,
-.farmer-card:hover .catalog-card-image,
-.recipe-card:hover .catalog-card-image,
-.package-card:hover .catalog-card-image,
-.post-card:hover .catalog-card-image { transform: scale(1.04); }
+/* Star ratings: one element, five star-shaped tiles filled to --rating (set by renderStars). */
+:root { --star-fill: #e0a526; --star-empty: rgba(38, 52, 45, 0.2); }
+:root[data-theme="dark"] { --star-fill: #f2c14e; --star-empty: rgba(255, 255, 255, 0.24); }
+.rating-stars {
+  --star-size: 14px;
+  display: inline-block;
+  flex-shrink: 0;
+  width: calc(var(--star-size) * 5);
+  height: var(--star-size);
+  vertical-align: middle;
+  background: linear-gradient(90deg, var(--star-fill) var(--rating, 0%), var(--star-empty) var(--rating, 0%));
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2.5l2.94 6.08 6.56.82-4.82 4.6 1.2 6.6L12 17.4l-5.88 3.2 1.2-6.6-4.82-4.6 6.56-.82z'/%3E%3C/svg%3E") 0 0 / var(--star-size) var(--star-size) repeat-x;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2.5l2.94 6.08 6.56.82-4.82 4.6 1.2 6.6L12 17.4l-5.88 3.2 1.2-6.6-4.82-4.6 6.56-.82z'/%3E%3C/svg%3E") 0 0 / var(--star-size) var(--star-size) repeat-x;
+}
+.rating-stars-lg { --star-size: 20px; }
+.rating-summary { display: inline-flex; align-items: center; gap: 6px; }
+.rating-value { font-weight: 700; }
+.rating-none { color: var(--muted); font-weight: 600; white-space: nowrap; }
 
-.rating-stars { display: inline-flex; align-items: center; gap: 2px; vertical-align: middle; }
-.rating-stars img { width: 14px; height: 14px; object-fit: contain; }
-.rating-stars .rating-star-empty { opacity: 0.28; }
-:root[data-theme="dark"] .rating-stars img { filter: brightness(0) invert(0.88) sepia(0.35) saturate(4) hue-rotate(5deg); }
-:root[data-theme="dark"] .rating-stars .rating-star-empty { opacity: 0.35; }
-
-.badge::before {
+/* A checkmark only on positive badges (e.g. "Delivery available", "Delivered"). */
+.badge-check::before {
   display: inline-block;
   width: 12px;
   height: 12px;
@@ -144,7 +160,7 @@
   content: "";
   vertical-align: -2px;
 }
-:root[data-theme="dark"] .badge::before { filter: brightness(0) invert(0.88); }
+:root[data-theme="dark"] .badge-check::before { filter: brightness(0) invert(0.88); }
 
 .icon-placeholder {
   display: inline-grid;
@@ -156,86 +172,118 @@
   color: var(--dark-green);
 }
 
-.product-card,
-.farmer-card,
-.recipe-card,
-.package-card,
-.post-card {
+/* Shared Catalog Card
+   One card for products, recipes, meal kits, and farmers (built by renderCard in utilities.js).
+   Minimal: image, meta line, name. With footer: plus the price and one fixed-width button. */
+.catalog-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
   background: var(--card);
   border: 1px solid var(--border, rgba(38, 52, 45, 0.11));
   border-radius: 16px;
   overflow: hidden;
   box-shadow: var(--shadow);
+  text-align: left;
   transition: transform 0.28s var(--ease-out, ease), box-shadow 0.28s var(--ease-out, ease), border-color 0.28s ease;
 }
-
-.product-card:hover,
-.farmer-card:hover,
-.recipe-card:hover,
-.package-card:hover,
-.post-card:hover {
+.catalog-card:hover {
   transform: translateY(-6px);
   box-shadow: var(--shadow-lg, 0 22px 40px rgba(35, 53, 43, 0.16));
   border-color: rgba(49, 90, 75, 0.18);
 }
-
-.product-card .body,
-.farmer-card .body,
-.recipe-card .body,
-.package-card .body,
-.post-card .body {
-  padding: 12px;
+.catalog-card-media {
+  flex: 0 0 auto;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: var(--surface-muted);
 }
-
-.card-meta {
+.catalog-card-media .catalog-card-image { width: 100%; height: 100%; aspect-ratio: auto; object-fit: cover; }
+.catalog-card:hover .catalog-card-image { transform: scale(1.04); filter: saturate(1.03); }
+.catalog-card-body { display: flex; flex: 1; flex-direction: column; gap: 6px; padding: 12px 12px 14px; }
+.catalog-card-meta {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 6px;
-  margin-bottom: 6px;
+  min-height: 1.2em;
   color: var(--muted);
   font-size: 0.74rem;
 }
-
-.card-meta strong { color: var(--dark-green); font-weight: 700; }
-:root[data-theme="dark"] .card-meta strong { color: var(--dark-green); }
-
-.product-card h3, .product-card h4,
-.farmer-card h3, .farmer-card h4,
-.recipe-card h3, .recipe-card h4,
-.package-card h3, .package-card h4,
-.post-card h3, .post-card h4 {
-  margin: 0 0 6px;
-  font-size: 0.98rem;
+.catalog-card-meta > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.catalog-card-rating { flex-shrink: 0; display: inline-flex; align-items: center; }
+.catalog-card-title {
+  display: -webkit-box;
+  min-height: 2.6em;
+  margin: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   color: var(--dark-green);
   font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.98rem;
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.3;
+  transition: color 0.2s ease;
 }
-:root[data-theme="dark"] .product-card h3, :root[data-theme="dark"] .product-card h4,
-:root[data-theme="dark"] .farmer-card h3, :root[data-theme="dark"] .farmer-card h4,
-:root[data-theme="dark"] .recipe-card h3, :root[data-theme="dark"] .recipe-card h4,
-:root[data-theme="dark"] .package-card h3, :root[data-theme="dark"] .package-card h4,
-:root[data-theme="dark"] .post-card h3, :root[data-theme="dark"] .post-card h4 { color: var(--dark-green); }
+.catalog-card:hover .catalog-card-title { color: var(--clay); }
 
-.product-card p,
-.farmer-card p,
-.recipe-card p,
-.package-card p,
-.post-card p {
-  margin: 0 0 10px;
-  color: var(--muted);
-  font-size: 0.88rem;
-  line-height: 1.45;
-}
+/* The title link's click area is stretched over the whole card. */
+.catalog-card-link { color: inherit; }
+.catalog-card-link::after { content: ""; position: absolute; inset: 0; z-index: 1; border-radius: inherit; }
+.catalog-card-link:focus-visible { outline: none; }
+.catalog-card-link:focus-visible::after { outline: 3px solid var(--green); outline-offset: 2px; }
 
-.card-footer {
+/* Footer: price on the left, one fixed-width button on the right, pinned to the bottom. */
+.catalog-card-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 8px;
   margin-top: auto;
+  padding-top: 10px;
+}
+.catalog-card-footer .price { min-width: 0; font-size: 1rem; white-space: nowrap; }
+.catalog-card-button {
+  position: relative;
+  z-index: 2;
+  flex: 0 0 7.25rem;
+  width: 7.25rem;
+  min-height: 36px;
+  margin: 0;
+  padding: 0.45rem 0.5rem;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+.catalog-card-button[disabled] { opacity: 0.55; cursor: not-allowed; }
+
+/* Loading placeholder with the same box as the card it stands in for (built in sample-data.js). */
+.catalog-card-skeleton { pointer-events: none; }
+.catalog-card-skeleton:hover { transform: none; box-shadow: var(--shadow); border-color: var(--border, rgba(38, 52, 45, 0.11)); }
+.catalog-card-skeleton .skeleton-img { width: 100%; height: 100%; border-radius: 0; }
+.catalog-card-skeleton .catalog-card-title { display: block; }
+.catalog-card-skeleton .catalog-card-meta > span:first-child { flex: 1; }
+.catalog-card-skeleton .skeleton-text {
+  display: inline-block;
+  max-width: 100%;
+  height: auto;
+  color: transparent;
+  border-radius: 6px;
+  transform: scaleY(0.72);
+  transform-origin: left center;
+}
+.catalog-card-skeleton .catalog-card-title .skeleton-text { display: block; }
+.catalog-card-skeleton .skeleton-btn { height: auto; margin: 0; border-radius: 999px; }
+@media (max-width: 640px) {
+  .catalog-card-body { padding: 10px 10px 12px; }
+  .catalog-card-meta { flex-direction: column; align-items: flex-start; gap: 2px; min-height: 2.4em; }
+  .catalog-card-meta > span:first-child { max-width: 100%; }
+  .catalog-card-title { font-size: 0.92rem; }
+  .catalog-card-footer { flex-direction: column; align-items: stretch; gap: 6px; }
+  .catalog-card-button { flex-basis: auto; width: 100%; }
 }
 
 .price {
@@ -284,25 +332,20 @@
   .hero-grid { grid-template-columns: 1fr; }
 }
 /* Shared review blocks (product/recipe/package details) */
+.review-section { padding-top: 0; }
 .product-review-card { padding: clamp(20px, 3vw, 34px); border-radius: var(--radius-lg); }
 .review-summary { margin: 0 0 20px; }
 .review-summary-card { display: flex; align-items: center; gap: 16px; padding: 18px 20px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
 .review-summary-score { font-size: clamp(2rem, 4vw, 2.8rem); font-weight: 800; line-height: 1; color: var(--dark-green); min-width: 56px; }
 .review-summary-stars { font-size: 1.1rem; letter-spacing: 1px; line-height: 1; }
 .review-summary-meta { margin: 6px 0 0; color: var(--muted); font-size: 0.95rem; }
-.review-stars-filled { color: #d97706; }
-.review-stars-empty { color: rgba(107,114,128,0.45); }
 .product-review-list { display: grid; gap: 14px; }
 .product-review { padding: 18px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
 .product-review-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
 .product-review-name { display: block; color: var(--dark-green); font-size: 1rem; }
 .product-review-meta { margin-top: 4px; color: var(--muted); font-size: 0.85rem; }
 .product-review-rating { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 0.9rem; white-space: nowrap; }
-.product-review-rating .review-stars { font-size: 0.95rem; }
 .product-review-comment { margin: 12px 0 0; color: var(--text); line-height: 1.65; }
-.product-review-empty { padding: 24px; border: 1px dashed var(--border); border-radius: 16px; background: color-mix(in srgb, var(--surface) 92%, transparent); text-align: center; }
-.product-review-empty p { margin: 0; font-weight: 700; color: var(--dark-green); }
-.product-review-empty span { display: block; margin-top: 6px; color: var(--muted); }
 .review-eligibility { margin: 18px 0 0; padding: 14px 16px; border-radius: 14px; background: color-mix(in srgb, var(--surface) 92%, transparent); border: 1px solid var(--border); color: var(--muted); }
 .review-eligibility[hidden], .product-review-form[hidden] { display: none !important; }
 .product-review-form { display: grid; gap: 14px; max-width: 720px; margin-top: 24px; padding: 22px; border: 1px solid var(--border); border-radius: 18px; background: color-mix(in srgb, var(--surface) 88%, transparent); }
@@ -312,6 +355,52 @@
 .review-field .select, .review-field .textarea { width: 100%; }
 .review-status { min-height: 1.4em; margin: 0; font-size: 0.95rem; color: var(--dark-green); }
 .review-status.error { color: #b91c1c; }
-:root[data-theme="dark"] .review-stars-empty { color: rgba(255,255,255,0.28); }
 :root[data-theme="dark"] .review-status.error { color: #fca5a5; }
 @media (max-width: 900px) { .product-review-head { flex-direction: column; align-items: flex-start; } }
+
+/* Shared Detail Page Layout
+   Product, recipe, meal kit, and farmer pages: image on the left, content on the right. */
+.detail-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(20px, 3vw, 32px);
+  align-items: start;
+}
+.detail-media,
+.detail-content {
+  min-width: 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+.detail-media { overflow: hidden; }
+.detail-media .catalog-card-image { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; }
+.detail-content { padding: clamp(22px, 3vw, 30px); }
+.detail-content > * { max-width: 65ch; }
+.detail-content h1 {
+  margin: 8px 0 12px;
+  color: var(--dark-green);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  line-height: 1.12;
+}
+.detail-content h2,
+.detail-content h3 { margin: 24px 0 12px; color: var(--dark-green); font-size: 1.2rem; }
+.detail-content p,
+.detail-content li { color: var(--muted); line-height: 1.7; }
+.detail-content ul,
+.detail-content ol { margin: 0; padding-left: 20px; }
+.detail-content li { margin: 8px 0; }
+.detail-meta { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 16px; }
+.detail-price { margin: 4px 0 12px; font-size: 1.8rem; }
+.detail-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
+.detail-actions .btn[disabled] { opacity: 0.55; cursor: not-allowed; }
+@media (max-width: 900px) {
+  .detail-layout { grid-template-columns: 1fr; gap: 20px; }
+}
+@media (max-width: 640px) {
+  .detail-content { padding: 18px; }
+  .detail-content h1 { font-size: clamp(1.65rem, 6vw, 2.2rem); }
+  .detail-actions .btn { flex: 1; }
+}

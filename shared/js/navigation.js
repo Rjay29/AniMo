@@ -1,4 +1,24 @@
 // Shared Navigation And Assistant
+
+// The signed-in user, or null for guests (never throws).
+window.aniMoSessionUser = async function () {
+  try {
+    const response = await fetch('/api/auth/session', { credentials: 'same-origin' });
+    if (!response.ok) return null;
+    return (await response.json()).user || null;
+  } catch {
+    return null;
+  }
+};
+
+// Log out (the button lives on the profile page). Throws if the server rejects the request.
+window.aniMoLogout = async function () {
+  const response = await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+  const contentType = response.headers.get('content-type') || '';
+  const result = contentType.includes('application/json') ? await response.json() : null;
+  if (!response.ok || !result?.ok) throw new Error('Could not log out. Please try again.');
+  window.location.replace('/pages/login/login.html');
+};
 // Assistant Capabilities
 document.addEventListener('DOMContentLoaded', () => {
   const nav = document.querySelector('.nav-links');
@@ -7,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const navItems = [
     ['Home', homeUrl],
     ['Farmers', '../farmers/farmers.html'],
-    ['Local map', `${homeUrl}#local-map`],
+    ['Local map', '../local-map/local-map.html'],
     ['Chats', '../chat/chat.html']
   ];
 
@@ -41,14 +61,19 @@ document.addEventListener('DOMContentLoaded', () => {
       ${navItems.slice(1).map(([label, href]) => (
       `<a href="${href}">${label}</a>`
       )).join('')}`;
+    // Highlight the link for the current page (hash links never count as the current page)
     const currentPath = window.location.pathname.split('/').pop() || 'index.html';
-    nav.querySelectorAll('a').forEach((link, index) => {
-      if (index !== navItems.length - 1
-        && link.getAttribute('href').split('/').pop().split('#')[0] === currentPath) {
+    nav.querySelectorAll('a').forEach((link) => {
+      const href = link.getAttribute('href');
+      if (!href.includes('#') && href.split('/').pop() === currentPath) {
         link.classList.add('active');
+        link.setAttribute('aria-current', 'page');
+        const dropdown = link.closest('.nav-dropdown');
+        if (dropdown) dropdown.classList.add('active');
       }
+    });
 
-      // Protected Shopping Action
+    // Protected Shopping Action
       window.aniMoPromptLogin = function (options = {}) {
         const next = options.next || `${window.location.pathname}${window.location.search}`;
         const message = options.message || 'Please log in to continue.';
@@ -77,10 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
       };
 
       window.aniMoRequireLogin = async function (options = {}) {
-        try {
-          const response = await fetch('/api/auth/me', { credentials: 'same-origin' });
-          if (response.ok) return true;
-        } catch {}
+        if (await window.aniMoSessionUser()) return true;
         const next = options.next || `${window.location.pathname}${window.location.search}`;
         if (options.pendingCart) {
           localStorage.setItem('animo-pending-cart', JSON.stringify(options.pendingCart));
@@ -92,7 +114,6 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.assign(`/pages/login/login.html?next=${encodeURIComponent(next)}`);
         return false;
       };
-    });
   }
 
   if (toggle && nav) {
@@ -112,9 +133,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.documentElement.style.setProperty('--accessibility-scale', savedAccessibility.largeText ? '1.12' : '1');
   if (savedAccessibility.highContrast) document.documentElement.dataset.contrast = 'high';
   if (savedAccessibility.reducedMotion) document.documentElement.dataset.motion = 'reduced';
-  if (navActions && !document.querySelector('.account-logout')) {
+  if (navActions && !document.querySelector('.account-login')) {
     const authBtn = document.createElement('a');
-    authBtn.className = 'btn btn-secondary account-logout';
+    authBtn.className = 'btn btn-secondary account-login';
     authBtn.href = '/pages/login/login.html';
     authBtn.textContent = 'Log in';
     authBtn.hidden = true;
@@ -130,24 +151,10 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     };
     const setAuthMode = (user) => {
-      authBtn.hidden = false;
-      authBtn.href = '#';
-      authBtn.textContent = 'Log out';
-      authBtn.onclick = async (e) => {
-        e.preventDefault();
-        authBtn.style.pointerEvents = 'none';
-        try {
-          const response = await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
-          const contentType = response.headers.get('content-type') || '';
-          const result = contentType.includes('application/json') ? await response.json() : null;
-          if (!response.ok || !result?.ok) throw new Error('Could not log out. Please try again.');
-          window.location.replace('/pages/login/login.html');
-        } catch (error) {
-          console.error('AniMo logout failed:', error);
-          authBtn.style.pointerEvents = '';
-          authBtn.textContent = 'Logout failed - retry';
-        }
-      };
+      // Signed-in users see their avatar (which opens the profile page); Log out is on that page.
+      authBtn.hidden = true;
+      document.querySelectorAll('.site-footer a[href*="login/login.html"], .site-footer a[href*="register/register.html"]')
+        .forEach((link) => { link.style.display = 'none'; });
       document.querySelectorAll('a.cart-pill').forEach((el) => { el.style.display = ''; });
       nav.querySelectorAll('a').forEach((link) => {
         if ((link.textContent || '').trim() === 'Chats') link.style.display = '';
@@ -174,9 +181,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       return user;
     };
-    fetch('/api/auth/me', { credentials: 'same-origin' }).then(async (response) => {
-      if (!response.ok) { setGuestMode(); return; }
-      const { user } = await response.json();
+    window.aniMoSessionUser().then((user) => {
+      if (!user) { setGuestMode(); return; }
       setAuthMode(user);
       const accountLink = document.createElement('a');
       accountLink.className = 'profile-avatar-link';
@@ -202,10 +208,10 @@ document.addEventListener('DOMContentLoaded', () => {
         farmerLink.textContent = 'Farmer dashboard';
         navActions.insertBefore(farmerLink, authBtn);
       }
-      if (user.role === 'admin' && !document.querySelector('.admin-dashboard-link')) {
+      if (user.role === 'admin' && user.adminPath && !document.querySelector('.admin-dashboard-link')) {
         const adminLink = document.createElement('a');
         adminLink.className = 'btn btn-secondary admin-dashboard-link';
-        adminLink.href = '/admin/';
+        adminLink.href = user.adminPath;
         adminLink.textContent = 'Admin dashboard';
         navActions.insertBefore(adminLink, authBtn);
       }
@@ -225,9 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
       themeButton.innerHTML = isDark ? sunIcon : moonIcon;
       const label = isDark ? 'Switch to light mode' : 'Switch to dark mode';
       themeButton.setAttribute('aria-label', label);
-      themeButton.setAttribute('data-tooltip', label);
       themeButton.setAttribute('aria-pressed', String(isDark));
-      themeButton.title = '';
     };
     setThemeUi(document.documentElement.dataset.theme === 'dark');
     themeButton.addEventListener('click', () => {
@@ -242,7 +246,6 @@ document.addEventListener('DOMContentLoaded', () => {
     accessibilityButton.type = 'button';
     accessibilityButton.innerHTML = accessIcon;
     accessibilityButton.setAttribute('aria-label', 'Accessibility settings');
-    accessibilityButton.setAttribute('data-tooltip', 'Accessibility settings');
     accessibilityButton.setAttribute('aria-expanded', 'false');
     const panel = document.createElement('section');
     panel.className = 'accessibility-settings-panel card';
@@ -286,30 +289,6 @@ document.addEventListener('DOMContentLoaded', () => {
     link.append(icon);
     if (count) link.append(count);
     link.setAttribute('aria-label', 'Cart');
-    link.setAttribute('data-tooltip', 'Cart');
-  });
-
-  // Tooltip Accessibility
-  function decorateTooltips() {
-    document.querySelectorAll('button, a.icon-btn').forEach((element) => {
-      const visibleText = element.textContent.trim().replace(/\s+/g, ' ');
-      const label = element.getAttribute('aria-label')
-        || element.getAttribute('title')
-        || (element.classList.contains('cart-pill') ? 'Cart' : '')
-        || visibleText;
-      if (label && !element.hasAttribute('data-tooltip')) {
-        element.setAttribute('data-tooltip', label);
-      }
-      if (label && !element.hasAttribute('aria-label')) {
-        element.setAttribute('aria-label', label);
-      }
-      element.removeAttribute('title');
-    });
-  }
-  decorateTooltips();
-  new MutationObserver(decorateTooltips).observe(document.body, {
-    childList: true,
-    subtree: true
   });
 
   // Cart Event Delegation
@@ -330,10 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('click', async (event) => {
     const orderLink = event.target.closest('a[href*="checkout/checkout.html"], a[href*="/checkout"], [data-require-login-order]');
     if (!orderLink) return;
-    try {
-      const response = await fetch('/api/auth/me', { credentials: 'same-origin' });
-      if (response.ok) return;
-    } catch {}
+    if (await window.aniMoSessionUser()) return;
     event.preventDefault();
     const href = orderLink.href ? new URL(orderLink.href, window.location.origin) : null;
     const next = href ? (href.pathname + href.search) : window.location.pathname;
@@ -415,7 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }).sort((left, right) => right.score - left.score);
     if (matches[0]?.score) return matches[0].record.content;
     if (normalized.includes('recipe') || normalized.includes('ingredient')) return 'Open Recipes to browse dishes, or ask me for a recipe idea using AniMo ingredients. I can suggest options based on available products and clearly note anything missing.';
-    if (normalized.includes('map') || normalized.includes('location') || normalized.includes('near')) return 'Use the Local map on the Home page to search Philippine locations, pin your location, and view nearby AniMo sellers.';
+    if (normalized.includes('map') || normalized.includes('location') || normalized.includes('near')) return 'Use the Local map (its own page in the navigation bar, also shown on the Home page) to search Philippine locations, pin your location, and view nearby AniMo sellers.';
     if (normalized.includes('order') || normalized.includes('cart') || normalized.includes('buy')) return 'Browse the Marketplace, add items to your cart, review vouchers in Cart, then continue to Checkout to place your order.';
     return 'I can help with AniMo products, farmers, recipes, meal kits, orders, and the Philippines map. Ask me a specific question and I\'ll do my best.';
   }
@@ -479,8 +455,6 @@ document.addEventListener('DOMContentLoaded', () => {
   assistant.querySelectorAll('[data-assistant-prompt]').forEach((button) => {
     button.addEventListener('click', () => sendMessage(button.dataset.assistantPrompt, button.dataset.assistantMode || 'chat'));
   });
-
-  decorateTooltips();
 
   // Progressive UI enhancements loader
   if (!document.querySelector('script[data-animo-ui-enhancements]')) {

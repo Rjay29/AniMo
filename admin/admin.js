@@ -89,7 +89,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     ].join('');
     return `<div class="admin-field${options.full ? ' admin-field-full' : ''}"><label for="${id}">${escapeHtml(label)}</label>
       <input class="input" id="${id}" name="${name}" type="${options.type || 'text'}"${constraints}${options.required ? ' required' : ''} />
-      ${name === 'rating' ? `<output class="admin-rating-preview" data-rating-preview="${id}" for="${id}">Current rating: 0.0 / 5</output>` : ''}
     </div>`;
   }
 
@@ -101,7 +100,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       inputField('unit', 'Sold per (bundle, jar, pack...)', { required: true }),
       inputField('farm', 'Farmer or seller name', { required: true }),
       inputField('location', 'Location', { required: true }),
-      inputField('rating', 'Rating (0–5)', { type: 'number', min: '0', max: '5', step: '0.1', required: true }),
       inputField('stock', 'Stock quantity', { type: 'number', min: '0', step: '1', required: true }),
       inputField('description', 'Description', { type: 'textarea', full: true, required: true }),
       inputField('deliveryAvailable', 'Delivery available', { type: 'checkbox' }),
@@ -112,7 +110,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       inputField('type', 'Seller type', { type: 'select', choices: ['Individual person', 'Group of farmers'] }),
       inputField('location', 'Location', { required: true }),
       inputField('specialty', 'What they grow or sell', { required: true }),
-      inputField('rating', 'Rating (0–5)', { type: 'number', min: '0', max: '5', step: '0.1', required: true }),
       inputField('followers', 'Community followers', { type: 'number', min: '0', step: '1', required: true }),
       inputField('story', 'Farmer story', { type: 'textarea', full: true, required: true })
     ],
@@ -159,17 +156,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         input.checked = entry.productIds.includes(input.value);
       });
     }
-    updateRatingPreview();
-  }
-
-  // Rating Preview Updates
-  function updateRatingPreview() {
-    const ratingInput = fields.querySelector('[name="rating"]');
-    const preview = fields.querySelector('.admin-rating-preview');
-    if (ratingInput && preview) {
-      const rating = Number(ratingInput.value);
-      preview.textContent = `Current rating: ${(Number.isFinite(rating) ? rating : 0).toFixed(1)} / 5`;
-    }
   }
 
   // Listing Rendering
@@ -192,7 +178,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               <button class="btn btn-secondary" type="button" data-edit-type="${type}" data-edit-id="${escapeHtml(entry.id)}">Edit</button>
               <button class="btn btn-secondary" type="button" data-delete-type="${type}" data-delete-id="${escapeHtml(entry.id)}">Remove</button>
             </span>
-          </article>`).join('') : '<p class="muted">No listings yet.</p>'}
+          </article>`).join('') : '<div class="empty-state" role="status"><p class="empty-state-title">No listings yet</p><p>Listings you add appear here.</p></div>'}
       </section>`;
     }).join('');
     list.innerHTML = groups;
@@ -286,14 +272,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       return {
         id: editingId, name: value('name'), category: value('category'), price: numbers('price'),
         unit: value('unit'), farm: value('farm'), location: value('location'),
-        rating: numbers('rating'), stock: numbers('stock'), description: value('description'),
+        stock: numbers('stock'), description: value('description'),
         tags: [], deliveryAvailable: checked('deliveryAvailable'), pickupAvailable: checked('pickupAvailable')
       };
     }
     if (currentType() === 'farmers') {
       return {
         id: editingId, name: value('name'), type: value('type'), location: value('location'),
-        specialty: value('specialty'), rating: numbers('rating'), followers: numbers('followers'),
+        specialty: value('specialty'), followers: numbers('followers'),
         story: value('story')
       };
     }
@@ -358,7 +344,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           <div class="application-documents">${documentLinks || '<span>No documents attached.</span>'}</div></div>
         ${application.status === 'pending' ? `<div class="listing-actions"><button class="btn btn-primary" data-approve-application="${application.userId}" type="button">Approve</button><button class="btn btn-secondary" data-reject-application="${application.userId}" type="button">Reject</button></div>` : ''}
       </article>`;
-    }).join('') : '<p class="muted">No farmer applications yet.</p>';
+    }).join('') : '<div class="empty-state" role="status"><p class="empty-state-title">No farmer applications</p><p>New applications will appear here for review.</p></div>';
   }
 
   try {
@@ -386,10 +372,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('listingFormTitle').textContent = 'Add listing';
     cancelEditButton.hidden = true;
     renderFields();
-  });
-  // Input Interaction
-  fields.addEventListener('input', (event) => {
-    if (event.target.matches('[name="rating"]')) updateRatingPreview();
   });
   // Input Change
   photo.addEventListener('change', () => {

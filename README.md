@@ -41,7 +41,7 @@ The first server start seeds 25 additional Philippine farmer profiles, 155 produ
 ### Local implementation boundaries
 
 - Checkout records orders and supports COD, BPI/BDO transfer, and InstaPay/e-wallet **as labels only**. No bank, e-wallet, or payment provider is contacted.
-- The Home local map uses Leaflet, OpenStreetMap tiles, Nominatim geocoding, and OSRM road routes. Map searches, seller pins, current location, and directions are limited to Philippine bounds. Public map services require an internet connection and are subject to their usage policies; this is not a courier booking or delivery guarantee. No map API key is needed.
+- The local map is shown on the Home page and also has its own page (**Local map** in the navigation bar, `pages/local-map/`). Both use the same shared code (`shared/js/local-map.js`, `shared/css/local-map.css`). It uses Leaflet, OpenStreetMap tiles, Nominatim geocoding, and OSRM road routes. Map searches, seller pins, current location, and directions are limited to Philippine bounds. Public map services require an internet connection and are subject to their usage policies; this is not a courier booking or delivery guarantee. No map API key is needed.
 - Farmer document approval is a manual local workflow. There is no government-ID, DA, bank, or address validation service.
 - Email/phone OTP, delivery tracking, SMS/email messages, and chats are local demos; chats refresh by polling.
 - This is not a production deployment. Production use needs HTTPS, external provider integrations, legal/privacy review, hardened operational rate limiting, backups, audit/retention policy for sensitive documents, and deployment security review.
@@ -158,10 +158,11 @@ AniMo/
 ├── pages/                  # Site pages, one folder each (html/css/js):
 │                           #   home, marketplace, product-details, farmers, farmer-profile,
 │                           #   recipe-discovery, recipe-details, recipe-packages, package-details,
-│                           #   cart, checkout, login, register, profile, about, farmer-dashboard
+│                           #   local-map, cart, checkout, chat, login, register, profile, about,
+│                           #   farmer-dashboard
 ├── shared/
 │   ├── css/                # Global styles, components, navbar, footer
-│   ├── js/                 # API client, cart, navigation + assistant, reviews, theme, catalog data
+│   ├── js/                 # API client, cart, navigation + assistant, local map, reviews, theme, catalog data
 │   └── assets/             # Logo, icons, and listing/profile photos by category
 ├── data/                   # SQLite databases, demo seed data, farmer documents (private)
 ├── files/                  # Layout screenshots
@@ -198,7 +199,7 @@ Uploaded catalog/profile images are validated and saved as files beneath their m
 
 ## 🛠️ Admin Dashboard
 
-Start the server with the admin variables set, open the **private administrator URL printed in the terminal** (`/control/<random code>`), and sign in. The old `/admin/` address no longer works.
+Start the server with the admin variables set, open the **private administrator URL printed in the terminal** (`/control/<random code>`), and sign in. The old `/admin/` address no longer works. While you are signed in as the administrator, the **Admin dashboard** button in the navbar also opens it.
 
 | Tool | What you can do |
 |------|-----------------|

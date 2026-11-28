@@ -19,7 +19,6 @@
       btn.innerHTML = iconFor(isDark ? 'dark' : 'light');
       const label = isDark ? 'Switch to light mode' : 'Switch to dark mode';
       btn.setAttribute('aria-label', label);
-      btn.setAttribute('title', label);
       btn.setAttribute('aria-pressed', String(isDark));
     });
   }

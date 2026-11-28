@@ -14,8 +14,9 @@
     <!-- Site Header -->
     <header class="site-header"><div class="container navbar"><a href="../home/home.html" class="brand">AniMo</a><nav class="nav-links" aria-label="Main navigation"></nav><div class="nav-actions"><a href="../cart/cart.html" class="icon-btn cart-pill"><span class="cart-count hidden">0</span></a><button class="btn btn-primary mobile-toggle" type="button">☰</button></div></div></header>
     <!-- Farmer Workspace -->
-    <main class="container farmer-dashboard">
-      <header class="farmer-dashboard-heading"><span class="eyebrow">Verified seller workspace</span><h1>Manage your harvest</h1><p>Submit listings for administrator review, adjust stock, and coordinate order delivery.</p><a class="btn btn-secondary" href="../chat/chat.html">Open buyer chats</a></header>
+    <main>
+      <section class="page-hero"><div class="container page-hero-inner"><div><span class="eyebrow">Verified seller workspace</span><h1>Manage your harvest</h1><p>Submit listings for administrator review, adjust stock, and coordinate order delivery.</p></div><a class="btn btn-light" href="../chat/chat.html">Open buyer chats</a></div></section>
+      <section class="section"><div class="container farmer-dashboard">
       <p id="farmerStatus" class="farmer-status" role="status" aria-live="polite"></p>
       <div class="farmer-dashboard-grid">
         <form id="farmerListingForm" class="card farmer-panel">
@@ -53,6 +54,7 @@
       <section class="card farmer-panel farmer-orders-panel"><div class="farmer-panel-heading"><h2>Orders and delivery</h2><button class="btn btn-secondary" id="refreshFarmerOrders" type="button">Refresh</button></div><div id="farmerOrders" class="farmer-list">
         <article class="skeleton-card" aria-hidden="true"><div class="skeleton-line skeleton-line-lg"></div><div class="skeleton-line"></div><div class="skeleton-line skeleton-line-sm"></div></article>
         <article class="skeleton-card" aria-hidden="true"><div class="skeleton-line skeleton-line-lg"></div><div class="skeleton-line"></div><div class="skeleton-line skeleton-line-sm"></div></article>
+      </div></section>
       </div></section>
     </main>
     <script src="../../shared/js/api.js"></script>

@@ -524,15 +524,14 @@ function validateListing(type, entry) {
   if (type === 'products') {
     if (!entry.category || !entry.unit || !entry.farm || !entry.location || !entry.description
       || !numeric(entry.price) || entry.price <= 0 || !numeric(entry.stock)
-      || !numeric(entry.rating) || entry.rating > 5
       || typeof entry.deliveryAvailable !== 'boolean' || typeof entry.pickupAvailable !== 'boolean') {
-      throw Object.assign(new Error('Product listings need a category, unit, seller, location, description, valid price, stock, rating, and fulfillment choices.'), { status: 400 });
+      throw Object.assign(new Error('Product listings need a category, unit, seller, location, description, valid price, stock, and fulfillment choices.'), { status: 400 });
     }
   } else if (type === 'farmers') {
     if (!['Individual person', 'Individual producer', 'Group of farmers'].includes(entry.type)
       || !entry.location || !entry.specialty || !entry.story
-      || !numeric(entry.rating) || entry.rating > 5 || !numeric(entry.followers)) {
-      throw Object.assign(new Error('Farmer listings need a valid type, location, specialty, story, rating, and follower count.'), { status: 400 });
+      || !numeric(entry.followers)) {
+      throw Object.assign(new Error('Farmer listings need a valid type, location, specialty, story, and follower count.'), { status: 400 });
     }
   } else if (type === 'recipes') {
     if (!entry.category || !entry.time || !entry.difficulty || !entry.description
@@ -578,17 +577,15 @@ function listCatalog(includePending = false) {
   ).all(...(includePending ? [] : ['approved']));
   for (const row of rows) catalog[row.type].push(readListing(row));
   catalog.ingredients = [...new Set(catalog.recipes.flatMap((recipe) => recipe.ingredients || []))];
-  const savedReviews = usersDb.prepare('SELECT listing_id, rating FROM reviews').all();
+  // Ratings shown in AniMo come only from saved buyer reviews; preset seed ratings are ignored.
+  const reviewStats = new Map(usersDb.prepare(
+    'SELECT listing_id, AVG(rating) AS average, COUNT(*) AS count FROM reviews GROUP BY listing_id'
+  ).all().map((row) => [row.listing_id, row]));
   for (const collection of [catalog.products, catalog.farmers, catalog.recipes, catalog.recipePackages]) {
     for (const listing of collection) {
-      const ratings = [
-        ...demoReviews.filter((review) => review.listingId === listing.id).map((review) => review.rating),
-        ...savedReviews.filter((review) => review.listing_id === listing.id).map((review) => review.rating)
-      ];
-      if (ratings.length) {
-        listing.rating = Math.round(ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length * 10) / 10;
-        listing.reviewCount = ratings.length;
-      }
+      const stats = reviewStats.get(listing.id);
+      listing.rating = stats ? Math.round(stats.average * 10) / 10 : null;
+      listing.reviewCount = stats ? stats.count : 0;
     }
   }
   return catalog;
@@ -689,40 +686,6 @@ function listingOrderCounts() {
   return counts;
 }
 
-// Demo Review Fixtures
-const demoReviews = [
-  ['okra', 'Mila Santos', 5, 'Picked fresh and tender; perfect for pinakbet.'],
-  ['okra', 'Ramon Dela Cruz', 4, 'Good quality and carefully packed.'],
-  ['coconut', 'Liza Mercado', 5, 'Lovely caramel flavor in coffee and champorado.'],
-  ['coconut', 'Paolo Reyes', 5, 'A little goes a long way.'],
-  ['cassava', 'Nina Flores', 5, 'Crisp snack with a clean, homemade taste.'],
-  ['cassava', 'Arman Cruz', 4, 'Arrived intact and not too salty.'],
-  ['native-rice', 'Jessa Lim', 5, 'Fragrant rice with a satisfying texture.'],
-  ['malunggay', 'Cora Bautista', 4, 'Fresh leaves; I added them to soup.'],
-  ['siling-labuyo', 'Ben Garcia', 5, 'Very spicy, just as expected.'],
-  ['ginataang-labong', 'Ella Navarro', 5, 'Comforting recipe with clear instructions.'],
-  ['vegetable-adobo', 'Tomas Aquino', 4, 'Easy weeknight bowl.'],
-  ['banana-coco-smoothie', 'Bea Ramos', 5, 'Quick and refreshing.'],
-  ['spicy-cassava-bites', 'Noel Santiago', 5, 'Great merienda idea.'],
-  ['sinigang-kit', 'Kaye Villanueva', 4, 'Useful kit for a simple sour soup.'],
-  ['adobo-kit', 'Migs Flores', 5, 'Convenient local ingredients.'],
-  ['malunggay-rice-soup', 'Ari Mendoza', 5, 'A soothing recipe for a rainy afternoon.'],
-  ['vegetable-bowl-kit', 'Tina Dizon', 4, 'Good portions for a quick lunch.'],
-  ['merienda-kit', 'Jun Pangan', 5, 'A fun snack to prepare with the family.'],
-  ['coconut-breakfast-kit', 'Maya Cortez', 4, 'Nice local pantry combination.'],
-  ['timpla', 'Gina Reyes', 5, 'Friendly grower with a thoughtful selection.'],
-  ['arawan', 'Leo Santos', 5, 'Great story and carefully grown ingredients.'],
-  ['kusina', 'Mara Lopez', 4, 'A welcoming local producer.']
-].map(([listingId, displayName, rating, comment], index) => ({
-  id: `demo-${index + 1}`,
-  listingId,
-  displayName,
-  rating,
-  comment,
-  created_at: '2026-11-20',
-  demo: true
-}));
-
 function seedExpandedDemoCatalog() {
   const data = createExpandedDemoData();
   const marker = listingsDb.prepare('SELECT value FROM app_settings WHERE key = ?').get('expanded_demo_catalog_seeded');
@@ -771,35 +734,6 @@ function seedExpandedDemoCatalog() {
   `);
   for (const [category, title, content] of data.assistantFaq) {
     knowledgeInsert.run(category, title, content, title);
-  }
-
-  const count = data.products.length + data.farmers.length + data.recipes.length + data.recipePackages.length;
-  for (let index = 0; index < count; index += 1) {
-    const listingId = index < 25
-      ? data.farmers[index].id
-      : index < 180
-        ? data.products[index - 25].id
-        : index < 200
-          ? data.recipes[index - 180].id
-          : data.recipePackages[index - 200].id;
-    const kind = index < 25 ? 'farmer' : index < 180 ? 'product' : index < 200 ? 'recipe' : 'meal kit';
-    const authorNames = ['Lina M.', 'Rogelio D.', 'Carmen P.', 'Noel A.', 'Mila S.'];
-    const comments = [
-      `The ${kind} was carefully prepared and the listing details were helpful.`,
-      `A lovely local ${kind}; the quality and description matched what I expected.`
-    ];
-    comments.forEach((comment, noteIndex) => {
-      if (demoReviews.some((review) => review.id === `demo-expanded-${index}-${noteIndex}`)) return;
-      demoReviews.push({
-        id: `demo-expanded-${index}-${noteIndex}`,
-        listingId,
-        displayName: authorNames[(index + noteIndex) % authorNames.length],
-        rating: 4 + ((index + noteIndex) % 2),
-        comment: comment.replaceAll(kind, kind === 'product' ? 'produce' : kind),
-        created_at: '2026-11-25',
-        demo: true
-      });
-    });
   }
 
   seedJevAustinDemoChat();
@@ -1104,7 +1038,7 @@ function buildLocalAssistantReply(question) {
     return 'Open your Cart and use the voucher selector to review and apply an available voucher before continuing to checkout.';
   }
   if (/\b(map|location|directions|route|nearby)\b/.test(normalized)) {
-    return 'Open Local map from the Home page. Search for a Philippine city or town, or use your location while in the Philippines. Select a seller marker and choose Directions to request a road route.';
+    return 'Open the Local map from the navigation bar (its own page), or use the map section on the Home page. Search for a Philippine city or town, or use your location while in the Philippines. Select a seller marker and choose Directions to request a road route.';
   }
   if (/\b(farmer|grower|seller)\b/.test(normalized)) {
     return catalog.farmers.length
@@ -1511,9 +1445,15 @@ async function handleApi(request, response, url) {
   }
 
   const user = currentUser(request);
+  // Administrators also get their private dashboard address so the navbar link works.
+  const sessionPayload = () => ({ ...publicUser(user), ...(user.role === 'admin' ? { adminPath: `${privateAdminPath}/` } : {}) });
   if (method === 'GET' && pathname === '/api/auth/me') {
     if (!user) return jsonResponse(response, 401, { error: 'Please log in.' });
-    return jsonResponse(response, 200, { user: publicUser(user) });
+    return jsonResponse(response, 200, { user: sessionPayload() });
+  }
+  // Like /api/auth/me, but guests get 200 with user null, so public pages don't log an error.
+  if (method === 'GET' && pathname === '/api/auth/session') {
+    return jsonResponse(response, 200, { user: user ? sessionPayload() : null });
   }
   if (method === 'GET' && pathname === '/api/assistant/knowledge') {
     return jsonResponse(response, 200, { records: listAssistantKnowledge() });
@@ -1637,7 +1577,7 @@ async function handleApi(request, response, url) {
       FROM reviews JOIN profiles ON profiles.user_id = reviews.user_id
       WHERE reviews.listing_id = ? ORDER BY reviews.created_at DESC
     `).all(listingId);
-    const reviews = [...saved, ...demoReviews.filter((review) => review.listingId === listingId)];
+    const reviews = saved;
     const average = reviews.length ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length : null;
     const counts = listingOrderCounts();
     const canReview = !!(user && usersDb.prepare("SELECT items_json FROM orders WHERE user_id = ? AND status = 'completed'").all(user.id)
@@ -1876,7 +1816,6 @@ async function handleApi(request, response, url) {
           location: farmerProfile.location,
           specialty: farmerProfile.specialty,
           story: farmerProfile.story,
-          rating: 0,
           followers: 0
         };
         listingsDb.prepare(`
@@ -2009,9 +1948,13 @@ async function handleApi(request, response, url) {
 }
 
 // Static File Serving
+// Pages that show the Leaflet map get a CSP that also allows unpkg and OpenStreetMap tiles.
+const mapPages = new Set(['/pages/home/home.html', '/pages/local-map/local-map.html']);
+
 function serveStatic(request, response, url, user) {
   if (url.pathname === '/server.js' || url.pathname.startsWith('/data/')) return response.writeHead(404).end('Not found');
   if (url.pathname === '/' || url.pathname === '/index.html') return redirect(response, '/pages/home/home.html');
+  if (url.pathname === '/favicon.ico') return redirect(response, '/shared/assets/logo.png');
   const isAuthPage = ['/pages/login/login.html', '/pages/register/register.html'].includes(url.pathname);
   const isPageDocument = url.pathname.endsWith('.html');
   if (user && isAuthPage) return redirect(response, '/pages/home/home.html');
@@ -2066,7 +2009,7 @@ function serveStatic(request, response, url, user) {
     response.writeHead(200, {
       'Content-Type': mimeTypes[extension],
       'X-Content-Type-Options': 'nosniff',
-      'Content-Security-Policy': url.pathname === '/pages/home/home.html'
+      'Content-Security-Policy': mapPages.has(url.pathname)
         ? "default-src 'self' data: blob:; img-src 'self' data: blob: https://*.tile.openstreetmap.org https://tile.openstreetmap.org; style-src 'self' 'unsafe-inline' https://unpkg.com; script-src 'self' https://unpkg.com; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
         : "default-src 'self' data: blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
       'Cache-Control': extension === '.html' ? 'no-store' : 'public, max-age=300'

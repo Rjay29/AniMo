@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const total = subtotal + shipping - discount;
 
     if (!items.length) {
-      cartItems.innerHTML = '<p>Your cart is empty. Visit the <a href="../marketplace/marketplace.html">marketplace</a> to add ingredients.</p>';
+      cartItems.innerHTML = '<div class="empty-state" role="status"><p class="empty-state-title">Your cart is empty</p><p>Add products or meal kits to see them here.</p><a class="btn btn-primary" href="../marketplace/marketplace.html">Browse the marketplace</a></div>';
     } else {
       cartItems.innerHTML = items.map((item) => `
         <article class="cart-item">

@@ -14,8 +14,9 @@
     <!-- Site Header -->
     <header class="site-header"><div class="container navbar"><a href="../home/home.html" class="brand">AniMo</a><nav class="nav-links" aria-label="Main navigation"></nav><div class="nav-actions"><a href="../cart/cart.html" class="icon-btn cart-pill"><span class="cart-count hidden">0</span></a><button class="btn btn-primary mobile-toggle" type="button">☰</button></div></div></header>
     <!-- Conversation Workspace -->
-    <main class="container chat-page">
-      <header><span class="eyebrow">Community messages</span><h1>Buyer and farmer chats</h1><p>Messages refresh every few seconds in this local demo.</p></header>
+    <main>
+      <section class="page-hero"><div class="container page-hero-inner"><div><span class="eyebrow">Community messages</span><h1>Buyer and farmer chats</h1><p>Messages refresh every few seconds in this local demo.</p></div></div></section>
+      <section class="section"><div class="container chat-page">
       <p id="chatStatus" role="status" aria-live="polite"></p>
       <div class="chat-layout card">
         <aside id="conversationList" class="conversation-list" aria-label="Conversations"><div class="skeleton-card" aria-hidden="true" style="padding:16px;display:grid;gap:10px"><div class="skeleton-row"><div class="skeleton-img" style="width:72px;height:72px;border-radius:12px"></div><div style="display:grid;gap:8px;flex:1"><div class="skeleton-line" style="width:60%;height:14px"></div><div class="skeleton-line" style="width:90%;height:12px"></div><div class="skeleton-line" style="width:40%;height:12px"></div></div></div></div><div class="skeleton-card" aria-hidden="true" style="padding:16px;display:grid;gap:10px"><div class="skeleton-row"><div class="skeleton-img" style="width:72px;height:72px;border-radius:12px"></div><div style="display:grid;gap:8px;flex:1"><div class="skeleton-line" style="width:60%;height:14px"></div><div class="skeleton-line" style="width:90%;height:12px"></div><div class="skeleton-line" style="width:40%;height:12px"></div></div></div></div><div class="skeleton-card" aria-hidden="true" style="padding:16px;display:grid;gap:10px"><div class="skeleton-row"><div class="skeleton-img" style="width:72px;height:72px;border-radius:12px"></div><div style="display:grid;gap:8px;flex:1"><div class="skeleton-line" style="width:60%;height:14px"></div><div class="skeleton-line" style="width:90%;height:12px"></div><div class="skeleton-line" style="width:40%;height:12px"></div></div></div></div><div class="skeleton-card" aria-hidden="true" style="padding:16px;display:grid;gap:10px"><div class="skeleton-row"><div class="skeleton-img" style="width:72px;height:72px;border-radius:12px"></div><div style="display:grid;gap:8px;flex:1"><div class="skeleton-line" style="width:60%;height:14px"></div><div class="skeleton-line" style="width:90%;height:12px"></div><div class="skeleton-line" style="width:40%;height:12px"></div></div></div></div></aside>
@@ -24,6 +25,7 @@
           <form id="chatForm" class="chat-form"><label class="sr-only" for="chatMessage">Message</label><textarea class="textarea" id="chatMessage" maxlength="2000" rows="2" placeholder="Write a message…" required></textarea><button class="btn btn-primary" type="submit">Send</button></form>
         </section>
       </div>
+      </div></section>
     </main>
     <script src="../../shared/js/api.js"></script>
     <script src="../../shared/js/cart.js"></script>
