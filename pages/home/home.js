@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       featuredProducts = featured.products;
       document.getElementById('featured-listing-count').textContent = String(featured.count);
       document.getElementById('featured-description').textContent = featured.count
-        ? `${featured.count} product${featured.count === 1 ? '' : 's'} qualify this week; ties at the top-five cutoff are included.`
+        ? 'The most ordered products this week.'
         : 'No product has reached 10 orders yet. Qualifying products and top-five ties appear here automatically.';
       document.getElementById('seasonal-title').textContent = `Featured this week: ${featured.count} product${featured.count === 1 ? '' : 's'}`;
     }
