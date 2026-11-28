@@ -263,12 +263,26 @@ window.aniMoData = {
 };
 
 // Catalog Loading Skeletons
-document.querySelectorAll('#featured-products, #recipe-cards, #package-cards, #farmer-cards, #productGrid, #recipeGrid, #packageGrid, #farmerGrid').forEach((container) => {
-  container.setAttribute('aria-busy', 'true');
-  if (!container.querySelector('.skeleton, .skeleton-card')) {
-    container.innerHTML = '<div class="skeleton" aria-hidden="true"></div><div class="skeleton" aria-hidden="true"></div><div class="skeleton" aria-hidden="true"></div>';
-  }
-});
+// Each placeholder uses the real card's classes (see renderCard in utilities.js) with invisible text,
+// so it has the same size as the card that replaces it. One placeholder per grid column.
+(function renderCatalogSkeletons() {
+  const footerGrids = new Set(['productGrid', 'packageGrid', 'farmerProductGrid']);
+  const bar = (width, extra = '') => `<span class="skeleton-line skeleton-text${extra}" style="width:${width}">&nbsp;</span>`;
+  const skeletonCard = (withFooter) => `
+    <article class="catalog-card catalog-card-skeleton${withFooter ? ' catalog-card-with-footer' : ''}" aria-hidden="true">
+      <div class="catalog-card-media"><div class="skeleton-img"></div></div>
+      <div class="catalog-card-body">
+        <div class="catalog-card-meta"><span>${bar('70%')}</span><span class="catalog-card-rating">${bar('4.5em')}</span></div>
+        <div class="catalog-card-title">${bar('90%')}${bar('60%')}</div>
+        ${withFooter ? `<div class="catalog-card-footer">${bar('3.5em', ' price')}<span class="btn catalog-card-button skeleton-btn">&nbsp;</span></div>` : ''}
+      </div>
+    </article>`;
+  document.querySelectorAll('#featured-products, #recipe-cards, #package-cards, #farmer-cards, #productGrid, #recipeGrid, #packageGrid, #farmerGrid, #farmerProductGrid').forEach((container) => {
+    container.setAttribute('aria-busy', 'true');
+    const columns = getComputedStyle(container).gridTemplateColumns.split(' ').filter(Boolean).length || 3;
+    container.innerHTML = skeletonCard(footerGrids.has(container.id)).repeat(columns);
+  });
+})();
 
 // Catalog Loading
 (function initCatalog() {
@@ -350,11 +364,11 @@ document.querySelectorAll('#featured-products, #recipe-cards, #package-cards, #f
     };
     const catalogFallbackIds = new Set(['featured-products', 'productGrid', 'recipe-cards', 'recipeGrid', 'package-cards', 'packageGrid', 'farmer-cards', 'farmerGrid', 'nearbyProducts']);
     const clearStuckSkeletons = () => {
-      document.querySelectorAll('.skeleton-card, .skeleton[aria-hidden="true"]').forEach((el) => {
+      document.querySelectorAll('.skeleton-card, .catalog-card-skeleton, .skeleton[aria-hidden="true"]').forEach((el) => {
         const container = el.parentElement;
         if (!container) return;
         const hasRealContent = Array.from(container.children).some((child) =>
-          !child.classList.contains('skeleton-card') && !child.classList.contains('skeleton') && child.nodeType === 1
+          !child.classList.contains('skeleton-card') && !child.classList.contains('catalog-card-skeleton') && !child.classList.contains('skeleton') && child.nodeType === 1
         );
         if (hasRealContent) return;
         const html = !window.aniMoCatalogLoadError ? fallbackHtml(container.id) : '';

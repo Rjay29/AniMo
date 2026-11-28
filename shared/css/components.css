@@ -259,6 +259,24 @@
   white-space: nowrap;
 }
 .catalog-card-button[disabled] { opacity: 0.55; cursor: not-allowed; }
+
+/* Loading placeholder with the same box as the card it stands in for (built in sample-data.js). */
+.catalog-card-skeleton { pointer-events: none; }
+.catalog-card-skeleton:hover { transform: none; box-shadow: var(--shadow); border-color: var(--border, rgba(38, 52, 45, 0.11)); }
+.catalog-card-skeleton .skeleton-img { width: 100%; height: 100%; border-radius: 0; }
+.catalog-card-skeleton .catalog-card-title { display: block; }
+.catalog-card-skeleton .catalog-card-meta > span:first-child { flex: 1; }
+.catalog-card-skeleton .skeleton-text {
+  display: inline-block;
+  max-width: 100%;
+  height: auto;
+  color: transparent;
+  border-radius: 6px;
+  transform: scaleY(0.72);
+  transform-origin: left center;
+}
+.catalog-card-skeleton .catalog-card-title .skeleton-text { display: block; }
+.catalog-card-skeleton .skeleton-btn { height: auto; margin: 0; border-radius: 999px; }
 @media (max-width: 640px) {
   .catalog-card-body { padding: 10px 10px 12px; }
   .catalog-card-meta { flex-direction: column; align-items: flex-start; gap: 2px; min-height: 2.4em; }
