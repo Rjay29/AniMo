@@ -330,28 +330,32 @@ document.addEventListener('DOMContentLoaded', () => {
       <header class="assistant-header">
         <div class="assistant-header-brand">
           <span class="assistant-avatar" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a5 5 0 0 1 5 5v1h1a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-1.1a5 5 0 0 1-9.8 0H6a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h1V7a5 5 0 0 1 5-5Zm0 2a3 3 0 0 0-3 3v1h6V7a3 3 0 0 0-3-3Zm-3 9a1.25 1.25 0 1 0 0 2.5A1.25 1.25 0 0 0 9 13Zm6 0a1.25 1.25 0 1 0 0 2.5A1.25 1.25 0 0 0 15 13Z"/></svg></span>
-          <div><strong>AniMo Assistant</strong><small class="assistant-status">AniMo help · AI status appears after your first question</small></div>
+          <div><strong>AniMo Assistant</strong><small class="assistant-status">Recipes and AniMo help · AI status appears after your first question</small></div>
         </div>
         <button class="assistant-close" type="button" aria-label="Close assistant"><img src="/shared/assets/icons/x.png" alt="" /></button>
       </header>
       <div class="assistant-messages" aria-live="polite">
-        <p class="assistant-message assistant-message-bot">Hi! I'm your AniMo assistant. I can help you find products, generate recipe ideas from AniMo ingredients, guide you around the website, or help with the Philippines map.</p>
+        <p class="assistant-message assistant-message-bot">Hi! I'm your AniMo assistant. I can make a recipe from your ingredients or answer questions about using AniMo: ordering, your cart, farmers, meal kits, and the local map.</p>
         <div class="assistant-quick-actions">
           <button type="button" data-assistant-mode="recipe" data-assistant-prompt="Suggest a Filipino recipe I can cook using ingredients available on AniMo.">Recipe idea</button>
-          <button type="button" data-assistant-mode="guide" data-assistant-prompt="How do I place an order on AniMo?">Website guide</button>
-          <button type="button" data-assistant-mode="chat" data-assistant-prompt="What products are available near Lucena, Quezon?">Find local products</button>
-          <button type="button" data-assistant-mode="guide" data-assistant-prompt="How do I use the local map on AniMo?">Map help</button>
+          <button type="button" data-assistant-mode="help" data-assistant-prompt="How do I place an order on AniMo?">How to order</button>
+          <button type="button" data-assistant-mode="help" data-assistant-prompt="Where can I find products from farmers near Lucena, Quezon on AniMo?">Find local products</button>
+          <button type="button" data-assistant-mode="help" data-assistant-prompt="How do I use the local map on AniMo?">Map help</button>
         </div>
       </div>
       <form class="assistant-form">
         <label class="sr-only" for="assistantInput">Ask AniMo Assistant</label>
-        <input id="assistantInput" class="input" type="text" placeholder="Ask about products, recipes, or the map..." autocomplete="off" />
+        <input id="assistantInput" class="input" type="text" placeholder="Ask for a recipe or about AniMo..." maxlength="500" autocomplete="off" />
         <button class="btn btn-primary assistant-send" type="submit" aria-label="Send message">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M2.01 21 23 12 2.01 3 2 10l15 2-15 2z"/></svg>
         </button>
       </form>
     </section>
   `;
+  const privacyNote = document.createElement('p');
+  privacyNote.className = 'assistant-privacy-note';
+  privacyNote.textContent = 'Don’t type personal information. Questions are sent to Google Gemini.';
+  assistant.querySelector('.assistant-form').after(privacyNote);
   document.body.appendChild(assistant);
 
   const panel = assistant.querySelector('.assistant-panel');
@@ -380,6 +384,69 @@ document.addEventListener('DOMContentLoaded', () => {
     return message;
   }
 
+  // Bot Reply Formatting
+  // Builds page elements (never innerHTML) from a small Markdown subset: headings, lists, bold, and AniMo links.
+  const safeLinkPattern = /^\/pages\/[a-z-]+\/[a-z-]+\.html(?:\?id=[A-Za-z0-9%._:-]+)?(?:#[a-z-]+)?$/;
+  function appendInline(parent, text) {
+    const tokenPattern = /\*\*([^*]+)\*\*|\[([^\]]+)\]\(([^)\s]+)\)/g;
+    let last = 0;
+    let match;
+    while ((match = tokenPattern.exec(text))) {
+      if (match.index > last) parent.appendChild(document.createTextNode(text.slice(last, match.index)));
+      if (match[1] !== undefined) {
+        const strong = document.createElement('strong');
+        strong.textContent = match[1];
+        parent.appendChild(strong);
+      } else if (safeLinkPattern.test(match[3])) {
+        const link = document.createElement('a');
+        link.href = match[3];
+        link.textContent = match[2];
+        parent.appendChild(link);
+      } else {
+        parent.appendChild(document.createTextNode(match[2]));
+      }
+      last = tokenPattern.lastIndex;
+    }
+    if (last < text.length) parent.appendChild(document.createTextNode(text.slice(last)));
+  }
+
+  function appendBotReply(text, { aiGenerated = false } = {}) {
+    const message = document.createElement('div');
+    message.className = `assistant-message assistant-message-bot assistant-message-rich${aiGenerated ? ' assistant-message-ai' : ''}`;
+    let list = null;
+    for (const rawLine of String(text).split(/\r?\n/)) {
+      const line = rawLine.trim();
+      const heading = line.match(/^#{1,6}\s+(.*)$/);
+      const bullet = line.match(/^[-*•]\s+(.*)$/);
+      const numbered = line.match(/^\d+[.)]\s+(.*)$/);
+      if (bullet || numbered) {
+        const listTag = bullet ? 'ul' : 'ol';
+        if (!list || list.tagName.toLowerCase() !== listTag) {
+          list = document.createElement(listTag);
+          message.appendChild(list);
+        }
+        const item = document.createElement('li');
+        appendInline(item, (bullet || numbered)[1]);
+        list.appendChild(item);
+        continue;
+      }
+      list = null;
+      if (!line) continue;
+      const block = document.createElement(heading ? 'h4' : 'p');
+      appendInline(block, heading ? heading[1] : line);
+      message.appendChild(block);
+    }
+    if (aiGenerated) {
+      const label = document.createElement('span');
+      label.className = 'assistant-ai-label';
+      label.textContent = 'AI-generated · may contain mistakes';
+      message.appendChild(label);
+    }
+    messages.appendChild(message);
+    messages.scrollTop = messages.scrollHeight;
+    return message;
+  }
+
   function localAnswer(question) {
     const normalized = question.toLowerCase();
     const stopWords = new Set(['about', 'and', 'can', 'does', 'for', 'how', 'the', 'what', 'when', 'where', 'with', 'you', 'animo']);
@@ -396,7 +463,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return 'I can help with AniMo products, farmers, recipes, meal kits, orders, and the Philippines map. Ask me a specific question and I\'ll do my best.';
   }
 
-  async function sendMessage(text, mode = 'chat') {
+  async function sendMessage(text, mode = 'help') {
     const question = text.trim();
     if (!question || assistantBusy) return;
     appendMessage(question, 'user');
@@ -413,21 +480,28 @@ document.addEventListener('DOMContentLoaded', () => {
       const result = await response.json().catch(() => ({}));
       typing.remove();
       if (response.ok && result.reply) {
-        appendMessage(result.reply, 'bot');
+        appendBotReply(result.reply, { aiGenerated: result.source === 'gemini' });
         assistantStatus.textContent = result.source === 'knowledge'
           ? 'Assistant Data · exact answer'
-          : result.aiAvailable
-            ? `AI online · ${result.model || 'local model'}`
-            : 'AI offline · Ollama required';
+          : result.source === 'guardrail'
+            ? 'AniMo help'
+            : result.aiAvailable
+              ? `AI online · ${result.model || 'Gemini'}`
+              : result.busy
+                ? 'AI busy · try again in a minute'
+                : 'AI offline · set GEMINI_API_KEY';
         assistantStatus.title = result.warning || '';
+      } else if (response.status === 429 || response.status === 400) {
+        // Sending too quickly, or a message over 500 characters: show the server's explanation.
+        appendBotReply(result.error || 'Please wait a minute and try again.');
       } else {
-        appendMessage(localAnswer(question), 'bot');
+        appendBotReply(localAnswer(question));
         assistantStatus.textContent = 'Local AniMo help · assistant service unavailable';
         assistantStatus.title = result.error || '';
       }
     } catch {
       typing.remove();
-      appendMessage(localAnswer(question), 'bot');
+      appendBotReply(localAnswer(question));
       assistantStatus.textContent = 'Local AniMo help · assistant service unavailable';
       assistantStatus.title = 'Could not reach the AniMo assistant service.';
     } finally {
@@ -450,10 +524,10 @@ document.addEventListener('DOMContentLoaded', () => {
     event.preventDefault();
     const value = input.value;
     input.value = '';
-    sendMessage(value, 'chat');
+    sendMessage(value, 'help');
   });
   assistant.querySelectorAll('[data-assistant-prompt]').forEach((button) => {
-    button.addEventListener('click', () => sendMessage(button.dataset.assistantPrompt, button.dataset.assistantMode || 'chat'));
+    button.addEventListener('click', () => sendMessage(button.dataset.assistantPrompt, button.dataset.assistantMode || 'help'));
   });
 
   // Progressive UI enhancements loader
