@@ -1,4 +1,13 @@
 // Shared Navigation And Assistant
+
+// Log out (the button lives on the profile page). Throws if the server rejects the request.
+window.aniMoLogout = async function () {
+  const response = await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+  const contentType = response.headers.get('content-type') || '';
+  const result = contentType.includes('application/json') ? await response.json() : null;
+  if (!response.ok || !result?.ok) throw new Error('Could not log out. Please try again.');
+  window.location.replace('/pages/login/login.html');
+};
 // Assistant Capabilities
 document.addEventListener('DOMContentLoaded', () => {
   const nav = document.querySelector('.nav-links');
@@ -116,9 +125,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.documentElement.style.setProperty('--accessibility-scale', savedAccessibility.largeText ? '1.12' : '1');
   if (savedAccessibility.highContrast) document.documentElement.dataset.contrast = 'high';
   if (savedAccessibility.reducedMotion) document.documentElement.dataset.motion = 'reduced';
-  if (navActions && !document.querySelector('.account-logout')) {
+  if (navActions && !document.querySelector('.account-login')) {
     const authBtn = document.createElement('a');
-    authBtn.className = 'btn btn-secondary account-logout';
+    authBtn.className = 'btn btn-secondary account-login';
     authBtn.href = '/pages/login/login.html';
     authBtn.textContent = 'Log in';
     authBtn.hidden = true;
@@ -134,24 +143,8 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     };
     const setAuthMode = (user) => {
-      authBtn.hidden = false;
-      authBtn.href = '#';
-      authBtn.textContent = 'Log out';
-      authBtn.onclick = async (e) => {
-        e.preventDefault();
-        authBtn.style.pointerEvents = 'none';
-        try {
-          const response = await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
-          const contentType = response.headers.get('content-type') || '';
-          const result = contentType.includes('application/json') ? await response.json() : null;
-          if (!response.ok || !result?.ok) throw new Error('Could not log out. Please try again.');
-          window.location.replace('/pages/login/login.html');
-        } catch (error) {
-          console.error('AniMo logout failed:', error);
-          authBtn.style.pointerEvents = '';
-          authBtn.textContent = 'Logout failed - retry';
-        }
-      };
+      // Signed-in users see their avatar (which opens the profile page); Log out is on that page.
+      authBtn.hidden = true;
       document.querySelectorAll('a.cart-pill').forEach((el) => { el.style.display = ''; });
       nav.querySelectorAll('a').forEach((link) => {
         if ((link.textContent || '').trim() === 'Chats') link.style.display = '';

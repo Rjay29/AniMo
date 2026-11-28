@@ -11,6 +11,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   let filter = 'all';
   let removePicture = false;
 
+  // Log Out
+  const logoutButton = document.getElementById('logoutButton');
+  const logoutStatus = document.getElementById('logoutStatus');
+  logoutButton.addEventListener('click', async () => {
+    logoutButton.disabled = true;
+    logoutStatus.classList.remove('error');
+    logoutStatus.textContent = '';
+    try {
+      await window.aniMoLogout();
+    } catch (error) {
+      logoutStatus.textContent = error.message;
+      logoutStatus.classList.add('error');
+      logoutButton.disabled = false;
+    }
+  });
+
   // Section State
   async function api(url, options = {}) {
     try {
