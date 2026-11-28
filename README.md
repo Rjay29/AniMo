@@ -172,7 +172,7 @@ AniMo/
 
 ## 💾 Data Storage
 
-The server creates three separate databases in `data/`:
+The databases are **not tracked in Git**. On first run the server creates three separate databases in `data/` and seeds them with the demo catalog and assistant knowledge:
 
 | File | Contents |
 |------|----------|
@@ -183,12 +183,13 @@ The server creates three separate databases in `data/`:
 Also in `data/`:
 
 - `farmer-documents/`: farmer verification files (government ID, proof of address, bank proof, DA accreditation). These stay outside the static asset tree and are only served to the admin.
-- `catalog-image-map.json` and `expanded-demo-data.js`: demo catalog seed data.
+- `catalog-image-map.json` and `expanded-demo-data.js`: demo catalog seed data (tracked in Git; the server needs them to start).
 
 Notes:
 
-- SQLite may also create `*.sqlite-shm` and `*.sqlite-wal` files while running. This is normal.
+- SQLite may also create `*.sqlite-shm` and `*.sqlite-wal` files while running. This is normal; they belong to the database and are not tracked either.
 - **Back up** by stopping the server, then copying the whole `data/` folder.
+- **Start fresh** by stopping the server, then deleting `data/*.sqlite*` (all `.sqlite`, `-shm`, and `-wal` files together). The next start creates and seeds new databases. Your accounts, orders, and chats are lost, so back up first if you need them.
 - ⚠️ `data/` contains personal information (orders, contacts, farmer documents). **Keep it private.**
 
 Uploaded catalog/profile images are validated and saved as files beneath their matching `shared\assets\` subfolders. Existing local visuals are organized under `shared\assets\`: brand/profile photos at the root and categorized `icons\`, `marketplace\`, `farmers\`, `recipes\`, and `meal_kits\` folders. The Home map loads Leaflet from unpkg and map data/tiles from OpenStreetMap-compatible services; these are the only required third-party map assets/services.
@@ -248,15 +249,17 @@ Customer profile pictures are managed by users on their own profile page and sav
 | Assistant only gives short built-in answers | Ollama isn't running or the model isn't installed; run `ollama pull llama3.1` and `ollama serve` (optional) |
 | Map is blank or search fails | The map needs an internet connection for OpenStreetMap tiles, search, and routes |
 | Port 8000 in use | Stop the other process, or set `PORT` to another number, then restart |
+| Data is broken or you want a clean demo | Stop the server, delete `data/*.sqlite*`, then start it again to recreate the seeded databases |
 
 ---
 
 ## Git Hygiene
 
 - `.env` is listed in `.gitignore`, so local settings files are not committed. Check with `git check-ignore .env`.
-- `.gitignore` also lists `data/*.sqlite`, `*.sqlite-shm`, and `*.sqlite-wal`, but the database files are **still tracked** in Git for now, so running the server shows them as modified. Ignore rules don't apply to files Git already tracks.
-- The databases contain password hashes, sessions, contacts, and orders. The team should decide whether to untrack them (`git rm --cached`, which keeps local copies). Files pushed earlier remain in Git history even after untracking.
-- Until then, don't commit database changes from local testing. Restore them with `git restore data/` after stopping the server.
+- The SQLite databases (`data/*.sqlite*`) are **no longer tracked**. Each computer keeps its own local databases, which the server creates on first run. They contain password hashes, sessions, contacts, and orders, so never commit them. Copies pushed earlier remain in Git history.
+- ⚠️ **Back up `data/` before pulling the commit that untracked the databases.** When Git applies that change it deletes the tracked database files from your working folder. Stop the server, copy `data/` somewhere outside the repo, pull, then copy your `*.sqlite` files back (or skip that and let the server create fresh ones).
+- Uploaded personal files are ignored too: `data/farmer-documents/`, `shared/assets/profiles/`, and new uploads saved as `shared/assets/*/upload-*`.
+- To clean up after local testing, stop the server and delete `data/*.sqlite*`; the next start recreates them. `git restore data/` no longer applies to the databases.
 - Add files by name instead of `git add .`.
 
 ---

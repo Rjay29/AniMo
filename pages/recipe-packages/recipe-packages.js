@@ -1,4 +1,4 @@
-﻿// Meal Kit Catalog
+// Meal Kit Catalog
 // Future Integrations
 document.addEventListener('DOMContentLoaded', async () => {
   await window.aniMoDataReady;
