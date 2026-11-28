@@ -101,7 +101,6 @@
 .admin-field textarea { min-height: 85px; resize: vertical; }
 
 /* Text Dimension */
-.admin-rating-preview { display: block; margin-top: 5px; color: var(--muted); font-size: 0.86rem; }
 
 /* Layout Dimension */
 .admin-check { display: flex; align-items: center; gap: 8px; min-height: 42px; }

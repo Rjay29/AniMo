@@ -128,7 +128,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       unit: form.elements.unit.value.trim(),
       farm: form.elements.farm.value.trim(),
       location: form.elements.location.value.trim(),
-      rating: 5,
       deliveryAvailable: true,
       pickupAvailable: true,
       tags: []

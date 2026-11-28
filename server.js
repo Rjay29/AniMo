@@ -524,15 +524,14 @@ function validateListing(type, entry) {
   if (type === 'products') {
     if (!entry.category || !entry.unit || !entry.farm || !entry.location || !entry.description
       || !numeric(entry.price) || entry.price <= 0 || !numeric(entry.stock)
-      || !numeric(entry.rating) || entry.rating > 5
       || typeof entry.deliveryAvailable !== 'boolean' || typeof entry.pickupAvailable !== 'boolean') {
-      throw Object.assign(new Error('Product listings need a category, unit, seller, location, description, valid price, stock, rating, and fulfillment choices.'), { status: 400 });
+      throw Object.assign(new Error('Product listings need a category, unit, seller, location, description, valid price, stock, and fulfillment choices.'), { status: 400 });
     }
   } else if (type === 'farmers') {
     if (!['Individual person', 'Individual producer', 'Group of farmers'].includes(entry.type)
       || !entry.location || !entry.specialty || !entry.story
-      || !numeric(entry.rating) || entry.rating > 5 || !numeric(entry.followers)) {
-      throw Object.assign(new Error('Farmer listings need a valid type, location, specialty, story, rating, and follower count.'), { status: 400 });
+      || !numeric(entry.followers)) {
+      throw Object.assign(new Error('Farmer listings need a valid type, location, specialty, story, and follower count.'), { status: 400 });
     }
   } else if (type === 'recipes') {
     if (!entry.category || !entry.time || !entry.difficulty || !entry.description
@@ -1817,7 +1816,6 @@ async function handleApi(request, response, url) {
           location: farmerProfile.location,
           specialty: farmerProfile.specialty,
           story: farmerProfile.story,
-          rating: 0,
           followers: 0
         };
         listingsDb.prepare(`
