@@ -1950,6 +1950,7 @@ const mapPages = new Set(['/pages/home/home.html', '/pages/local-map/local-map.h
 function serveStatic(request, response, url, user) {
   if (url.pathname === '/server.js' || url.pathname.startsWith('/data/')) return response.writeHead(404).end('Not found');
   if (url.pathname === '/' || url.pathname === '/index.html') return redirect(response, '/pages/home/home.html');
+  if (url.pathname === '/favicon.ico') return redirect(response, '/shared/assets/logo.png');
   const isAuthPage = ['/pages/login/login.html', '/pages/register/register.html'].includes(url.pathname);
   const isPageDocument = url.pathname.endsWith('.html');
   if (user && isAuthPage) return redirect(response, '/pages/home/home.html');

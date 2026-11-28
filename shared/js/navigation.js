@@ -145,6 +145,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const setAuthMode = (user) => {
       // Signed-in users see their avatar (which opens the profile page); Log out is on that page.
       authBtn.hidden = true;
+      document.querySelectorAll('.site-footer a[href*="login/login.html"], .site-footer a[href*="register/register.html"]')
+        .forEach((link) => { link.style.display = 'none'; });
       document.querySelectorAll('a.cart-pill').forEach((el) => { el.style.display = ''; });
       nav.querySelectorAll('a').forEach((link) => {
         if ((link.textContent || '').trim() === 'Chats') link.style.display = '';

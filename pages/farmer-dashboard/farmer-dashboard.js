@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('farmerOrders').innerHTML = orders.length ? orders.map((order) => `
       <article class="farmer-list-row">
         <div><strong>${escape(order.id)} · ${escape(order.username)}</strong><p>${order.items.map((item) => `${escape(item.name)} × ${escape(item.quantity)}`).join(', ')}</p><small>${escape(order.fulfillment)} · ${escape(order.status)} · ${escape(order.address)}</small></div>
-        ${order.status === 'completed' ? '<span class="badge">Delivered</span>' : `<button class="btn btn-primary" type="button" data-deliver-order="${escape(order.id)}">Mark delivered</button>`}
+        ${order.status === 'completed' ? '<span class="badge badge-check">Delivered</span>' : `<button class="btn btn-primary" type="button" data-deliver-order="${escape(order.id)}">Mark delivered</button>`}
       </article>`).join('') : '<div class="empty-state" role="status"><p class="empty-state-title">No orders yet</p><p>Orders for your listings will appear here.</p></div>';
   }
   try {

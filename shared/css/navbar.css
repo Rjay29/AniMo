@@ -354,6 +354,14 @@
 }
 
 @media (max-width: 480px) {
+  /* Keep the navbar on one row on phones. */
+  .site-header .navbar { width: calc(100% - 1.5rem); gap: 8px; }
+  .brand { gap: 6px; }
+  .brand-logo { width: 30px; height: 30px; }
+  .brand-wordmark { font-size: 1.2rem; }
+  .nav-actions { gap: 5px; flex-wrap: nowrap; }
+  .nav-actions .icon-btn, .nav-actions .profile-avatar-link { width: 34px; height: 34px; }
+  .nav-actions > .btn { min-height: 34px; padding: 6px 8px; }
   .assistant-widget { right: 14px; bottom: 14px; }
   .assistant-launcher { width: 52px; height: 52px; }
 }.nav-dropdown[open] > div {

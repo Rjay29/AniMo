@@ -27,8 +27,9 @@
             <article class="skeleton-card" aria-hidden="true"><div class="skeleton-img" style="height:320px"></div><div class="skeleton-line skeleton-line-lg"></div><div class="skeleton-line"></div><div class="skeleton-line skeleton-line-sm"></div></article>
           </div></div></section>
       <!-- Meal Kit Reviews -->
-      <section class="section"><div class="container card product-review-card" data-listing-reviews>
-        <h2>Meal kit ratings and comments</h2><p data-review-summary>Loading reviews…</p><div class="product-review-list" data-review-list></div>
+      <section class="section review-section"><div class="container card product-review-card" data-listing-reviews>
+        <div class="section-heading"><div><span class="eyebrow">Buyer notes</span><h2>Meal kit ratings and comments</h2></div></div>
+        <div class="review-summary" data-review-summary aria-live="polite"></div><div class="product-review-list" data-review-list></div>
         <form class="product-review-form" data-review-form hidden><label>Your rating<select class="select" name="rating"><option value="5">5 — Excellent</option><option value="4">4 — Good</option><option value="3">3 — Okay</option><option value="2">2 — Poor</option><option value="1">1 — Bad</option></select></label><label>Comment (optional)<textarea class="textarea" name="comment" maxlength="500" rows="3"></textarea></label><p data-review-status role="status" aria-live="polite"></p><button class="btn btn-primary" type="submit">Submit rating</button></form>
       </div></section>
     </main>

@@ -25,13 +25,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       <div class="detail-meta">
         <span class="badge">${ui.renderRating(product, { showCount: true })}</span>
         <span class="badge">${ui.escapeHTML(product.location)}</span>
-        <span class="badge">${Number(product.orderCount) || 0} orders</span>
+        <span class="badge">${Number(product.orderCount) || 0} order${Number(product.orderCount) === 1 ? '' : 's'}</span>
       </div>
       <div class="price detail-price">${formatCurrency(product.price)} / ${ui.escapeHTML(product.unit)}</div>
       <p>${ui.escapeHTML(product.description)}</p>
       <div class="detail-meta">
-        ${product.deliveryAvailable ? '<span class="badge">Delivery available</span>' : ''}
-        ${product.pickupAvailable ? '<span class="badge">Pickup available</span>' : ''}
+        ${product.deliveryAvailable ? '<span class="badge badge-check">Delivery available</span>' : ''}
+        ${product.pickupAvailable ? '<span class="badge badge-check">Pickup available</span>' : ''}
       </div>
       <p class="stock-status ${soldOut ? 'sold-out' : ''}" aria-live="polite">
         ${soldOut ? 'Sold out' : `${ui.escapeHTML(product.stock)} ${ui.escapeHTML(product.unit)} in stock`}
@@ -76,11 +76,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const response = await fetch(`/api/reviews?listingId=${encodeURIComponent(product.id)}`, { credentials: 'same-origin' });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Could not load reviews.');
-    summary.innerHTML = `
+    summary.innerHTML = !result.count ? '' : `
       <div class="review-summary-card">
-        <div class="review-summary-score">${result.rating ? result.rating.toFixed(1) : '—'}</div>
+        <div class="review-summary-score">${result.rating.toFixed(1)}</div>
         <div>
-          <div class="review-summary-stars">${result.rating ? ui.renderStars(result.rating, 'lg') : '<span class="rating-none">No reviews yet</span>'}</div>
+          <div class="review-summary-stars">${ui.renderStars(result.rating, 'lg')}</div>
           <p class="review-summary-meta">${result.count} rating${result.count === 1 ? '' : 's'} · ${result.orderCount} placed order${result.orderCount === 1 ? '' : 's'}</p>
         </div>
       </div>`;
