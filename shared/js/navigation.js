@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const navItems = [
     ['Home', homeUrl],
     ['Farmers', '../farmers/farmers.html'],
-    ['Local map', `${homeUrl}#local-map`],
+    ['Local map', '../local-map/local-map.html'],
     ['Chats', '../chat/chat.html']
   ];
 
@@ -41,14 +41,19 @@ document.addEventListener('DOMContentLoaded', () => {
       ${navItems.slice(1).map(([label, href]) => (
       `<a href="${href}">${label}</a>`
       )).join('')}`;
+    // Highlight the link for the current page (hash links never count as the current page)
     const currentPath = window.location.pathname.split('/').pop() || 'index.html';
-    nav.querySelectorAll('a').forEach((link, index) => {
-      if (index !== navItems.length - 1
-        && link.getAttribute('href').split('/').pop().split('#')[0] === currentPath) {
+    nav.querySelectorAll('a').forEach((link) => {
+      const href = link.getAttribute('href');
+      if (!href.includes('#') && href.split('/').pop() === currentPath) {
         link.classList.add('active');
+        link.setAttribute('aria-current', 'page');
+        const dropdown = link.closest('.nav-dropdown');
+        if (dropdown) dropdown.classList.add('active');
       }
+    });
 
-      // Protected Shopping Action
+    // Protected Shopping Action
       window.aniMoPromptLogin = function (options = {}) {
         const next = options.next || `${window.location.pathname}${window.location.search}`;
         const message = options.message || 'Please log in to continue.';
@@ -92,7 +97,6 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.assign(`/pages/login/login.html?next=${encodeURIComponent(next)}`);
         return false;
       };
-    });
   }
 
   if (toggle && nav) {
@@ -388,7 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }).sort((left, right) => right.score - left.score);
     if (matches[0]?.score) return matches[0].record.content;
     if (normalized.includes('recipe') || normalized.includes('ingredient')) return 'Open Recipes to browse dishes, or ask me for a recipe idea using AniMo ingredients. I can suggest options based on available products and clearly note anything missing.';
-    if (normalized.includes('map') || normalized.includes('location') || normalized.includes('near')) return 'Use the Local map on the Home page to search Philippine locations, pin your location, and view nearby AniMo sellers.';
+    if (normalized.includes('map') || normalized.includes('location') || normalized.includes('near')) return 'Use the Local map (its own page in the navigation bar, also shown on the Home page) to search Philippine locations, pin your location, and view nearby AniMo sellers.';
     if (normalized.includes('order') || normalized.includes('cart') || normalized.includes('buy')) return 'Browse the Marketplace, add items to your cart, review vouchers in Cart, then continue to Checkout to place your order.';
     return 'I can help with AniMo products, farmers, recipes, meal kits, orders, and the Philippines map. Ask me a specific question and I\'ll do my best.';
   }

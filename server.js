@@ -1104,7 +1104,7 @@ function buildLocalAssistantReply(question) {
     return 'Open your Cart and use the voucher selector to review and apply an available voucher before continuing to checkout.';
   }
   if (/\b(map|location|directions|route|nearby)\b/.test(normalized)) {
-    return 'Open Local map from the Home page. Search for a Philippine city or town, or use your location while in the Philippines. Select a seller marker and choose Directions to request a road route.';
+    return 'Open the Local map from the navigation bar (its own page), or use the map section on the Home page. Search for a Philippine city or town, or use your location while in the Philippines. Select a seller marker and choose Directions to request a road route.';
   }
   if (/\b(farmer|grower|seller)\b/.test(normalized)) {
     return catalog.farmers.length
@@ -2009,6 +2009,9 @@ async function handleApi(request, response, url) {
 }
 
 // Static File Serving
+// Pages that show the Leaflet map get a CSP that also allows unpkg and OpenStreetMap tiles.
+const mapPages = new Set(['/pages/home/home.html', '/pages/local-map/local-map.html']);
+
 function serveStatic(request, response, url, user) {
   if (url.pathname === '/server.js' || url.pathname.startsWith('/data/')) return response.writeHead(404).end('Not found');
   if (url.pathname === '/' || url.pathname === '/index.html') return redirect(response, '/pages/home/home.html');
@@ -2066,7 +2069,7 @@ function serveStatic(request, response, url, user) {
     response.writeHead(200, {
       'Content-Type': mimeTypes[extension],
       'X-Content-Type-Options': 'nosniff',
-      'Content-Security-Policy': url.pathname === '/pages/home/home.html'
+      'Content-Security-Policy': mapPages.has(url.pathname)
         ? "default-src 'self' data: blob:; img-src 'self' data: blob: https://*.tile.openstreetmap.org https://tile.openstreetmap.org; style-src 'self' 'unsafe-inline' https://unpkg.com; script-src 'self' https://unpkg.com; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
         : "default-src 'self' data: blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
       'Cache-Control': extension === '.html' ? 'no-store' : 'public, max-age=300'
